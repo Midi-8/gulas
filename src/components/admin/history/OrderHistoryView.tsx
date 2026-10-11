@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useTransition } from 'react';
-import { ManagedOrder, getOrderHistory } from '@/actions/order-management';
+
+import React, { useState, useMemo, useCallback, useTransition, useEffect } from 'react';
+import { ManagedOrder, getOrderHistory, reopenCompletedOrder } from '@/actions/order-management';
 import { OrderStatusBadge } from '../orders/OrderStatusBadge';
 import { OrderHistoryDetailModal } from './OrderHistoryDetailModal';
 import {
@@ -16,7 +17,11 @@ import {
   Search,
   X,
   Filter,
+  Undo2,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
+
 
 interface OrderHistoryViewProps {
   restaurantName: string;
@@ -24,8 +29,10 @@ interface OrderHistoryViewProps {
   initialOrders: ManagedOrder[];
 }
 
+
 type PeriodOption = 'all' | 'today' | '7days' | '30days';
 type StatusOption = 'all' | 'completed' | 'cancelled';
+
 
 export function OrderHistoryView({
   restaurantName,
@@ -36,7 +43,12 @@ export function OrderHistoryView({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<ManagedOrder | null>(null);
-  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
+
+  // Reopen state: map of orderId -> { confirming, loading, error }
+  type ReopenState = { confirming: boolean; loading: boolean; error: string | null };
+  const [reopenMap, setReopenMap] = useState<Record<string, ReopenState>>({});
+
 
   // Filter States (M4.5.2)
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,7 +56,15 @@ export function OrderHistoryView({
   const [tableFilter, setTableFilter] = useState<string>('all');
   const [periodFilter, setPeriodFilter] = useState<PeriodOption>('all');
 
+
   const [isRefreshing, startRefreshTransition] = useTransition();
+
+
+  // Set the timestamp only after client mount (avoids SSR hydration mismatch)
+  useEffect(() => {
+    setLastRefreshedAt(new Date());
+  }, []);
+
 
   const fetchHistory = useCallback(async () => {
     setError(null);
@@ -63,11 +83,66 @@ export function OrderHistoryView({
     }
   }, []);
 
+
   const handleManualRefresh = () => {
     startRefreshTransition(async () => {
       await fetchHistory();
     });
   };
+
+  // Handlers for reopen (undo completion)
+  const handleReopenConfirm = (orderId: string) => {
+    setReopenMap((prev) => ({
+      ...prev,
+      [orderId]: { confirming: true, loading: false, error: null },
+    }));
+  };
+
+  const handleReopenCancel = (orderId: string) => {
+    setReopenMap((prev) => ({
+      ...prev,
+      [orderId]: { confirming: false, loading: false, error: null },
+    }));
+  };
+
+  const handleReopenExecute = async (order: ManagedOrder) => {
+    setReopenMap((prev) => ({
+      ...prev,
+      [order.id]: { confirming: false, loading: true, error: null },
+    }));
+    try {
+      const result = await reopenCompletedOrder({
+        orderId: order.id,
+        expectedUpdatedAt: order.updatedAt,
+      });
+      if (!result.success) {
+        if (result.error.code === 'OPTIMISTIC_CONFLICT') {
+          // Refresh history to get latest state
+          await fetchHistory();
+        }
+        setReopenMap((prev) => ({
+          ...prev,
+          [order.id]: { confirming: false, loading: false, error: result.error.message },
+        }));
+      } else {
+        // Remove from history view (it's now active in KDS)
+        setOrders((prev) => prev.filter((o) => o.id !== order.id));
+        setReopenMap((prev) => {
+          const next = { ...prev };
+          delete next[order.id];
+          return next;
+        });
+        // Close modal if it was showing this order
+        setSelectedOrder((prev) => (prev?.id === order.id ? null : prev));
+      }
+    } catch {
+      setReopenMap((prev) => ({
+        ...prev,
+        [order.id]: { confirming: false, loading: false, error: 'Erro ao reabrir pedido.' },
+      }));
+    }
+  };
+
 
   // Dynamic tables list from loaded orders
   const availableTables = useMemo(() => {
@@ -76,15 +151,17 @@ export function OrderHistoryView({
     return Array.from(tableSet).sort((a, b) => a - b);
   }, [orders]);
 
+
   // Combined client-side filtering
   const filteredOrders = useMemo(() => {
-    const referenceTime = lastRefreshedAt.getTime();
-    const startOfToday = new Date(lastRefreshedAt);
+    const referenceTime = (lastRefreshedAt ?? new Date()).getTime();
+    const startOfToday = new Date(referenceTime);
     startOfToday.setHours(0, 0, 0, 0);
     const startOfTodayMs = startOfToday.getTime();
     const sevenDaysAgoMs = referenceTime - 7 * 24 * 60 * 60 * 1000;
     const thirtyDaysAgoMs = referenceTime - 30 * 24 * 60 * 60 * 1000;
     const cleanQuery = searchQuery.replace('#', '').trim().toLowerCase();
+
 
     return orders.filter((order) => {
       // 1. Search Query (order number, space/hash tolerant)
@@ -95,12 +172,14 @@ export function OrderHistoryView({
         }
       }
 
+
       // 2. Status Filter
       if (statusFilter !== 'all') {
         if (order.status !== statusFilter) {
           return false;
         }
       }
+
 
       // 3. Table Filter
       if (tableFilter !== 'all') {
@@ -109,9 +188,11 @@ export function OrderHistoryView({
         }
       }
 
+
       // 4. Period Filter
       if (periodFilter !== 'all') {
         const orderTimestamp = new Date(order.createdAt).getTime();
+
 
         if (periodFilter === 'today' && orderTimestamp < startOfTodayMs) {
           return false;
@@ -124,6 +205,7 @@ export function OrderHistoryView({
         }
       }
 
+
       return true;
     });
   }, [
@@ -135,11 +217,13 @@ export function OrderHistoryView({
     lastRefreshedAt,
   ]);
 
+
   const hasActiveFilters =
     searchQuery.trim() !== '' ||
     statusFilter !== 'all' ||
     tableFilter !== 'all' ||
     periodFilter !== 'all';
+
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -147,6 +231,7 @@ export function OrderHistoryView({
     setTableFilter('all');
     setPeriodFilter('all');
   };
+
 
   const formatDateTime = (dateString: string) => {
     try {
@@ -163,16 +248,19 @@ export function OrderHistoryView({
     }
   };
 
+
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('pt-PT', {
       style: 'currency',
       currency: 'EUR',
     }).format(price);
 
+
   // Global Loaded Metrics
   const completedCount = orders.filter((o) => o.status === 'completed').length;
   const cancelledCount = orders.filter((o) => o.status === 'cancelled').length;
   const totalHistoryCount = orders.length;
+
 
   return (
     <div className="space-y-6 pb-12">
@@ -192,16 +280,20 @@ export function OrderHistoryView({
           </p>
         </div>
 
+
         {/* Refresh button & info */}
         <div className="flex items-center gap-3 self-start md:self-auto">
-          <span className="text-xs text-gulas-gray-400 hidden sm:inline-block">
-            Última atualização:{' '}
-            {lastRefreshedAt.toLocaleTimeString('pt-PT', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-            })}
-          </span>
+          {lastRefreshedAt && (
+            <span className="text-xs text-gulas-gray-400 hidden sm:inline-block">
+              Última atualização:{' '}
+              {lastRefreshedAt.toLocaleTimeString('pt-PT', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              })}
+            </span>
+          )}
+
 
           <button
             type="button"
@@ -211,14 +303,14 @@ export function OrderHistoryView({
             aria-label="Atualizar histórico"
           >
             <RotateCcw
-              className={`w-4 h-4 text-gulas-gray-600 ${
-                isLoading || isRefreshing ? 'animate-spin' : ''
-              }`}
+              className={`w-4 h-4 text-gulas-gray-600 ${isLoading || isRefreshing ? 'animate-spin' : ''
+                }`}
             />
             <span>Atualizar</span>
           </button>
         </div>
       </div>
+
 
       {/* KPI Summary Cards (Representing the full loaded dataset) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -237,6 +329,7 @@ export function OrderHistoryView({
           </div>
         </div>
 
+
         {/* Concluídos */}
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200 shadow-xs flex items-center justify-between">
           <div>
@@ -251,6 +344,7 @@ export function OrderHistoryView({
             <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
+
 
         {/* Cancelados */}
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-rose-200 shadow-xs flex items-center justify-between">
@@ -267,6 +361,7 @@ export function OrderHistoryView({
           </div>
         </div>
       </div>
+
 
       {/* Filter and Search Bar (M4.5.2) */}
       <div className="bg-white p-4 rounded-2xl border border-gulas-gray-200 shadow-xs space-y-3">
@@ -293,6 +388,7 @@ export function OrderHistoryView({
             )}
           </div>
 
+
           {/* 2. Select Status */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
             <select
@@ -305,6 +401,7 @@ export function OrderHistoryView({
               <option value="completed">Concluídos</option>
               <option value="cancelled">Cancelados</option>
             </select>
+
 
             {/* 3. Select Table (Dynamic) */}
             <select
@@ -321,6 +418,7 @@ export function OrderHistoryView({
               ))}
             </select>
 
+
             {/* 4. Select Period */}
             <select
               value={periodFilter}
@@ -333,6 +431,7 @@ export function OrderHistoryView({
               <option value="7days">Últimos 7 dias</option>
               <option value="30days">Últimos 30 dias</option>
             </select>
+
 
             {/* Reset Button (Only visible if active filters) */}
             {hasActiveFilters && (
@@ -348,6 +447,7 @@ export function OrderHistoryView({
           </div>
         </div>
 
+
         {/* Filter Results Summary */}
         <div className="flex items-center justify-between text-xs text-gulas-gray-500 pt-1">
           <span className="flex items-center gap-1 font-medium">
@@ -362,6 +462,7 @@ export function OrderHistoryView({
           )}
         </div>
       </div>
+
 
       {/* Main Content Area */}
       {error ? (
@@ -460,7 +561,7 @@ export function OrderHistoryView({
                     (acc, item) => acc + item.quantity,
                     0
                   );
-                  return (
+                   return (
                     <tr
                       key={order.id}
                       className="hover:bg-zinc-50/60 transition-colors"
@@ -486,15 +587,63 @@ export function OrderHistoryView({
                       <td className="px-5 py-4 font-black text-gulas-dark text-right">
                         {formatPrice(order.total)}
                       </td>
-                      <td className="px-5 py-4 text-center">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedOrder(order)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-gulas-dark text-xs font-bold transition-all cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Ver Detalhes</span>
-                        </button>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2 justify-center">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrder(order)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-gulas-dark text-xs font-bold transition-all cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Ver</span>
+                          </button>
+
+                          {order.status === 'completed' && (() => {
+                            const rs = reopenMap[order.id];
+                            if (rs?.confirming) {
+                              return (
+                                <div className="flex items-center gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                                  <span className="text-amber-900 font-medium">Reabrir #{order.orderNumber}?</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleReopenExecute(order)}
+                                    className="px-2 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold transition-all cursor-pointer"
+                                    aria-label={`Confirmar reabertura do pedido ${order.orderNumber}`}
+                                  >
+                                    Sim
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleReopenCancel(order.id)}
+                                    className="px-2 py-1 rounded bg-white border border-amber-200 text-amber-800 font-bold transition-all cursor-pointer"
+                                  >
+                                    Não
+                                  </button>
+                                </div>
+                              );
+                            }
+                            if (rs?.loading) {
+                              return <Loader2 className="w-4 h-4 animate-spin text-amber-600" />;
+                            }
+                            return (
+                              <div className="flex flex-col gap-0.5 items-start">
+                                <button
+                                  type="button"
+                                  onClick={() => handleReopenConfirm(order.id)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold transition-all cursor-pointer"
+                                  aria-label={`Desfazer conclusão do pedido ${order.orderNumber}`}
+                                >
+                                  <Undo2 className="w-3.5 h-3.5" />
+                                  <span>Desfazer</span>
+                                </button>
+                                {rs?.error && (
+                                  <span className="text-xs text-rose-700 font-medium">{rs.error}</span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -502,6 +651,7 @@ export function OrderHistoryView({
               </tbody>
             </table>
           </div>
+
 
           {/* Mobile Card List View */}
           <div className="md:hidden divide-y divide-gulas-gray-100">
@@ -530,7 +680,8 @@ export function OrderHistoryView({
                     <OrderStatusBadge status={order.status} size="sm" />
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
+
+                  <div className="flex items-center justify-between pt-1 gap-2 flex-wrap">
                     <span className="text-xs text-gulas-gray-500">
                       {totalItemsCount} artigo{totalItemsCount > 1 ? 's' : ''} &bull;{' '}
                       <strong className="text-sm font-black text-gulas-dark">
@@ -538,21 +689,67 @@ export function OrderHistoryView({
                       </strong>
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 text-white text-xs font-bold transition-all cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Detalhes</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrder(order)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 text-white text-xs font-bold transition-all cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Detalhes</span>
+                      </button>
+
+                      {order.status === 'completed' && (() => {
+                        const rs = reopenMap[order.id];
+                        if (rs?.confirming) {
+                          return (
+                            <div className="flex items-center gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs">
+                              <span className="text-amber-900 font-bold">Confirmar?</span>
+                              <button
+                                type="button"
+                                onClick={() => handleReopenExecute(order)}
+                                className="px-2 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold cursor-pointer"
+                                aria-label={`Confirmar reabertura pedido ${order.orderNumber}`}
+                              >
+                                Sim
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleReopenCancel(order.id)}
+                                className="px-2 py-1 rounded border border-amber-200 text-amber-800 font-bold cursor-pointer"
+                              >
+                                Não
+                              </button>
+                            </div>
+                          );
+                        }
+                        if (rs?.loading) {
+                          return <Loader2 className="w-4 h-4 animate-spin text-amber-600" />;
+                        }
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => handleReopenConfirm(order.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold transition-all cursor-pointer"
+                            aria-label={`Desfazer conclusão do pedido ${order.orderNumber}`}
+                          >
+                            <Undo2 className="w-3.5 h-3.5" />
+                            <span>Desfazer</span>
+                          </button>
+                        );
+                      })()}
+                    </div>
                   </div>
+                  {reopenMap[order.id]?.error && (
+                    <p className="text-xs text-rose-700 font-medium">{reopenMap[order.id].error}</p>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
       )}
+
 
       {/* Detail Modal */}
       <OrderHistoryDetailModal
