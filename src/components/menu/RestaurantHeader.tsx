@@ -1,16 +1,55 @@
 'use client';
 
-import React, { useSyncExternalStore } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import { Restaurant } from '@/types/restaurant';
 import { useCart } from '@/context/CartContext';
-import { ShoppingBag, UtensilsCrossed } from 'lucide-react';
+import { ShoppingBag, UtensilsCrossed, Sparkles } from 'lucide-react';
 
 interface RestaurantHeaderProps {
   restaurant: Restaurant;
 }
 
 const emptySubscribe = () => () => {};
+
+/**
+ * Componente de Logótipo Gastronómico com fallback elegante em SVG estilizado.
+ */
+const GulasLogo: React.FC = () => {
+  const [imgError, setImgError] = useState(false);
+
+  if (imgError) {
+    return (
+      <div className="flex items-center gap-2.5 select-none" aria-label="Gulas — Pizza, Burger & Coffee">
+        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#5E4939] border border-[#C09573]/40 flex items-center justify-center shadow-xs">
+          <span className="text-lg sm:text-xl font-black text-[#F5F4F1] font-mono leading-none">
+            G
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xl sm:text-2xl font-black tracking-tight text-[#35271F] uppercase leading-none">
+            GULAS
+          </span>
+          <span className="text-[9px] sm:text-[10px] font-extrabold text-[#C09573] tracking-widest uppercase mt-0.5">
+            Pizza &bull; Burger &bull; Coffee
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center h-10 sm:h-12">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/logo.svg"
+        alt="Gulas — Pizza, Burger & Coffee"
+        className="h-9 sm:h-11 w-auto object-contain transition-transform duration-200"
+        onError={() => setImgError(true)}
+      />
+    </div>
+  );
+};
 
 export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }) => {
   const { selectedTableNumber, isTableLocked, itemCount, setIsCartOpen } = useCart();
@@ -22,33 +61,27 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
 
   return (
     <header className="w-full bg-[#F5F4F1] pt-3 pb-2 border-b border-[#E5DED6]">
-      {/* Top Navbar */}
       <div className="max-w-4xl mx-auto px-4">
+        {/* Barra Superior de Navegação */}
         <div className="flex items-center justify-between h-12">
-          {/* Gulas Wordmark */}
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-[#35271F] uppercase leading-none">
-              GULAS
-            </span>
-            <span className="text-xs font-bold text-[#C09573] hidden sm:inline-block">
-              Pizza · Burger · Coffee
-            </span>
+          {/* Logótipo Oficial Gulas */}
+          <div className="flex items-center">
+            <GulasLogo />
           </div>
 
-          {/* Right Actions: Table & Cart Trigger */}
+          {/* Ações Rápidas: Indicador de Mesa e Carrinho */}
           <div className="flex items-center gap-2">
             {!hasMounted ? (
-              // Stable SSR shell matching layout dimensions without hydration mismatch
               <div
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EAE5DF] border border-[#E5DED6] text-xs font-bold text-transparent select-none animate-pulse"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EAE5DF] border border-[#E5DED6] text-xs font-bold text-transparent select-none animate-pulse"
                 aria-hidden="true"
               >
-                <UtensilsCrossed className="w-3 h-3 text-[#A89F95]" />
+                <UtensilsCrossed className="w-3.5 h-3.5 text-[#A89F95]" />
                 <span className="invisible">Mesa 00</span>
               </div>
             ) : selectedTableNumber ? (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shadow-xs">
-                <UtensilsCrossed className="w-3 h-3 text-[#C09573]" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shadow-xs">
+                <UtensilsCrossed className="w-3.5 h-3.5 text-[#C09573]" />
                 <span>Mesa {selectedTableNumber}</span>
                 {isTableLocked && (
                   <span className="text-[10px] text-[#C09573] font-bold">(QR)</span>
@@ -58,22 +91,22 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
               <button
                 type="button"
                 onClick={() => setIsCartOpen(true)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#EAE5DF] border border-[#C09573]/50 text-xs font-bold text-[#35271F] shadow-xs hover:bg-[#E5DED6] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#C09573]/50 text-xs font-bold text-[#35271F] shadow-xs hover:border-[#C09573] hover:bg-[#EAE5DF] transition-all cursor-pointer"
                 title="Escolher mesa onde está sentado"
               >
-                <UtensilsCrossed className="w-3 h-3 text-[#C09573]" />
+                <UtensilsCrossed className="w-3.5 h-3.5 text-[#C09573]" />
                 <span>Mesa?</span>
               </button>
             )}
 
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2 rounded-lg bg-[#FFFFFF] border border-[#E5DED6] text-[#35271F] hover:border-[#C09573]/60 transition-colors shadow-xs cursor-pointer"
+              className="relative p-2.5 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] text-[#35271F] hover:border-[#C09573]/70 hover:shadow-sm transition-all cursor-pointer"
               aria-label="Abrir pedido"
             >
               <ShoppingBag className="w-4 h-4 text-[#35271F]" />
               {hasMounted && itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#5E4939] text-[#F5F4F1] text-[10px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#5E4939] text-[#F5F4F1] text-[10px] font-black flex items-center justify-center shadow-xs">
                   {itemCount}
                 </span>
               )}
@@ -81,32 +114,37 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
           </div>
         </div>
 
-        {/* Hero Card Container */}
-        <div className="mt-2 relative rounded-2xl overflow-hidden bg-[#FFFFFF] border border-[#E5DED6] shadow-xs">
-          {/* Background image */}
+        {/* Cartão Herói Gastronómico */}
+        <div className="mt-3 relative rounded-2xl overflow-hidden bg-[#FFFFFF] border border-[#E5DED6] shadow-xs">
           <div className="relative h-36 sm:h-44 w-full">
             <Image
               src={restaurant.coverImageUrl}
-              alt="Gulas especialidades gastronómicas"
+              alt="Gulas especialidades gastronómicas artesanais"
               fill
               priority
               sizes="(max-width: 896px) 100vw, 896px"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#35271F]/80 via-[#35271F]/30 to-transparent" />
+            {/* Gradiente de proteção de contraste cinematográfico */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#35271F]/90 via-[#35271F]/40 to-transparent" />
 
-            {/* Bottom Hero Info */}
-            <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-2">
+            {/* Conteúdo do Rodapé do Herói */}
+            <div className="absolute bottom-3.5 left-4 right-4 flex items-end justify-between gap-3">
               <div>
-                <p className="text-[11px] uppercase tracking-widest text-[#C09573] font-bold mb-0.5 drop-shadow-xs">
-                  Vila das Aves
-                </p>
-                <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-xs">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#35271F]/60 backdrop-blur-xs border border-[#C09573]/40 text-[10px] uppercase tracking-wider font-extrabold text-[#C09573] mb-1">
+                  <Sparkles className="w-2.5 h-2.5 text-[#C09573]" />
+                  <span>Vila das Aves</span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-xs">
                   Escolhe o que te apetece.
                 </h1>
+                <p className="text-xs text-[#EAE5DF] font-medium hidden sm:block mt-0.5">
+                  Pizzas de fermentação lenta, caracóizzz artesanais &amp; burgers
+                </p>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFFFFF] border border-[#E5DED6] text-[11px] font-bold text-[#35271F] shrink-0 shadow-xs">
+              {/* Selo Minimalista "Aberto" */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shrink-0 shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#C09573] animate-pulse" />
                 <span>Aberto</span>
               </div>
