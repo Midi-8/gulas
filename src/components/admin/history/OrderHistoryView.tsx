@@ -337,17 +337,17 @@ export function OrderHistoryView({
 
 
         {/* Concluídos */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gulas-gray-200 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-zinc-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-500">
               Concluídos com Sucesso
             </span>
-            <p className="text-2xl sm:text-3xl font-black text-zinc-900 mt-0.5">
+            <p className="text-2xl sm:text-3xl font-black text-[#35271F] mt-0.5">
               {completedCount}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-700">
-            <CheckCircle2 className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-[#EAE5DF] flex items-center justify-center text-[#5E4939]">
+            <CheckCircle2 className="w-5 h-5 text-[#C09573]" />
           </div>
         </div>
 
@@ -380,7 +380,7 @@ export function OrderHistoryView({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Pesquisar pedido (ex: 8)..."
-              className="w-full pl-9 pr-9 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm text-gulas-dark placeholder-gulas-gray-400 focus:outline-none focus:border-zinc-900 focus:bg-white transition-all"
+              className="w-full pl-9 pr-9 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm text-gulas-dark placeholder-gulas-gray-400 focus:outline-none focus:border-[#C09573] focus:bg-white transition-all"
             />
             {searchQuery && (
               <button
@@ -400,7 +400,7 @@ export function OrderHistoryView({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusOption)}
-              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-zinc-900 focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
+              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-[#C09573] focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
               aria-label="Filtrar por estado"
             >
               <option value="all">Todos os Estados</option>
@@ -413,7 +413,7 @@ export function OrderHistoryView({
             <select
               value={tableFilter}
               onChange={(e) => setTableFilter(e.target.value)}
-              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-zinc-900 focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
+              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-[#C09573] focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
               aria-label="Filtrar por mesa"
             >
               <option value="all">Todas as Mesas</option>
@@ -429,7 +429,7 @@ export function OrderHistoryView({
             <select
               value={periodFilter}
               onChange={(e) => setPeriodFilter(e.target.value as PeriodOption)}
-              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-zinc-900 focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
+              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-[#C09573] focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
               aria-label="Filtrar por período"
             >
               <option value="all">Todos os Períodos</option>
@@ -503,7 +503,7 @@ export function OrderHistoryView({
           <button
             type="button"
             onClick={handleManualRefresh}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black text-white text-xs font-bold transition-all cursor-pointer"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs font-bold transition-all cursor-pointer shadow-xs"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Atualizar Lista</span>
@@ -512,8 +512,8 @@ export function OrderHistoryView({
       ) : filteredOrders.length === 0 ? (
         /* Empty State for Filters */
         <div className="bg-white border border-gulas-gray-200 rounded-2xl p-10 sm:p-12 text-center max-w-lg mx-auto shadow-xs space-y-3">
-          <div className="w-14 h-14 bg-zinc-100 text-zinc-500 rounded-2xl flex items-center justify-center mx-auto">
-            <Search className="w-6 h-6 text-zinc-400" />
+          <div className="w-14 h-14 bg-[#EAE5DF] text-[#5E4939] rounded-2xl flex items-center justify-center mx-auto border border-[#E5DED6]">
+            <Search className="w-6 h-6 text-[#C09573]" />
           </div>
           <h3 className="text-base sm:text-lg font-bold text-gulas-dark">
             Nenhum pedido corresponde aos filtros
@@ -524,7 +524,7 @@ export function OrderHistoryView({
           <button
             type="button"
             onClick={handleClearFilters}
-            className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black text-white text-xs font-bold transition-all cursor-pointer"
+            className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs font-bold transition-all cursor-pointer shadow-xs"
           >
             <X className="w-3.5 h-3.5" />
             <span>Limpar Todos os Filtros</span>
@@ -699,9 +699,9 @@ export function OrderHistoryView({
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(order)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 text-white text-xs font-bold transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs font-bold transition-all cursor-pointer shadow-xs"
                       >
-                        <Eye className="w-3.5 h-3.5" />
+                        <Eye className="w-3.5 h-3.5 text-[#C09573]" />
                         <span>Detalhes</span>
                       </button>
 

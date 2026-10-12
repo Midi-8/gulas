@@ -1,7 +1,7 @@
 import React from 'react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Sparkles, Leaf } from 'lucide-react';
+import { Sparkles, Leaf, Flame } from 'lucide-react';
 import { ProductBadge } from '@/types/restaurant';
 
 interface BadgeProps {
@@ -69,7 +69,7 @@ export const Badge: React.FC<BadgeProps> = ({
   const renderDefaultIcon = () => {
     switch (effectiveVariant) {
       case 'picante':
-        return <span className="text-[10px] leading-none" aria-hidden="true">🌶️</span>;
+        return <Flame className="w-2.5 h-2.5 text-red-600" />;
       case 'vegetariano':
         return <Leaf className="w-2.5 h-2.5 text-emerald-700" />;
       case 'vegan':

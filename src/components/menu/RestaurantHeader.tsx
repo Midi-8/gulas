@@ -82,7 +82,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
         </div>
 
         {/* Hero Card Container */}
-        <div className="mt-2 relative rounded-2xl overflow-hidden bg-[#0C0F14] text-[#F5F4F1] shadow-sm">
+        <div className="mt-2 relative rounded-2xl overflow-hidden bg-[#FFFFFF] border border-[#E5DED6] shadow-xs">
           {/* Background image */}
           <div className="relative h-36 sm:h-44 w-full">
             <Image
@@ -91,22 +91,22 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
               fill
               priority
               sizes="(max-width: 896px) 100vw, 896px"
-              className="object-cover opacity-75 mix-blend-overlay"
+              className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0C0F14] via-[#0C0F14]/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#35271F]/80 via-[#35271F]/30 to-transparent" />
 
             {/* Bottom Hero Info */}
             <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-2">
               <div>
-                <p className="text-[11px] uppercase tracking-widest text-[#C09573] font-bold mb-0.5">
+                <p className="text-[11px] uppercase tracking-widest text-[#C09573] font-bold mb-0.5 drop-shadow-xs">
                   Vila das Aves
                 </p>
-                <h1 className="text-lg sm:text-2xl font-black text-[#F5F4F1] tracking-tight leading-tight">
+                <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-xs">
                   Escolhe o que te apetece.
                 </h1>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0C0F14]/70 backdrop-blur-md border border-[#E5DED6]/20 text-[11px] font-semibold text-[#F5F4F1] shrink-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFFFFF] border border-[#E5DED6] text-[11px] font-bold text-[#35271F] shrink-0 shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#C09573] animate-pulse" />
                 <span>Aberto</span>
               </div>

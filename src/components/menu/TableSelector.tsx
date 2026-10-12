@@ -16,30 +16,30 @@ export const TableSelectorModal: React.FC<TableSelectorModalProps> = ({ isOpen, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#35271F]/40 animate-in fade-in duration-200">
       <div
-        className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl animate-in zoom-in-95 duration-200"
+        className="w-full max-w-sm bg-[#FFFFFF] border border-[#E5DED6] rounded-2xl p-5 shadow-xl animate-in zoom-in-95 duration-200 text-[#35271F]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-800">
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#E5DED6]">
           <div className="flex items-center gap-2">
-            <UtensilsCrossed className="w-4 h-4 text-amber-400" />
-            <h3 className="text-sm font-bold text-white">Selecionar Mesa</h3>
+            <UtensilsCrossed className="w-4 h-4 text-[#C09573]" />
+            <h3 className="text-sm font-bold text-[#35271F]">Selecionar Mesa</h3>
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center"
+            className="w-7 h-7 rounded-full bg-[#EAE5DF] text-[#4C453F] hover:bg-[#E5DED6] flex items-center justify-center cursor-pointer transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {isTableLocked ? (
-          <p className="text-xs text-amber-400/90 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 mb-3">
+          <p className="text-xs text-[#5E4939] bg-[#EAE5DF] p-3 rounded-xl border border-[#E5DED6] mb-3 font-medium">
             A mesa foi definida automaticamente pelo QR Code que leu na mesa.
           </p>
         ) : (
-          <p className="text-xs text-zinc-400 mb-3">
+          <p className="text-xs text-[#4C453F] mb-3">
             Escolha a mesa onde está sentado para a nossa equipa lhe entregar o pedido:
           </p>
         )}
@@ -55,14 +55,14 @@ export const TableSelectorModal: React.FC<TableSelectorModalProps> = ({ isOpen, 
                   setSelectedTableNumber(t.number);
                   onClose();
                 }}
-                className={`p-3 rounded-xl text-left border transition-all text-xs font-medium flex items-center justify-between ${
+                className={`p-3 rounded-xl text-left border transition-all text-xs font-medium flex items-center justify-between cursor-pointer ${
                   isSelected
-                    ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
-                    : 'bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                    ? 'bg-[#5E4939] border-[#5E4939] text-[#F5F4F1] font-bold shadow-xs'
+                    : 'bg-[#F5F4F1] border-[#E5DED6] text-[#35271F] hover:bg-[#EAE5DF]'
                 }`}
               >
                 <span>{t.name}</span>
-                {isSelected && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                {isSelected && <Check className="w-3.5 h-3.5 text-[#C09573]" />}
               </button>
             );
           })}

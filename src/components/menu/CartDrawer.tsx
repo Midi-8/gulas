@@ -58,9 +58,9 @@ export const CartDrawer: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[#35271F]/40 animate-in fade-in duration-200">
       <div
-        className="w-full max-w-md bg-[#FFFFFF] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-250 text-[#35271F]"
+        className="w-full max-w-md bg-[#FFFFFF] h-full flex flex-col shadow-xl animate-in slide-in-from-right duration-250 text-[#35271F]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -77,14 +77,14 @@ export const CartDrawer: React.FC = () => {
             {items.length > 0 && (
               <button
                 onClick={clearCart}
-                className="text-xs text-zinc-400 hover:text-red-600 px-2 py-1 rounded transition-colors cursor-pointer"
+                className="text-xs text-[#A89F95] hover:text-rose-600 px-2 py-1 rounded transition-colors cursor-pointer"
               >
                 Limpar
               </button>
             )}
             <button
               onClick={() => setIsCartOpen(false)}
-              className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 flex items-center justify-center transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-[#EAE5DF] text-[#4C453F] hover:bg-[#E5DED6] flex items-center justify-center transition-colors cursor-pointer"
               aria-label="Fechar carrinho"
             >
               <X className="w-4 h-4" />
@@ -95,34 +95,34 @@ export const CartDrawer: React.FC = () => {
         {/* Body */}
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-            <div className="w-14 h-14 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
+            <div className="w-14 h-14 rounded-full bg-[#EAE5DF] flex items-center justify-center text-[#A89F95] mb-3 border border-[#E5DED6]">
               <Utensils className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-bold text-[#141619] mb-1">O teu pedido está vazio</h3>
-            <p className="text-xs text-zinc-500 max-w-xs leading-relaxed mb-5">
+            <h3 className="text-sm font-bold text-[#35271F] mb-1">O teu pedido está vazio</h3>
+            <p className="text-xs text-[#4C453F] max-w-xs leading-relaxed mb-5">
               Escolhe os teus caracóizzz, burgers ou pizzas no menu para adicionar.
             </p>
             <button
               onClick={() => setIsCartOpen(false)}
-              className="px-4 py-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs font-bold transition-all cursor-pointer shadow-xs"
             >
               Ver Menu
             </button>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#FAF8F5]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#F5F4F1]">
             {/* Table Selection */}
-            <div className={`p-3 rounded-xl bg-white border space-y-1.5 transition-all ${
+            <div className={`p-3 rounded-xl bg-[#FFFFFF] border space-y-1.5 transition-all ${
               !selectedTableNumber
-                ? 'border-amber-400 bg-amber-50/20 ring-2 ring-amber-200/60'
-                : 'border-zinc-200/80'
+                ? 'border-[#C09573] ring-1 ring-[#C09573]/30'
+                : 'border-[#E5DED6]'
             }`}>
-              <label htmlFor="cart-table-select" className="text-xs font-bold text-[#141619] flex items-center justify-between">
+              <label htmlFor="cart-table-select" className="text-xs font-bold text-[#35271F] flex items-center justify-between">
                 <span>Mesa de Entrega:</span>
                 {isTableLocked ? (
-                  <span className="text-[10px] text-[#15803D] font-bold">Bloqueada por QR</span>
+                  <span className="text-[10px] text-[#C09573] font-bold">Bloqueada por QR</span>
                 ) : !selectedTableNumber ? (
-                  <span className="text-[10px] text-amber-700 font-bold">Obrigatório</span>
+                  <span className="text-[10px] text-[#C09573] font-bold">Obrigatório</span>
                 ) : null}
               </label>
               <select
@@ -134,8 +134,8 @@ export const CartDrawer: React.FC = () => {
                   setSelectedTableNumber(val);
                   if (val) setErrorMessage(null);
                 }}
-                className={`w-full px-3 py-1.5 rounded-lg border text-xs font-semibold text-[#141619] focus:outline-none focus:border-[#15803D] disabled:opacity-75 cursor-pointer ${
-                  !selectedTableNumber ? 'bg-amber-50/50 border-amber-300' : 'bg-zinc-50 border-zinc-200'
+                className={`w-full px-3 py-1.5 rounded-lg border text-xs font-semibold text-[#35271F] focus:outline-none focus:border-[#C09573] disabled:opacity-75 cursor-pointer ${
+                  !selectedTableNumber ? 'bg-[#FFFFFF] border-[#C09573]/50' : 'bg-[#F5F4F1] border-[#E5DED6]'
                 }`}
               >
                 <option value="">-- Escolhe a tua mesa --</option>
@@ -271,14 +271,14 @@ export const CartDrawer: React.FC = () => {
               </div>
               <div className="flex justify-between text-base font-black text-[#35271F] pt-1.5 border-t border-[#E5DED6]">
                 <span>Total</span>
-                <span className="text-[#5E4939]">{formatCurrency(total)}</span>
+                <span className="text-[#C09573]">{formatCurrency(total)}</span>
               </div>
             </div>
 
             <button
               onClick={handleConfirmOrder}
               disabled={isSubmitting}
-              className="w-full py-3 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] disabled:bg-[#EAE5DF] text-[#F5F4F1] disabled:text-[#A89F95] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-[#5E4939]/20 active:scale-[0.99] cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] disabled:bg-[#EAE5DF] text-[#F5F4F1] disabled:text-[#A89F95] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99] cursor-pointer"
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">

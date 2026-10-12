@@ -274,35 +274,31 @@ export function AnalyticsDashboardView({
 
   return (
     <div className="space-y-8 pb-16 text-[#35271F] font-sans">
-      {/* 1. CABEÇALHO EXECUTIVO (Preto Carvão #0C0F14 com Destaques Caramelo #C09573) */}
-      <div className="relative rounded-3xl bg-[#0C0F14] text-[#F5F4F1] border border-[#E5DED6]/20 p-6 sm:p-8 shadow-xl overflow-hidden">
-        {/* Ambient Warm Directional Glows */}
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#C09573]/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#5E4939]/20 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      {/* 1. CABEÇALHO ANALYTICS (Minimalista, Flat & Sólido em #FFFFFF) */}
+      <div className="rounded-2xl bg-[#FFFFFF] text-[#35271F] border border-[#E5DED6] p-6 sm:p-7 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2.5 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wide bg-[#C09573]/20 text-[#C09573] border border-[#C09573]/40">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wide bg-[#EAE5DF] text-[#5E4939] border border-[#E5DED6]">
                 <span className="w-2 h-2 rounded-full bg-[#C09573] animate-pulse" />
                 LIVE SYNC
               </span>
-              <span className="text-xs font-mono text-[#EAE5DF]/70">
+              <span className="text-xs font-mono text-[#78716C]">
                 Centro de Comando &bull; {restaurantName}
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#F5F4F1]">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#35271F]">
               Inteligência de Negócio &amp; BI
             </h1>
-            <p className="text-xs sm:text-sm text-[#EAE5DF]/80 mt-1 max-w-xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#4C453F] mt-1 max-w-xl leading-relaxed">
               Métricas de rentabilidade BCG, análise de cestas de compra, pressão operacional de cozinha e simulação preditiva.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Period Selector Toggle */}
-            <div className="inline-flex p-1 bg-[#1A1F26] border border-white/10 rounded-2xl shadow-inner">
+            <div className="inline-flex p-1 bg-[#EAE5DF] border border-[#E5DED6] rounded-xl">
               {(['today', '7days', '30days'] as AnalyticsPeriod[]).map((p) => {
                 const isActive = period === p;
                 return (
@@ -310,10 +306,10 @@ export function AnalyticsDashboardView({
                     key={p}
                     onClick={() => handlePeriodChange(p)}
                     disabled={isPending}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all ${
                       isActive
-                        ? 'bg-[#5E4939] text-[#F5F4F1] shadow-sm border border-[#C09573]/40'
-                        : 'text-[#EAE5DF]/70 hover:text-white'
+                        ? 'bg-[#FFFFFF] text-[#35271F] shadow-xs'
+                        : 'text-[#4C453F] hover:text-[#35271F]'
                     } disabled:opacity-50 cursor-pointer`}
                   >
                     {PERIOD_LABELS[p]}
@@ -326,7 +322,7 @@ export function AnalyticsDashboardView({
             <button
               onClick={handleExportCsv}
               disabled={isExporting || isPending}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#C09573] hover:bg-[#A77B59] text-[#0C0F14] text-xs sm:text-sm font-bold shadow-md shadow-[#C09573]/20 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
               <span>{isExporting ? 'A Exportar...' : 'Exportar Relatório (CSV)'}</span>
@@ -342,8 +338,8 @@ export function AnalyticsDashboardView({
         )}
 
         {errorMessage && (
-          <div className="mt-4 p-3 bg-rose-500/15 border border-rose-500/30 text-rose-200 text-xs rounded-xl flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-rose-400 flex-shrink-0" />
+          <div className="mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-rose-600 flex-shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -352,7 +348,7 @@ export function AnalyticsDashboardView({
       {/* 2. FAIXA DE KPIS COM SPARKLINES (Cartões em #FFFFFF, Bordas #E5DED6, Destaque #C09573) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* KPI 1: Faturação Total */}
-        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
+        <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
               Faturação Total
@@ -380,7 +376,7 @@ export function AnalyticsDashboardView({
         </div>
 
         {/* KPI 2: Ticket Médio */}
-        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
+        <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
               Ticket Médio
@@ -408,7 +404,7 @@ export function AnalyticsDashboardView({
         </div>
 
         {/* KPI 3: Cumprimento SLA (<20m) */}
-        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
+        <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
               Cumprimento SLA
@@ -447,7 +443,7 @@ export function AnalyticsDashboardView({
         </div>
 
         {/* KPI 4: Ritmo de Pedidos */}
-        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
+        <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
               Ritmo de Pedidos
@@ -472,7 +468,7 @@ export function AnalyticsDashboardView({
         </div>
 
         {/* KPI 5: Projeção Live */}
-        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
+        <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
               Projeção Live
@@ -497,7 +493,7 @@ export function AnalyticsDashboardView({
       </div>
 
       {/* 3. HISTOGRAMA DE FLUXO HORÁRIO EXPANDIDO (Altura h-80, Min-Width 800px, Tons Gulas) */}
-      <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-4">
+      <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E5DED6]">
           <div>
             <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider mb-1">
@@ -539,10 +535,10 @@ export function AnalyticsDashboardView({
                   className="flex-1 flex flex-col items-center h-full justify-end group relative"
                 >
                   {/* Floating Hover Tooltip */}
-                  <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0C0F14] text-[#F5F4F1] text-xs rounded-xl py-2 px-3 pointer-events-none whitespace-nowrap shadow-xl z-30 border border-[#C09573]/40">
+                  <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity bg-[#35271F] text-[#F5F4F1] text-xs rounded-xl py-2 px-3 pointer-events-none whitespace-nowrap shadow-xl z-30 border border-[#E5DED6]/30">
                     <div className="font-bold text-[#C09573]">{h.hourLabel}</div>
                     <div>{h.orderCount} pedidos • {h.totalRevenue.toFixed(2)}€</div>
-                    <div className="text-amber-300">Tempo médio: {h.avgTurnaroundMinutes} min</div>
+                    <div className="text-amber-200">Tempo médio: {h.avgTurnaroundMinutes} min</div>
                   </div>
 
                   {/* Persistent Numeric Label on top of active bars */}
@@ -590,7 +586,7 @@ export function AnalyticsDashboardView({
       {/* 4. SECÇÃO: ENGENHARIA DE MENU & CROSS-SELLING */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Coluna 1 & 2: Matriz BCG Interativa */}
-        <div className="lg:col-span-2 rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="lg:col-span-2 rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider mb-1">
@@ -725,7 +721,7 @@ export function AnalyticsDashboardView({
         </div>
 
         {/* Coluna 3: Market Basket / Top Combos de Cross-Selling */}
-        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
+        <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider">
@@ -798,7 +794,7 @@ export function AnalyticsDashboardView({
       {/* 5. SECÇÃO: MINERAÇÃO DE NOTAS & SIMULADOR WHAT-IF */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Painel Semântico de Observações (NLP em Português) */}
-        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
+        <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider">
@@ -909,7 +905,7 @@ export function AnalyticsDashboardView({
         </div>
 
         {/* Simulador Dinâmico "What-If" */}
-        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider mb-1">
@@ -1061,7 +1057,7 @@ export function AnalyticsDashboardView({
       </div>
 
       {/* 6. ANÁLISE DE MESAS & ESPAÇO */}
-      <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-4">
+      <div className="rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-[#E5DED6]">
           <div>
             <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider mb-1">

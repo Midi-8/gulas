@@ -40,8 +40,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
     <div
       onClick={() => onOpenDetails(product)}
       className={clsx(
-        'group relative flex flex-col justify-between rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-3.5 sm:p-4 transition-all duration-200 hover:border-[#C09573]/60 hover:shadow-md hover:shadow-[#5E4939]/5 cursor-pointer select-none active:scale-[0.99]',
-        !product.available && 'opacity-60 bg-[#EAE5DF]/40'
+        'group relative flex flex-col justify-between rounded-xl sm:rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] p-3.5 sm:p-4 transition-all duration-200 hover:border-[#C09573]/60 shadow-xs cursor-pointer select-none active:scale-[0.99]',
+        !product.available && 'opacity-60 bg-[#F5F4F1]'
       )}
     >
       <div className="flex gap-3 sm:gap-4 items-start">
@@ -59,7 +59,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
                 </span>
               )}
               {!product.available && (
-                <span className="text-[10px] text-amber-950 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full font-bold tracking-tight">
+                <span className="text-[10px] text-[#5E4939] bg-[#EAE5DF] border border-[#E5DED6] px-2 py-0.5 rounded-full font-bold tracking-tight">
                   Temporariamente Esgotado
                 </span>
               )}
@@ -99,9 +99,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
       </div>
 
       {/* Footer: Price and Add button */}
-      <div className="mt-3 pt-2.5 border-t border-[#E5DED6]/80 flex items-center justify-between">
+      <div className="mt-3 pt-2.5 border-t border-[#E5DED6] flex items-center justify-between">
         <div className="flex items-baseline gap-1">
-          <span className="text-sm sm:text-base font-black text-[#35271F] tracking-tight">
+          <span className="text-sm sm:text-base font-black text-[#C09573] tracking-tight">
             {formatCurrency(product.price)}
           </span>
         </div>

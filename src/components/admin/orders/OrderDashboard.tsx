@@ -480,7 +480,7 @@ export function OrderDashboard({
               type="button"
               id="kds-alerts-activate-btn"
               onClick={activateAlerts}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 sm:text-sm"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#5E4939] px-4 py-2.5 text-xs font-bold text-[#F5F4F1] shadow-xs transition-all hover:bg-[#453426] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] sm:text-sm"
               aria-label="Ativar alertas sonoros e de vibração para pedidos novos"
             >
               <Bell className="h-4 w-4" />
@@ -491,11 +491,11 @@ export function OrderDashboard({
               type="button"
               id="kds-alerts-deactivate-btn"
               onClick={deactivateAlerts}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-800 sm:text-sm"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#EAE5DF] border border-[#C09573] px-4 py-2.5 text-xs font-bold text-[#5E4939] shadow-xs transition-all hover:bg-[#E5DED6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C09573] sm:text-sm"
               aria-label="Alertas ativos. Clique para desativar"
               aria-pressed
             >
-              <BellOff className="h-4 w-4" />
+              <BellOff className="h-4 w-4 text-[#C09573]" />
               <span>Alertas ativos</span>
             </button>
           )}
@@ -504,12 +504,13 @@ export function OrderDashboard({
             type="button"
             disabled={isLoading || isRefreshing}
             onClick={handleManualRefresh}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-gulas-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gulas-dark shadow-xs transition-all hover:bg-gulas-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#E5DED6] bg-[#FFFFFF] px-4 py-2.5 text-xs font-bold text-[#35271F] shadow-xs transition-all hover:bg-[#EAE5DF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
             aria-label="Atualizar lista de pedidos"
           >
             <RotateCcw
-              className={`h-4 w-4 text-gulas-gray-600 ${isLoading || isRefreshing ? 'animate-spin' : ''
-                }`}
+              className={`h-4 w-4 text-[#78716C] ${
+                isLoading || isRefreshing ? 'animate-spin' : ''
+              }`}
             />
             <span>Atualizar</span>
           </button>
@@ -517,69 +518,69 @@ export function OrderDashboard({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <div className="flex items-center justify-between rounded-2xl border border-gulas-gray-200 bg-white p-4 shadow-xs sm:p-5">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               Total Ativos
             </span>
-            <p className="mt-0.5 text-2xl font-black text-gulas-dark sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
               {totalActiveCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
             <UtensilsCrossed className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-amber-200/80 bg-white p-4 shadow-xs sm:p-5">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               A Aguardar
             </span>
-            <p className="mt-0.5 text-2xl font-black text-amber-900 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
               {pendingCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#C09573]">
             <Clock className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-orange-200 bg-white p-4 shadow-xs sm:p-5">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-orange-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               Em Preparação
             </span>
-            <p className="mt-0.5 text-2xl font-black text-orange-900 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
               {preparingCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-            <Flame className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
+            <Flame className="h-5 w-5 text-[#C09573]" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-white p-4 shadow-xs sm:p-5">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               Prontos p/ Entrega
             </span>
-            <p className="mt-0.5 text-2xl font-black text-emerald-900 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black text-[#5E4939] sm:text-3xl">
               {readyCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-            <BellRing className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
+            <BellRing className="h-5 w-5 text-[#C09573]" />
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-xs font-bold uppercase tracking-wider text-gulas-gray-500">
+        <span className="mr-1 text-xs font-bold uppercase tracking-wider text-[#78716C]">
           Secção:
         </span>
 
@@ -588,10 +589,11 @@ export function OrderDashboard({
             key={key}
             type="button"
             onClick={() => setSectionFilter(key)}
-            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 sm:text-sm ${sectionFilter === key
-                ? 'border-zinc-900 bg-zinc-900 text-white'
-                : 'border-gulas-gray-200 bg-white text-gulas-dark hover:bg-gulas-gray-100'
-              }`}
+            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] sm:text-sm ${
+              sectionFilter === key
+                ? 'border-[#5E4939] bg-[#5E4939] text-[#F5F4F1] shadow-xs'
+                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+            }`}
           >
             {icon}
             <span>{label}</span>
@@ -682,26 +684,26 @@ export function OrderDashboard({
         <aside
           role="status"
           aria-label="Aviso de pedido concluído com opção de desfazer"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl bg-zinc-950 px-4 py-3 text-white shadow-2xl ring-1 ring-white/10 animate-in slide-in-from-bottom-5 fade-in duration-200"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl bg-[#35271F] px-4 py-3 text-[#F5F4F1] shadow-xl border border-[#E5DED6]/30 animate-in slide-in-from-bottom-5 fade-in duration-200"
         >
           <div className="flex items-center gap-2 text-xs sm:text-sm">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            <span className="font-semibold text-zinc-200">
+            <span className="h-2 w-2 rounded-full bg-[#C09573]" />
+            <span className="font-semibold text-[#EAE5DF]">
               Pedido <strong className="text-white">#{undoOrder.orderNumber}</strong> (Mesa {undoOrder.tableNumber}) concluído.
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 border-l border-zinc-800 pl-2">
+          <div className="flex items-center gap-1.5 border-l border-[#E5DED6]/30 pl-2">
             <button
               type="button"
               disabled={isUndoing}
               onClick={handleUndo}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-zinc-950 transition-all hover:bg-zinc-200 active:scale-95 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#FFFFFF] px-3 py-1.5 text-xs font-bold text-[#35271F] transition-all hover:bg-[#EAE5DF] active:scale-95 disabled:opacity-50 shadow-2xs"
             >
               {isUndoing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#35271F]" />
               ) : (
-                <Undo2 className="h-3.5 w-3.5 text-zinc-900" />
+                <Undo2 className="h-3.5 w-3.5 text-[#5E4939]" />
               )}
               <span>Desfazer</span>
             </button>

@@ -202,7 +202,7 @@ export function QuickStockDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[#35271F]/40 animate-in fade-in duration-200">
       {/* Click outside backdrop */}
       <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
 
@@ -211,7 +211,7 @@ export function QuickStockDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="stock-drawer-title"
-        className="relative z-10 w-full max-w-lg bg-[#FFFFFF] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-250 border-l border-[#E5DED6] text-[#35271F]"
+        className="relative z-10 w-full max-w-lg bg-[#FFFFFF] h-full flex flex-col shadow-xl animate-in slide-in-from-right duration-250 border-l border-[#E5DED6] text-[#35271F]"
       >
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[#E5DED6] bg-[#FFFFFF] flex items-center justify-between">
