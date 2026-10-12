@@ -13,25 +13,62 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-export const ActiveOrderBanner: React.FC = () => {
-  const { activeOrder, status, completionNotice, openDetailModal } =
-    useActiveOrderTracker();
-  const { itemCount } = useCart();
+const subscribeStorage = (callback: () => void) => {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('storage', callback);
+  window.addEventListener('gulas_active_order_created', callback);
+  window.addEventListener('gulas_order_status_update', callback);
+  return () => {
+    window.removeEventListener('storage', callback);
+    window.removeEventListener('gulas_active_order_created', callback);
+    window.removeEventListener('gulas_order_status_update', callback);
+  };
+};
 
-  // Oculta se não houver pedido ativo nem mensagem de conclusão de 8 segundos
-  if (!activeOrder && !completionNotice) {
+const getStoredOrderId = () => {
+  try {
+    return localStorage.getItem('gulas_active_order_id');
+  } catch {
+    return null;
+  }
+};
+
+const getServerSnapshot = () => null;
+
+export const ActiveOrderBanner: React.FC = () => {
+  const {
+    activeOrderId,
+    activeOrder,
+    status,
+    completionNotice,
+    openDetailModal,
+  } = useActiveOrderTracker();
+  const { itemCount, selectedTableNumber } = useCart();
+
+  // Fallback rápido: sincroniza diretamente com o localStorage via useSyncExternalStore
+  const storedOrderId = React.useSyncExternalStore(
+    subscribeStorage,
+    getStoredOrderId,
+    getServerSnapshot
+  );
+
+  const effectiveOrderId = activeOrderId || storedOrderId;
+
+  // Oculta APENAS se não houver pedido ativo (nem em fallback) e nenhuma mensagem de conclusão
+  if (!effectiveOrderId && !completionNotice) {
     return null;
   }
 
-  // Se estiver a exibir a mensagem de conclusão após finalização
+  // Se estiver a exibir a mensagem de conclusão após finalização (ex.: 8 segundos)
   if (completionNotice) {
     return (
-      <div
-        className={`fixed inset-x-0 z-40 px-4 flex justify-center pointer-events-none transition-all duration-300 animate-in slide-in-from-bottom-3 ${
+      <aside
+        aria-label="Aviso de conclusão de pedido"
+        className={`fixed left-1/2 -translate-x-1/2 z-[60] w-[92%] max-w-md pointer-events-none transition-all duration-300 animate-in slide-in-from-bottom-3 ${
           itemCount > 0 ? 'bottom-20' : 'bottom-4'
         }`}
       >
-        <div className="w-full max-w-md pointer-events-auto">
+        <div className="w-full pointer-events-auto">
           <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] shadow-sm text-[#35271F]">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-7 h-7 rounded-full bg-[#EAE5DF] flex items-center justify-center shrink-0 border border-[#E5DED6]">
@@ -49,16 +86,14 @@ export const ActiveOrderBanner: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
+      </aside>
     );
   }
 
-  if (!activeOrder) return null;
-
-  const currentStatus = status || activeOrder.status;
+  const currentStatus = status || activeOrder?.status || 'pending';
 
   // Configurações contextuais por estado
-  let statusText = 'A aguardar confirmação';
+  let statusText = 'Pedido registado na cozinha';
   let StatusIcon = Clock;
   let isPulsing = true;
 
@@ -92,19 +127,29 @@ export const ActiveOrderBanner: React.FC = () => {
   }
 
   const tableLabel =
-    activeOrder.tableName || `Mesa ${activeOrder.tableNumber}`;
+    activeOrder?.tableName ||
+    (activeOrder?.tableNumber ? `Mesa ${activeOrder.tableNumber}` : '') ||
+    (selectedTableNumber ? `Mesa ${selectedTableNumber}` : 'O teu pedido');
+
+  const orderNumberDisplay =
+    activeOrder?.orderNumber !== undefined
+      ? `Pedido #${activeOrder.orderNumber}`
+      : effectiveOrderId
+      ? `Pedido #${effectiveOrderId.replace('ord_', '').slice(0, 6)}`
+      : null;
 
   return (
-    <div
-      className={`fixed inset-x-0 z-40 px-4 flex justify-center pointer-events-none transition-all duration-300 animate-in slide-in-from-bottom-3 ${
+    <aside
+      aria-label="Acompanhamento do pedido ativo"
+      className={`fixed left-1/2 -translate-x-1/2 z-[60] w-[92%] max-w-md pointer-events-none transition-all duration-300 animate-in slide-in-from-bottom-3 ${
         itemCount > 0 ? 'bottom-20' : 'bottom-4'
       }`}
     >
-      <div className="w-full max-w-md pointer-events-auto">
+      <div className="w-full pointer-events-auto">
         <button
           onClick={openDetailModal}
           className="w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[#FFFFFF] hover:bg-[#FAF8F5] border border-[#E5DED6] shadow-sm text-[#35271F] transition-all cursor-pointer group active:scale-[0.99]"
-          aria-label="Acompanhar estado do pedido"
+          aria-label="Acompanhar estado do pedido em tempo real"
         >
           {/* Lado Esquerdo: Ícone + Ponto Indicador Caramelo */}
           <div className="flex items-center gap-2.5 min-w-0">
@@ -126,9 +171,9 @@ export const ActiveOrderBanner: React.FC = () => {
               <p className="text-xs font-semibold text-[#35271F] truncate">
                 <span className="font-bold">{tableLabel}</span> • {statusText}
               </p>
-              {activeOrder.orderNumber && (
+              {orderNumberDisplay && (
                 <p className="text-[10px] text-[#78716C]">
-                  Pedido #{activeOrder.orderNumber}
+                  {orderNumberDisplay}
                 </p>
               )}
             </div>
@@ -143,6 +188,6 @@ export const ActiveOrderBanner: React.FC = () => {
           </div>
         </button>
       </div>
-    </div>
+    </aside>
   );
 };

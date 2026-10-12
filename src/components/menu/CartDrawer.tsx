@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
+import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency, mockTables } from '@/data/mockRestaurant';
 import { X, Trash2, Plus, Minus, Utensils, ShoppingBag } from 'lucide-react';
 
@@ -22,6 +23,7 @@ export const CartDrawer: React.FC = () => {
     submitOrder,
     isSubmitting,
   } = useCart();
+  const { setActiveOrderId } = useActiveOrderTracker();
 
   const [orderNotes, setOrderNotes] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -47,7 +49,15 @@ export const CartDrawer: React.FC = () => {
 
     setErrorMessage(null);
     try {
-      await submitOrder(orderNotes.trim() || undefined);
+      const createdOrder = await submitOrder(orderNotes.trim() || undefined);
+      if (createdOrder?.id) {
+        try {
+          localStorage.setItem('gulas_active_order_id', createdOrder.id);
+        } catch {
+          // ignore
+        }
+        setActiveOrderId(createdOrder.id, createdOrder);
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setErrorMessage(err.message);

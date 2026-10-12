@@ -255,6 +255,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           })
         );
         window.dispatchEvent(
+          new CustomEvent('gulas_active_order_created', {
+            detail: {
+              orderId: newOrder.id,
+              order: newOrder,
+            },
+          })
+        );
+        window.dispatchEvent(
           new CustomEvent('gulas_order_status_update', {
             detail: { orderId: newOrder.id, status: newOrder.status },
           })

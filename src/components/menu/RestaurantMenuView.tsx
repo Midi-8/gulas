@@ -239,9 +239,6 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       {/* Floating Bottom Cart Bar (Mobile & Desktop) */}
       <FloatingCartBar />
 
-      {/* Live Order Tracking Banner (Pílula Flutuante) */}
-      <ActiveOrderBanner />
-
       {/* Cart Slide Drawer */}
       <CartDrawer />
 
@@ -257,6 +254,9 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
 
       {/* Live Order Detail & Stepper Modal */}
       <ActiveOrderDetailModal />
+
+      {/* Live Order Tracking Banner (Pílula Flutuante) montado no topo visual (z-[60]) */}
+      <ActiveOrderBanner />
     </div>
   );
 };

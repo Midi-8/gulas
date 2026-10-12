@@ -403,16 +403,56 @@ export const ActiveOrderTrackerProvider: React.FC<{
     return () => clearInterval(interval);
   }, [activeOrderId, activeOrder?.status, fetchLatestStatus]);
 
-  // 5. Ouvinte de evento customizado (para sincronização na mesma aba / bancada de testes)
+  // 5. Ouvinte de eventos customizados e storage para sincronização instantânea
   useEffect(() => {
     const handleCustomStatusUpdate = (e: Event) => {
-      const evt = e as CustomEvent<{ orderId: string; status: OrderStatus }>;
-      if (
-        evt.detail &&
-        evt.detail.orderId === activeOrderIdRef.current &&
-        evt.detail.status
-      ) {
+      const evt = e as CustomEvent<{
+        orderId: string;
+        status?: OrderStatus;
+        order?: Partial<ActiveTrackerOrder> | Order;
+      }>;
+      if (!evt.detail?.orderId) return;
+
+      const incomingOrderId = evt.detail.orderId;
+
+      // Se ainda não estiver associado a este pedido, associa imediatamente
+      if (activeOrderIdRef.current !== incomingOrderId) {
+        setActiveOrderIdState(incomingOrderId);
+        activeOrderIdRef.current = incomingOrderId;
+        try {
+          localStorage.setItem(ACTIVE_ORDER_ID_KEY, incomingOrderId);
+        } catch {
+          // ignore
+        }
+        void fetchLatestStatus(incomingOrderId);
+      }
+
+      if (evt.detail.order) {
+        setActiveOrderId(incomingOrderId, evt.detail.order);
+      } else if (evt.detail.status) {
         handleStatusTransition(evt.detail.status);
+      }
+    };
+
+    const handleActiveOrderCreated = (e: Event) => {
+      const evt = e as CustomEvent<{
+        orderId: string;
+        order?: Partial<ActiveTrackerOrder> | Order;
+      }>;
+      if (evt.detail?.orderId) {
+        setActiveOrderId(evt.detail.orderId, evt.detail.order);
+      }
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === ACTIVE_ORDER_ID_KEY) {
+        if (e.newValue) {
+          setActiveOrderIdState(e.newValue);
+          activeOrderIdRef.current = e.newValue;
+          void fetchLatestStatus(e.newValue);
+        } else {
+          clearActiveOrder();
+        }
       }
     };
 
@@ -420,13 +460,24 @@ export const ActiveOrderTrackerProvider: React.FC<{
       'gulas_order_status_update',
       handleCustomStatusUpdate
     );
+    window.addEventListener(
+      'gulas_active_order_created',
+      handleActiveOrderCreated
+    );
+    window.addEventListener('storage', handleStorageChange);
+
     return () => {
       window.removeEventListener(
         'gulas_order_status_update',
         handleCustomStatusUpdate
       );
+      window.removeEventListener(
+        'gulas_active_order_created',
+        handleActiveOrderCreated
+      );
+      window.removeEventListener('storage', handleStorageChange);
     };
-  }, [handleStatusTransition]);
+  }, [handleStatusTransition, setActiveOrderId, fetchLatestStatus, clearActiveOrder]);
 
   const openDetailModal = useCallback(() => setIsDetailModalOpen(true), []);
   const closeDetailModal = useCallback(() => setIsDetailModalOpen(false), []);

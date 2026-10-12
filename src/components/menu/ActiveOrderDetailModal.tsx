@@ -50,17 +50,18 @@ const STEPS: StepDef[] = [
 
 export const ActiveOrderDetailModal: React.FC = () => {
   const {
+    activeOrderId,
     activeOrder,
     status,
     isDetailModalOpen,
     closeDetailModal,
   } = useActiveOrderTracker();
 
-  if (!isDetailModalOpen || !activeOrder) {
+  if (!isDetailModalOpen || (!activeOrder && !activeOrderId)) {
     return null;
   }
 
-  const currentStatus = status || activeOrder.status;
+  const currentStatus = status || activeOrder?.status || 'pending';
 
   // Determina o índice da etapa ativa (0 a 3)
   let currentStepIndex = 0;
@@ -74,11 +75,14 @@ export const ActiveOrderDetailModal: React.FC = () => {
 
   const isCancelled = currentStatus === 'cancelled';
   const orderIdentifier =
-    activeOrder.orderNumber !== undefined
+    activeOrder?.orderNumber !== undefined
       ? `Pedido #${activeOrder.orderNumber}`
-      : `Pedido #${activeOrder.id.replace('ord_', '').slice(0, 8)}`;
+      : activeOrderId
+      ? `Pedido #${activeOrderId.replace('ord_', '').slice(0, 8)}`
+      : 'O teu Pedido';
   const tableDisplay =
-    activeOrder.tableName || `Mesa ${activeOrder.tableNumber}`;
+    activeOrder?.tableName ||
+    (activeOrder?.tableNumber ? `Mesa ${activeOrder.tableNumber}` : 'Mesa');
 
   return (
     <div
@@ -220,12 +224,12 @@ export const ActiveOrderDetailModal: React.FC = () => {
                 Artigos no Pedido
               </h3>
               <span className="text-[11px] text-[#78716C]">
-                {activeOrder.items?.reduce((acc, i) => acc + i.quantity, 0) || 0} artigos
+                {activeOrder?.items?.reduce((acc, i) => acc + i.quantity, 0) || 0} artigos
               </span>
             </div>
 
             <div className="rounded-xl border border-[#E5DED6] bg-[#FFFFFF] divide-y divide-[#E5DED6]">
-              {activeOrder.items && activeOrder.items.length > 0 ? (
+              {activeOrder?.items && activeOrder.items.length > 0 ? (
                 activeOrder.items.map((item, idx) => (
                   <div
                     key={item.id || idx}
@@ -253,29 +257,31 @@ export const ActiveOrderDetailModal: React.FC = () => {
                 ))
               ) : (
                 <p className="p-3 text-xs text-[#78716C] italic">
-                  Informação de artigos a carregar...
+                  A carregar resumo dos artigos...
                 </p>
               )}
             </div>
 
             {/* Total e Subtotal */}
             <div className="p-3 rounded-xl bg-[#F5F4F1] border border-[#E5DED6] space-y-1 text-xs">
-              {activeOrder.subtotal > 0 && activeOrder.subtotal !== activeOrder.total && (
-                <div className="flex justify-between text-[#78716C]">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(activeOrder.subtotal)}</span>
-                </div>
-              )}
+              {activeOrder?.subtotal !== undefined &&
+                activeOrder.subtotal > 0 &&
+                activeOrder.subtotal !== activeOrder.total && (
+                  <div className="flex justify-between text-[#78716C]">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(activeOrder.subtotal)}</span>
+                  </div>
+                )}
               <div className="flex justify-between font-black text-sm text-[#35271F] pt-0.5">
                 <span>Total a Pagar</span>
                 <span className="text-[#C09573]">
-                  {formatCurrency(activeOrder.total)}
+                  {formatCurrency(activeOrder?.total || 0)}
                 </span>
               </div>
             </div>
 
             {/* Observações Gerais se houver */}
-            {activeOrder.customerNotes && (
+            {activeOrder?.customerNotes && (
               <div className="p-2.5 rounded-lg bg-[#FAF8F5] border border-[#E5DED6] text-[11px] text-[#4C453F]">
                 <span className="font-bold text-[#35271F]">Notas: </span>
                 {activeOrder.customerNotes}
