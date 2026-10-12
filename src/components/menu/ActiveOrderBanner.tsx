@@ -11,6 +11,7 @@ import {
   XCircle,
   ChevronRight,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 
 const subscribeStorage = (callback: () => void) => {
@@ -25,37 +26,49 @@ const subscribeStorage = (callback: () => void) => {
   };
 };
 
-const getStoredOrderId = () => {
+const getStoredOrderIds = (): string[] => {
   try {
-    return localStorage.getItem('gulas_active_order_id');
+    const rawMulti = localStorage.getItem('gulas_active_order_ids');
+    if (rawMulti) {
+      const parsed = JSON.parse(rawMulti);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.filter((id) => typeof id === 'string' && id.trim() !== '');
+      }
+    }
+    const single = localStorage.getItem('gulas_active_order_id');
+    if (single && single.trim() !== '') {
+      return [single.trim()];
+    }
   } catch {
-    return null;
+    // ignore
   }
+  return [];
 };
 
-const getServerSnapshot = () => null;
+const getServerSnapshot = () => [];
 
 export const ActiveOrderBanner: React.FC = () => {
   const {
-    activeOrderId,
-    activeOrder,
+    activeOrderIds,
+    activeOrders,
     status,
     completionNotice,
     openDetailModal,
   } = useActiveOrderTracker();
   const { itemCount, selectedTableNumber } = useCart();
 
-  // Fallback rápido: sincroniza diretamente com o localStorage via useSyncExternalStore
-  const storedOrderId = React.useSyncExternalStore(
+  // Leitura síncrona segura de IDs a partir do localStorage
+  const storedIds = React.useSyncExternalStore(
     subscribeStorage,
-    getStoredOrderId,
+    getStoredOrderIds,
     getServerSnapshot
   );
 
-  const effectiveOrderId = activeOrderId || storedOrderId;
+  const effectiveIds =
+    activeOrderIds.length > 0 ? activeOrderIds : storedIds;
 
-  // Oculta APENAS se não houver pedido ativo (nem em fallback) e nenhuma mensagem de conclusão
-  if (!effectiveOrderId && !completionNotice) {
+  // Oculta se não houver pedidos ativos nem mensagem de conclusão temporária
+  if (effectiveIds.length === 0 && !completionNotice) {
     return null;
   }
 
@@ -79,7 +92,7 @@ export const ActiveOrderBanner: React.FC = () => {
               </p>
             </div>
             <button
-              onClick={openDetailModal}
+              onClick={() => openDetailModal()}
               className="text-[11px] font-bold text-[#5E4939] hover:text-[#453426] underline underline-offset-2 shrink-0 cursor-pointer"
             >
               Ver
@@ -90,27 +103,49 @@ export const ActiveOrderBanner: React.FC = () => {
     );
   }
 
-  const currentStatus = status || activeOrder?.status || 'pending';
+  const ordersCount = Math.max(effectiveIds.length, activeOrders.length);
+  const isMultiOrder = ordersCount > 1;
 
-  // Configurações contextuais por estado
+  // Determina o pedido mais recente ou de maior prioridade operacional
+  const hasReady = activeOrders.some((o) => o.status === 'ready');
+  const hasPreparing = activeOrders.some((o) => o.status === 'preparing');
+  const primaryOrder =
+    activeOrders.find((o) => o.status === 'ready') ||
+    activeOrders.find((o) => o.status === 'preparing') ||
+    activeOrders[activeOrders.length - 1] ||
+    null;
+
+  const currentStatus =
+    hasReady
+      ? 'ready'
+      : hasPreparing
+      ? 'preparing'
+      : status || primaryOrder?.status || 'pending';
+
   let statusText = 'Pedido registado na cozinha';
-  let StatusIcon = Clock;
+  let StatusIcon = isMultiOrder ? Layers : Clock;
   let isPulsing = true;
 
   switch (currentStatus) {
     case 'pending':
     case 'accepted':
-      statusText = 'Pedido registado na cozinha';
-      StatusIcon = Clock;
+      statusText = isMultiOrder
+        ? 'Pedidos registados na cozinha'
+        : 'Pedido registado na cozinha';
+      StatusIcon = isMultiOrder ? Layers : Clock;
       isPulsing = true;
       break;
     case 'preparing':
-      statusText = 'A preparar na cozinha';
+      statusText = isMultiOrder
+        ? 'A preparar pedidos na cozinha'
+        : 'A preparar na cozinha';
       StatusIcon = ChefHat;
       isPulsing = true;
       break;
     case 'ready':
-      statusText = 'Pronto • A caminho da mesa';
+      statusText = isMultiOrder
+        ? 'Pedido pronto • A caminho da mesa'
+        : 'Pronto • A caminho da mesa';
       StatusIcon = UtensilsCrossed;
       isPulsing = true;
       break;
@@ -127,16 +162,9 @@ export const ActiveOrderBanner: React.FC = () => {
   }
 
   const tableLabel =
-    activeOrder?.tableName ||
-    (activeOrder?.tableNumber ? `Mesa ${activeOrder.tableNumber}` : '') ||
+    primaryOrder?.tableName ||
+    (primaryOrder?.tableNumber ? `Mesa ${primaryOrder.tableNumber}` : '') ||
     (selectedTableNumber ? `Mesa ${selectedTableNumber}` : 'O teu pedido');
-
-  const orderNumberDisplay =
-    activeOrder?.orderNumber !== undefined
-      ? `Pedido #${activeOrder.orderNumber}`
-      : effectiveOrderId
-      ? `Pedido #${effectiveOrderId.replace('ord_', '').slice(0, 6)}`
-      : null;
 
   return (
     <aside
@@ -147,9 +175,9 @@ export const ActiveOrderBanner: React.FC = () => {
     >
       <div className="w-full pointer-events-auto">
         <button
-          onClick={openDetailModal}
+          onClick={() => openDetailModal()}
           className="w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[#FFFFFF] hover:bg-[#FAF8F5] border border-[#E5DED6] shadow-sm text-[#35271F] transition-all cursor-pointer group active:scale-[0.99]"
-          aria-label="Acompanhar estado do pedido em tempo real"
+          aria-label="Acompanhar estado dos pedidos em tempo real"
         >
           {/* Lado Esquerdo: Ícone + Ponto Indicador Caramelo */}
           <div className="flex items-center gap-2.5 min-w-0">
@@ -168,14 +196,33 @@ export const ActiveOrderBanner: React.FC = () => {
 
             {/* Texto Central */}
             <div className="text-left min-w-0">
-              <p className="text-xs font-semibold text-[#35271F] truncate">
-                <span className="font-bold">{tableLabel}</span> • {statusText}
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="font-bold text-xs text-[#35271F]">
+                  {tableLabel}
+                </span>
+                <span className="text-xs text-[#4C453F]">•</span>
+                {isMultiOrder ? (
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-[#5E4939] truncate">
+                    <span>{ordersCount} Pedidos ativos</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#C09573]/15 text-[#C09573] font-black border border-[#C09573]/30">
+                      Multi
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold text-[#4C453F] truncate">
+                    {statusText}
+                  </span>
+                )}
+              </div>
+
+              {/* Subtítulo informativo */}
+              <p className="text-[10px] text-[#78716C] truncate mt-0.2">
+                {isMultiOrder
+                  ? statusText
+                  : primaryOrder?.orderNumber
+                  ? `Pedido #${primaryOrder.orderNumber}`
+                  : `Pedido #${effectiveIds[0].replace('ord_', '').slice(0, 6)}`}
               </p>
-              {orderNumberDisplay && (
-                <p className="text-[10px] text-[#78716C]">
-                  {orderNumberDisplay}
-                </p>
-              )}
             </div>
           </div>
 

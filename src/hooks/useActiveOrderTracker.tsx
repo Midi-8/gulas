@@ -12,6 +12,8 @@ import { createClient } from '@/lib/supabase/client';
 import { getOrderPublicStatus } from '@/actions/orders';
 import { Order, OrderStatus } from '@/types/restaurant';
 
+export const ACTIVE_ORDER_IDS_KEY = 'gulas_active_order_ids';
+export const ACTIVE_ORDERS_DATA_KEY = 'gulas_active_orders_data';
 export const ACTIVE_ORDER_ID_KEY = 'gulas_active_order_id';
 export const ACTIVE_ORDER_DATA_KEY = 'gulas_active_order_data';
 
@@ -40,20 +42,25 @@ export interface ActiveTrackerOrder {
   items: TrackerOrderItem[];
 }
 
-interface ActiveOrderTrackerContextValue {
+export interface ActiveOrderTrackerContextValue {
+  activeOrderIds: string[];
+  activeOrders: ActiveTrackerOrder[];
   activeOrderId: string | null;
   activeOrder: ActiveTrackerOrder | null;
   status: OrderStatus | null;
   isLoading: boolean;
   completionNotice: string | null;
   isDetailModalOpen: boolean;
+  selectedOrderId: string | null;
+  setSelectedOrderId: (id: string | null) => void;
   setIsDetailModalOpen: (open: boolean) => void;
-  openDetailModal: () => void;
+  openDetailModal: (orderId?: string) => void;
   closeDetailModal: () => void;
   setActiveOrderId: (
     orderId: string,
     initialData?: Partial<ActiveTrackerOrder> | Order
   ) => void;
+  removeActiveOrder: (orderId: string) => void;
   clearActiveOrder: () => void;
   refreshOrder: () => Promise<void>;
 }
@@ -61,133 +68,209 @@ interface ActiveOrderTrackerContextValue {
 const ActiveOrderTrackerContext =
   createContext<ActiveOrderTrackerContextValue | null>(null);
 
+function getInitialActiveOrderIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const multi = localStorage.getItem(ACTIVE_ORDER_IDS_KEY);
+    if (multi) {
+      const parsed = JSON.parse(multi);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.filter(
+          (id) => typeof id === 'string' && id.trim() !== ''
+        );
+      }
+    }
+    const single = localStorage.getItem(ACTIVE_ORDER_ID_KEY);
+    if (single && single.trim() !== '') {
+      return [single.trim()];
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+function getInitialActiveOrders(ids: string[]): ActiveTrackerOrder[] {
+  if (typeof window === 'undefined' || ids.length === 0) return [];
+  try {
+    const multiData = localStorage.getItem(ACTIVE_ORDERS_DATA_KEY);
+    if (multiData) {
+      const parsed = JSON.parse(multiData);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (o): o is ActiveTrackerOrder =>
+            Boolean(
+              o &&
+                typeof o.id === 'string' &&
+                ids.includes(o.id) &&
+                o.status !== 'completed' &&
+                o.status !== 'cancelled'
+            )
+        );
+      }
+    }
+    const singleData = localStorage.getItem(ACTIVE_ORDER_DATA_KEY);
+    if (singleData) {
+      const parsed = JSON.parse(singleData) as ActiveTrackerOrder;
+      if (
+        parsed &&
+        typeof parsed.id === 'string' &&
+        ids.includes(parsed.id) &&
+        parsed.status !== 'completed' &&
+        parsed.status !== 'cancelled'
+      ) {
+        return [parsed];
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
 export const ActiveOrderTrackerProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const [activeOrderId, setActiveOrderIdState] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      return localStorage.getItem(ACTIVE_ORDER_ID_KEY);
-    } catch {
-      return null;
-    }
-  });
+  const [activeOrderIds, setActiveOrderIdsState] = useState<string[]>(
+    getInitialActiveOrderIds
+  );
 
-  const [activeOrder, setActiveOrder] = useState<ActiveTrackerOrder | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const storedData = localStorage.getItem(ACTIVE_ORDER_DATA_KEY);
-      if (storedData) {
-        const parsed = JSON.parse(storedData) as ActiveTrackerOrder;
-        if (parsed.status !== 'completed' && parsed.status !== 'cancelled') {
-          return parsed;
-        }
-      }
-    } catch {
-      // ignore
-    }
-    return null;
-  });
+  const [activeOrders, setActiveOrders] = useState<ActiveTrackerOrder[]>(() =>
+    getInitialActiveOrders(getInitialActiveOrderIds())
+  );
 
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [completionNotice, setCompletionNotice] = useState<string | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
 
-  const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const activeOrderIdRef = useRef<string | null>(activeOrderId);
-
+  const activeOrderIdsRef = useRef<string[]>(activeOrderIds);
   useEffect(() => {
-    activeOrderIdRef.current = activeOrderId;
-  }, [activeOrderId]);
+    activeOrderIdsRef.current = activeOrderIds;
+  }, [activeOrderIds]);
+
+  const activeOrdersRef = useRef<ActiveTrackerOrder[]>(activeOrders);
+  useEffect(() => {
+    activeOrdersRef.current = activeOrders;
+  }, [activeOrders]);
+
+  const persistOrders = useCallback(
+    (ids: string[], orders: ActiveTrackerOrder[]) => {
+      try {
+        if (ids.length > 0) {
+          localStorage.setItem(ACTIVE_ORDER_IDS_KEY, JSON.stringify(ids));
+          localStorage.setItem(ACTIVE_ORDERS_DATA_KEY, JSON.stringify(orders));
+          // Sincroniza a chave legada com o mais recente
+          localStorage.setItem(ACTIVE_ORDER_ID_KEY, ids[ids.length - 1]);
+          if (orders.length > 0) {
+            localStorage.setItem(
+              ACTIVE_ORDER_DATA_KEY,
+              JSON.stringify(orders[orders.length - 1])
+            );
+          }
+        } else {
+          localStorage.removeItem(ACTIVE_ORDER_IDS_KEY);
+          localStorage.removeItem(ACTIVE_ORDERS_DATA_KEY);
+          localStorage.removeItem(ACTIVE_ORDER_ID_KEY);
+          localStorage.removeItem(ACTIVE_ORDER_DATA_KEY);
+        }
+      } catch {
+        // ignore
+      }
+    },
+    []
+  );
 
   const clearActiveOrder = useCallback(() => {
-    setActiveOrderIdState(null);
-    setActiveOrder(null);
+    setActiveOrderIdsState([]);
+    setActiveOrders([]);
+    setSelectedOrderId(null);
     setCompletionNotice(null);
     setIsDetailModalOpen(false);
 
     try {
+      localStorage.removeItem(ACTIVE_ORDER_IDS_KEY);
+      localStorage.removeItem(ACTIVE_ORDERS_DATA_KEY);
       localStorage.removeItem(ACTIVE_ORDER_ID_KEY);
       localStorage.removeItem(ACTIVE_ORDER_DATA_KEY);
     } catch {
       // ignore
     }
-
-    if (completionTimerRef.current) {
-      clearTimeout(completionTimerRef.current);
-      completionTimerRef.current = null;
-    }
   }, []);
 
-  const handleStatusTransition = useCallback((newStatus: OrderStatus) => {
-    setActiveOrder((current) => {
-      if (!current) return current;
-      if (current.status === newStatus) return current;
+  const removeActiveOrder = useCallback(
+    (orderIdToRemove: string) => {
+      setActiveOrderIdsState((prevIds) => {
+        const nextIds = prevIds.filter((id) => id !== orderIdToRemove);
+        setActiveOrders((prevOrders) => {
+          const nextOrders = prevOrders.filter((o) => o.id !== orderIdToRemove);
+          persistOrders(nextIds, nextOrders);
+          return nextOrders;
+        });
 
-      const updated: ActiveTrackerOrder = {
-        ...current,
-        status: newStatus,
-        updatedAt: new Date().toISOString(),
-      };
+        setSelectedOrderId((current) =>
+          current === orderIdToRemove
+            ? nextIds[nextIds.length - 1] || null
+            : current
+        );
 
-      try {
-        localStorage.setItem(ACTIVE_ORDER_DATA_KEY, JSON.stringify(updated));
-      } catch {
-        // ignore
-      }
+        return nextIds;
+      });
+    },
+    [persistOrders]
+  );
 
-      return updated;
-    });
+  const handleStatusTransition = useCallback(
+    (targetOrderId: string, newStatus: OrderStatus) => {
+      setActiveOrders((prevOrders) => {
+        const target = prevOrders.find((o) => o.id === targetOrderId);
+        if (!target || target.status === newStatus) return prevOrders;
 
-    // Se o pedido for concluído ou cancelado, aciona a limpeza automática após 8 segundos
-    if (newStatus === 'completed' || newStatus === 'cancelled') {
-      const notice =
-        newStatus === 'completed'
-          ? 'O teu pedido foi concluído com sucesso. Bom apetite!'
-          : 'O teu pedido foi cancelado.';
+        const updated = prevOrders.map((o) =>
+          o.id === targetOrderId
+            ? { ...o, status: newStatus, updatedAt: new Date().toISOString() }
+            : o
+        );
 
-      setCompletionNotice(notice);
+        // Se o pedido for concluído ou cancelado:
+        if (newStatus === 'completed' || newStatus === 'cancelled') {
+          const orderNum = target.orderNumber ? `#${target.orderNumber}` : '';
+          const notice =
+            newStatus === 'completed'
+              ? `Pedido ${orderNum} concluído com sucesso. Bom apetite!`
+              : `Pedido ${orderNum} cancelado.`;
 
-      // Limpa as chaves no localStorage imediatamente para novas compras não herdarem o ID
-      try {
-        localStorage.removeItem(ACTIVE_ORDER_ID_KEY);
-        localStorage.removeItem(ACTIVE_ORDER_DATA_KEY);
-      } catch {
-        // ignore
-      }
+          setCompletionNotice(notice);
 
-      // Mantém o estado visível durante exatamente 8 segundos antes de ocultar
-      if (completionTimerRef.current) {
-        clearTimeout(completionTimerRef.current);
-      }
-      completionTimerRef.current = setTimeout(() => {
-        setCompletionNotice(null);
-        setActiveOrderIdState(null);
-        setActiveOrder(null);
-        setIsDetailModalOpen(false);
-      }, 8000);
-    }
-  }, []);
+          // Remove apenas este ID após 8 segundos para dar tempo ao aviso
+          setTimeout(() => {
+            setCompletionNotice((current) =>
+              current === notice ? null : current
+            );
+            removeActiveOrder(targetOrderId);
+          }, 8000);
+        } else {
+          persistOrders(activeOrderIdsRef.current, updated);
+        }
+
+        return updated;
+      });
+    },
+    [persistOrders, removeActiveOrder]
+  );
 
   const setActiveOrderId = useCallback(
     (
       orderId: string,
       initialData?: Partial<ActiveTrackerOrder> | Order
     ) => {
-      if (!orderId) {
-        clearActiveOrder();
-        return;
-      }
+      if (!orderId || typeof orderId !== 'string') return;
+      const cleanId = orderId.trim();
+      if (!cleanId) return;
 
-      try {
-        localStorage.setItem(ACTIVE_ORDER_ID_KEY, orderId);
-      } catch {
-        // ignore
-      }
-
-      setActiveOrderIdState(orderId);
       setCompletionNotice(null);
 
+      let formatted: ActiveTrackerOrder | null = null;
       if (initialData) {
         const rawItems = (initialData.items || []) as Array<
           TrackerOrderItem | { product: { id: string; name: string; price: number }; quantity: number; notes?: string }
@@ -212,12 +295,14 @@ export const ActiveOrderTrackerProvider: React.FC<{
           };
         });
 
-        const formattedOrder: ActiveTrackerOrder = {
-          id: orderId,
+        formatted = {
+          id: cleanId,
           orderNumber:
             'orderNumber' in initialData ? initialData.orderNumber : undefined,
           tableNumber: initialData.tableNumber ?? 0,
-          tableName: initialData.tableName || `Mesa ${initialData.tableNumber ?? ''}`,
+          tableName:
+            initialData.tableName ||
+            `Mesa ${initialData.tableNumber ?? ''}`,
           restaurantId: initialData.restaurantId,
           restaurantSlug: initialData.restaurantSlug,
           restaurantName: initialData.restaurantName,
@@ -232,20 +317,42 @@ export const ActiveOrderTrackerProvider: React.FC<{
               : new Date().toISOString(),
           items: formattedItems,
         };
-
-        setActiveOrder(formattedOrder);
-
-        try {
-          localStorage.setItem(
-            ACTIVE_ORDER_DATA_KEY,
-            JSON.stringify(formattedOrder)
-          );
-        } catch {
-          // ignore
-        }
       }
+
+      setActiveOrderIdsState((prev) => {
+        const nextIds = prev.includes(cleanId) ? prev : [...prev, cleanId];
+        setActiveOrders((prevOrders) => {
+          const nextOrders = [...prevOrders];
+          if (formatted) {
+            const idx = nextOrders.findIndex((o) => o.id === cleanId);
+            if (idx >= 0) {
+              nextOrders[idx] = formatted;
+            } else {
+              nextOrders.push(formatted);
+            }
+          } else {
+            if (!nextOrders.some((o) => o.id === cleanId)) {
+              nextOrders.push({
+                id: cleanId,
+                tableNumber: 0,
+                tableName: 'Mesa',
+                status: 'pending',
+                subtotal: 0,
+                total: 0,
+                createdAt: new Date().toISOString(),
+                items: [],
+              });
+            }
+          }
+          persistOrders(nextIds, nextOrders);
+          return nextOrders;
+        });
+        return nextIds;
+      });
+
+      setSelectedOrderId(cleanId);
     },
-    [clearActiveOrder]
+    [persistOrders]
   );
 
   const fetchLatestStatus = useCallback(
@@ -256,125 +363,136 @@ export const ActiveOrderTrackerProvider: React.FC<{
         const result = await getOrderPublicStatus(orderIdToFetch);
         if (result.success && result.data) {
           const fetched = result.data;
-          setActiveOrder((current) => {
-            const nextStatus = fetched.status as OrderStatus;
-            const updated: ActiveTrackerOrder = {
+          const currentStatus = fetched.status as OrderStatus;
+
+          setActiveOrders((prev) => {
+            const exists = prev.some((o) => o.id === fetched.id);
+            const updatedItem: ActiveTrackerOrder = {
               id: fetched.id,
               orderNumber: fetched.orderNumber,
               tableNumber: fetched.tableNumber,
               tableName: fetched.tableName || `Mesa ${fetched.tableNumber}`,
-              restaurantId: current?.restaurantId,
-              restaurantSlug: current?.restaurantSlug,
-              restaurantName: current?.restaurantName,
-              status: nextStatus,
+              status: currentStatus,
               subtotal: fetched.subtotal,
               total: fetched.total,
-              customerNotes: current?.customerNotes,
               createdAt: fetched.createdAt,
               updatedAt: fetched.updatedAt,
               items:
                 fetched.items && fetched.items.length > 0
                   ? fetched.items
-                  : current?.items || [],
+                  : prev.find((o) => o.id === fetched.id)?.items || [],
             };
 
-            try {
-              localStorage.setItem(
-                ACTIVE_ORDER_DATA_KEY,
-                JSON.stringify(updated)
-              );
-            } catch {
-              // ignore
-            }
+            const next = exists
+              ? prev.map((o) =>
+                  o.id === fetched.id ? { ...o, ...updatedItem } : o
+                )
+              : [...prev, updatedItem];
 
-            return updated;
+            persistOrders(activeOrderIdsRef.current, next);
+            return next;
           });
 
-          const currentStatus = fetched.status as OrderStatus;
-          if (currentStatus === 'completed' || currentStatus === 'cancelled') {
-            handleStatusTransition(currentStatus);
+          if (
+            currentStatus === 'completed' ||
+            currentStatus === 'cancelled'
+          ) {
+            handleStatusTransition(fetched.id, currentStatus);
           }
         }
       } catch {
         // Falha tolerada em modo offline
       }
     },
-    [handleStatusTransition]
+    [handleStatusTransition, persistOrders]
   );
 
-  const refreshOrder = useCallback(async () => {
-    if (activeOrderIdRef.current) {
-      setIsLoading(true);
-      await fetchLatestStatus(activeOrderIdRef.current);
-      setIsLoading(false);
+  const fetchAllActiveStatuses = useCallback(async () => {
+    const ids = activeOrderIdsRef.current;
+    if (ids.length === 0) return;
+
+    for (const id of ids) {
+      await fetchLatestStatus(id);
     }
   }, [fetchLatestStatus]);
 
-  // 1. Reconciliação inicial com o backend se houver pedido ativo recuperado do localStorage
+  const refreshOrder = useCallback(async () => {
+    setIsLoading(true);
+    await fetchAllActiveStatuses();
+    setIsLoading(false);
+  }, [fetchAllActiveStatuses]);
+
+  // 1. Reconciliação inicial com o backend se houver pedidos ativos
   useEffect(() => {
-    if (activeOrderId) {
+    if (activeOrderIds.length > 0) {
       const timer = setTimeout(() => {
-        void fetchLatestStatus(activeOrderId);
+        void fetchAllActiveStatuses();
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [activeOrderId, fetchLatestStatus]);
+  }, [activeOrderIds, fetchAllActiveStatuses]);
 
-  // 2. Subscrição Supabase Realtime para a tabela orders
+  // 2. Subscrição Supabase Realtime para a tabela orders com múltiplos filtros
   useEffect(() => {
-    if (!activeOrderId) return;
-    if (activeOrder?.status === 'completed' || activeOrder?.status === 'cancelled') {
-      return;
-    }
+    if (activeOrderIds.length === 0) return;
 
     const supabase = createClient();
     if (!supabase) return;
 
-    const channelName = `order-tracker-${activeOrderId}`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
+    const channelName = `customer-orders-${activeOrderIds
+      .slice(0, 3)
+      .join('-')}-${activeOrderIds.length}`;
+    const channel = supabase.channel(channelName);
+
+    activeOrderIds.forEach((orderId) => {
+      channel.on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'orders',
-          filter: `id=eq.${activeOrderId}`,
+          filter: `id=eq.${orderId}`,
         },
         (payload) => {
           const rec = payload.new as {
             id?: string;
             status?: OrderStatus;
-            order_number?: number;
           };
 
-          if (rec?.status) {
-            handleStatusTransition(rec.status);
+          if (rec?.id && rec?.status) {
+            handleStatusTransition(rec.id, rec.status);
           }
         }
-      )
-      .on(
-        'broadcast',
-        { event: 'status_update' },
-        (msg: { payload?: { id?: string; status?: OrderStatus } }) => {
-          const data = msg?.payload;
-          if (data?.id === activeOrderId && data?.status) {
-            handleStatusTransition(data.status);
-          }
+      );
+    });
+
+    channel.on(
+      'broadcast',
+      { event: 'status_update' },
+      (msg: { payload?: { id?: string; status?: OrderStatus } }) => {
+        const data = msg?.payload;
+        if (
+          data?.id &&
+          data?.status &&
+          activeOrderIdsRef.current.includes(data.id)
+        ) {
+          handleStatusTransition(data.id, data.status);
         }
-      )
-      .subscribe();
+      }
+    );
+
+    channel.subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [activeOrderId, activeOrder?.status, handleStatusTransition]);
+  }, [activeOrderIds, handleStatusTransition]);
 
   // 3. Reconciliação em mudanças de visibilidade ou reconexão Wi-Fi
   useEffect(() => {
     const handleRecheck = () => {
-      if (document.visibilityState === 'visible' && activeOrderIdRef.current) {
-        void fetchLatestStatus(activeOrderIdRef.current);
+      if (document.visibilityState === 'visible' && activeOrderIdsRef.current.length > 0) {
+        void fetchAllActiveStatuses();
       }
     };
 
@@ -385,23 +503,18 @@ export const ActiveOrderTrackerProvider: React.FC<{
       document.removeEventListener('visibilitychange', handleRecheck);
       window.removeEventListener('online', handleRecheck);
     };
-  }, [fetchLatestStatus]);
+  }, [fetchAllActiveStatuses]);
 
-  // 4. Polling ultra-leve de reconciliação (cada 4s) enquanto houver pedido em curso
+  // 4. Polling ultra-leve de reconciliação (cada 4s) enquanto houver pedidos em curso
   useEffect(() => {
-    if (!activeOrderId) return;
-    if (activeOrder?.status === 'completed' || activeOrder?.status === 'cancelled') {
-      return;
-    }
+    if (activeOrderIds.length === 0) return;
 
     const interval = setInterval(() => {
-      if (activeOrderIdRef.current) {
-        void fetchLatestStatus(activeOrderIdRef.current);
-      }
+      void fetchAllActiveStatuses();
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [activeOrderId, activeOrder?.status, fetchLatestStatus]);
+  }, [activeOrderIds, fetchAllActiveStatuses]);
 
   // 5. Ouvinte de eventos customizados e storage para sincronização instantânea
   useEffect(() => {
@@ -415,22 +528,10 @@ export const ActiveOrderTrackerProvider: React.FC<{
 
       const incomingOrderId = evt.detail.orderId;
 
-      // Se ainda não estiver associado a este pedido, associa imediatamente
-      if (activeOrderIdRef.current !== incomingOrderId) {
-        setActiveOrderIdState(incomingOrderId);
-        activeOrderIdRef.current = incomingOrderId;
-        try {
-          localStorage.setItem(ACTIVE_ORDER_ID_KEY, incomingOrderId);
-        } catch {
-          // ignore
-        }
-        void fetchLatestStatus(incomingOrderId);
-      }
-
-      if (evt.detail.order) {
+      if (!activeOrderIdsRef.current.includes(incomingOrderId)) {
         setActiveOrderId(incomingOrderId, evt.detail.order);
       } else if (evt.detail.status) {
-        handleStatusTransition(evt.detail.status);
+        handleStatusTransition(incomingOrderId, evt.detail.status);
       }
     };
 
@@ -445,14 +546,15 @@ export const ActiveOrderTrackerProvider: React.FC<{
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === ACTIVE_ORDER_ID_KEY) {
-        if (e.newValue) {
-          setActiveOrderIdState(e.newValue);
-          activeOrderIdRef.current = e.newValue;
-          void fetchLatestStatus(e.newValue);
-        } else {
-          clearActiveOrder();
-        }
+      if (
+        e.key === ACTIVE_ORDER_IDS_KEY ||
+        e.key === ACTIVE_ORDER_ID_KEY
+      ) {
+        const freshIds = getInitialActiveOrderIds();
+        setActiveOrderIdsState(freshIds);
+        activeOrderIdsRef.current = freshIds;
+        const freshOrders = getInitialActiveOrders(freshIds);
+        setActiveOrders(freshOrders);
       }
     };
 
@@ -477,22 +579,46 @@ export const ActiveOrderTrackerProvider: React.FC<{
       );
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [handleStatusTransition, setActiveOrderId, fetchLatestStatus, clearActiveOrder]);
+  }, [handleStatusTransition, setActiveOrderId]);
 
-  const openDetailModal = useCallback(() => setIsDetailModalOpen(true), []);
+  const openDetailModal = useCallback((orderId?: string) => {
+    if (orderId) {
+      setSelectedOrderId(orderId);
+    }
+    setIsDetailModalOpen(true);
+  }, []);
+
   const closeDetailModal = useCallback(() => setIsDetailModalOpen(false), []);
 
+  // Determinar activeOrder principal (o selecionado ou o mais recente da lista)
+  const activeOrder =
+    activeOrders.find((o) => o.id === selectedOrderId) ||
+    activeOrders[activeOrders.length - 1] ||
+    null;
+
+  const activeOrderId =
+    activeOrder?.id ||
+    activeOrderIds[activeOrderIds.length - 1] ||
+    null;
+
+  const status = activeOrder?.status || null;
+
   const value: ActiveOrderTrackerContextValue = {
+    activeOrderIds,
+    activeOrders,
     activeOrderId,
     activeOrder,
-    status: activeOrder?.status ?? null,
+    status,
     isLoading,
     completionNotice,
     isDetailModalOpen,
+    selectedOrderId,
+    setSelectedOrderId,
     setIsDetailModalOpen,
     openDetailModal,
     closeDetailModal,
     setActiveOrderId,
+    removeActiveOrder,
     clearActiveOrder,
     refreshOrder,
   };

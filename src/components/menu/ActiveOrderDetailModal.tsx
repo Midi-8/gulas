@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
+import React, { useMemo } from 'react';
+import { useActiveOrderTracker, ActiveTrackerOrder } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency } from '@/data/mockRestaurant';
 import {
   X,
@@ -12,6 +12,7 @@ import {
   Sparkles,
   AlertCircle,
   Utensils,
+  Receipt,
 } from 'lucide-react';
 
 interface StepDef {
@@ -48,20 +49,62 @@ const STEPS: StepDef[] = [
   },
 ];
 
+function formatTime(isoString?: string): string {
+  if (!isoString) return '';
+  try {
+    const d = new Date(isoString);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString('pt-PT', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '';
+  }
+}
+
 export const ActiveOrderDetailModal: React.FC = () => {
   const {
-    activeOrderId,
-    activeOrder,
-    status,
+    activeOrderIds,
+    activeOrders,
     isDetailModalOpen,
+    selectedOrderId,
+    setSelectedOrderId,
     closeDetailModal,
   } = useActiveOrderTracker();
 
-  if (!isDetailModalOpen || (!activeOrder && !activeOrderId)) {
+  // Garante uma lista estável de pedidos a exibir
+  const displayOrders = useMemo(() => {
+    if (activeOrders.length > 0) return activeOrders;
+    if (activeOrderIds.length > 0) {
+      return activeOrderIds.map(
+        (id, idx): ActiveTrackerOrder => ({
+          id,
+          orderNumber: idx + 1,
+          tableNumber: 0,
+          tableName: 'Mesa',
+          status: 'pending',
+          subtotal: 0,
+          total: 0,
+          createdAt: new Date().toISOString(),
+          items: [],
+        })
+      );
+    }
+    return [];
+  }, [activeOrders, activeOrderIds]);
+
+  // Pedido selecionado atualmente
+  const activeOrder =
+    displayOrders.find((o) => o.id === selectedOrderId) ||
+    displayOrders[displayOrders.length - 1] ||
+    null;
+
+  if (!isDetailModalOpen || !activeOrder) {
     return null;
   }
 
-  const currentStatus = status || activeOrder?.status || 'pending';
+  const currentStatus = activeOrder.status || 'pending';
 
   // Determina o índice da etapa ativa (0 a 3)
   let currentStepIndex = 0;
@@ -75,14 +118,13 @@ export const ActiveOrderDetailModal: React.FC = () => {
 
   const isCancelled = currentStatus === 'cancelled';
   const orderIdentifier =
-    activeOrder?.orderNumber !== undefined
+    activeOrder.orderNumber !== undefined
       ? `Pedido #${activeOrder.orderNumber}`
-      : activeOrderId
-      ? `Pedido #${activeOrderId.replace('ord_', '').slice(0, 8)}`
-      : 'O teu Pedido';
+      : `Pedido #${activeOrder.id.replace('ord_', '').slice(0, 8)}`;
   const tableDisplay =
-    activeOrder?.tableName ||
-    (activeOrder?.tableNumber ? `Mesa ${activeOrder.tableNumber}` : 'Mesa');
+    activeOrder.tableName ||
+    (activeOrder.tableNumber ? `Mesa ${activeOrder.tableNumber}` : 'Mesa');
+  const orderTimeDisplay = formatTime(activeOrder.createdAt);
 
   return (
     <div
@@ -98,7 +140,9 @@ export const ActiveOrderDetailModal: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-black text-[#5E4939] uppercase tracking-wide">
-                {orderIdentifier}
+                {displayOrders.length > 1
+                  ? `${displayOrders.length} Pedidos Ativos`
+                  : orderIdentifier}
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EAE5DF] text-[#4C453F] border border-[#E5DED6]">
                 {tableDisplay}
@@ -118,8 +162,70 @@ export const ActiveOrderDetailModal: React.FC = () => {
           </button>
         </div>
 
+        {/* Barra de Tabs para Múltiplos Pedidos */}
+        {displayOrders.length > 1 && (
+          <div className="px-4 sm:px-5 pt-3 pb-1 border-b border-[#E5DED6] bg-[#FAF8F5] shrink-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-2">
+              {displayOrders.map((ord, idx) => {
+                const isSelected = ord.id === activeOrder.id;
+                const ordTime = formatTime(ord.createdAt);
+                const ordNum = ord.orderNumber ? `#${ord.orderNumber}` : `${idx + 1}`;
+
+                return (
+                  <button
+                    key={ord.id}
+                    onClick={() => setSelectedOrderId(ord.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border ${
+                      isSelected
+                        ? 'bg-[#5E4939] text-[#F5F4F1] border-[#5E4939] shadow-xs'
+                        : 'bg-[#FFFFFF] text-[#4C453F] border-[#E5DED6] hover:bg-[#EAE5DF]'
+                    }`}
+                  >
+                    <Receipt className="w-3 h-3 text-[#C09573]" />
+                    <span>Pedido {ordNum}</span>
+                    {ordTime && (
+                      <span
+                        className={`text-[10px] ${
+                          isSelected ? 'text-[#C09573]' : 'text-[#78716C]'
+                        }`}
+                      >
+                        {ordTime}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Corpo com Scroll */}
         <div className="p-4 sm:p-5 overflow-y-auto space-y-5 bg-[#FFFFFF]">
+          {/* Identificação do Pedido Selecionado */}
+          <div className="flex items-center justify-between pb-1 border-b border-[#E5DED6]">
+            <div>
+              <h2 className="text-sm font-black text-[#35271F]">
+                {orderIdentifier}
+              </h2>
+              {orderTimeDisplay && (
+                <p className="text-[11px] text-[#78716C]">
+                  Submetido às {orderTimeDisplay}
+                </p>
+              )}
+            </div>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-[#F5F4F1] border border-[#E5DED6] text-[#5E4939]">
+              {currentStatus === 'preparing'
+                ? 'Em preparação'
+                : currentStatus === 'ready'
+                ? 'Pronto'
+                : currentStatus === 'completed'
+                ? 'Entregue'
+                : currentStatus === 'cancelled'
+                ? 'Cancelado'
+                : 'Recebido'}
+            </span>
+          </div>
+
           {/* Alerta de Cancelamento se aplicável */}
           {isCancelled && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-900">
@@ -216,20 +322,20 @@ export const ActiveOrderDetailModal: React.FC = () => {
             </div>
           )}
 
-          {/* Resumo dos Artigos Pedidos */}
+          {/* Resumo dos Artigos do Pedido Selecionado */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-[#35271F] uppercase tracking-wider flex items-center gap-1.5">
                 <Utensils className="w-3.5 h-3.5 text-[#C09573]" />
-                Artigos no Pedido
+                Artigos deste Pedido
               </h3>
               <span className="text-[11px] text-[#78716C]">
-                {activeOrder?.items?.reduce((acc, i) => acc + i.quantity, 0) || 0} artigos
+                {activeOrder.items?.reduce((acc, i) => acc + i.quantity, 0) || 0} artigos
               </span>
             </div>
 
             <div className="rounded-xl border border-[#E5DED6] bg-[#FFFFFF] divide-y divide-[#E5DED6]">
-              {activeOrder?.items && activeOrder.items.length > 0 ? (
+              {activeOrder.items && activeOrder.items.length > 0 ? (
                 activeOrder.items.map((item, idx) => (
                   <div
                     key={item.id || idx}
@@ -262,9 +368,9 @@ export const ActiveOrderDetailModal: React.FC = () => {
               )}
             </div>
 
-            {/* Total e Subtotal */}
+            {/* Total e Subtotal deste Pedido */}
             <div className="p-3 rounded-xl bg-[#F5F4F1] border border-[#E5DED6] space-y-1 text-xs">
-              {activeOrder?.subtotal !== undefined &&
+              {activeOrder.subtotal !== undefined &&
                 activeOrder.subtotal > 0 &&
                 activeOrder.subtotal !== activeOrder.total && (
                   <div className="flex justify-between text-[#78716C]">
@@ -273,15 +379,15 @@ export const ActiveOrderDetailModal: React.FC = () => {
                   </div>
                 )}
               <div className="flex justify-between font-black text-sm text-[#35271F] pt-0.5">
-                <span>Total a Pagar</span>
+                <span>Total deste Pedido</span>
                 <span className="text-[#C09573]">
-                  {formatCurrency(activeOrder?.total || 0)}
+                  {formatCurrency(activeOrder.total || 0)}
                 </span>
               </div>
             </div>
 
             {/* Observações Gerais se houver */}
-            {activeOrder?.customerNotes && (
+            {activeOrder.customerNotes && (
               <div className="p-2.5 rounded-lg bg-[#FAF8F5] border border-[#E5DED6] text-[11px] text-[#4C453F]">
                 <span className="font-bold text-[#35271F]">Notas: </span>
                 {activeOrder.customerNotes}

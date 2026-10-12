@@ -272,6 +272,47 @@ export default function TestBenchPage() {
   }, [connectRealtime]);
 
   // Handlers: Bloco A - Disparo de Pedidos
+  const syncSimulatedOrderToClientTracker = (orderData: {
+    orderId: string;
+    orderNumber: number;
+    tableNumber: number;
+    tableName?: string;
+    subtotal: number;
+    total: number;
+    status: string;
+    createdAt: string;
+  }) => {
+    try {
+      let existingIds: string[] = [];
+      try {
+        const rawIds = localStorage.getItem('gulas_active_order_ids');
+        if (rawIds) {
+          const parsed = JSON.parse(rawIds);
+          if (Array.isArray(parsed)) existingIds = parsed;
+        }
+      } catch {
+        // ignore
+      }
+      if (!existingIds.includes(orderData.orderId)) {
+        existingIds.push(orderData.orderId);
+      }
+
+      localStorage.setItem('gulas_active_order_ids', JSON.stringify(existingIds));
+      localStorage.setItem('gulas_active_order_id', orderData.orderId);
+
+      window.dispatchEvent(
+        new CustomEvent('gulas_active_order_created', {
+          detail: {
+            orderId: orderData.orderId,
+            order: orderData,
+          },
+        })
+      );
+    } catch {
+      // ignore
+    }
+  };
+
   const handleDispatchNormalOrder = async () => {
     setActiveAction('dispatch-normal');
     addLog('info', 'A submeter Pedido Normal na Mesa 3 (2 artigos comuns)...');
@@ -301,6 +342,7 @@ export default function TestBenchPage() {
       if (!result.success) {
         addLog('error', `Falha ao criar pedido: ${result.error.message}`);
       } else {
+        syncSimulatedOrderToClientTracker(result.data);
         addLog(
           'success',
           `✅ Pedido #${result.data.orderNumber} criado na Mesa 3! Total: €${result.data.total.toFixed(
@@ -349,6 +391,7 @@ export default function TestBenchPage() {
       if (!result.success) {
         addLog('error', `Falha ao criar pedido especial: ${result.error.message}`);
       } else {
+        syncSimulatedOrderToClientTracker(result.data);
         addLog(
           'success',
           `✅ Pedido #${result.data.orderNumber} (Mesa 7) com notas especiais criado! Verifique o painel âmbar de nota de cliente no cartão do KDS.`

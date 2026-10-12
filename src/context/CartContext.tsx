@@ -229,31 +229,61 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Persistir no localStorage para o Live Order Tracking e emitir evento reativo
       try {
+        let existingIds: string[] = [];
+        try {
+          const rawIds = localStorage.getItem('gulas_active_order_ids');
+          if (rawIds) {
+            const parsed = JSON.parse(rawIds);
+            if (Array.isArray(parsed)) existingIds = parsed;
+          }
+        } catch {
+          // ignore
+        }
+        if (!existingIds.includes(newOrder.id)) {
+          existingIds.push(newOrder.id);
+        }
+
+        const serializedNewOrder = {
+          id: newOrder.id,
+          orderNumber: newOrder.orderNumber,
+          tableNumber: newOrder.tableNumber,
+          tableName: newOrder.tableName,
+          restaurantId: newOrder.restaurantId,
+          restaurantSlug: newOrder.restaurantSlug,
+          restaurantName: newOrder.restaurantName,
+          status: newOrder.status,
+          subtotal: newOrder.subtotal,
+          total: newOrder.total,
+          customerNotes: newOrder.customerNotes,
+          createdAt: newOrder.createdAt,
+          items: newOrder.items.map((i) => ({
+            id: i.product.id,
+            productName: i.product.name,
+            quantity: i.quantity,
+            unitPrice: i.product.price,
+            notes: i.notes,
+          })),
+        };
+
+        let existingOrders: typeof serializedNewOrder[] = [];
+        try {
+          const rawOrders = localStorage.getItem('gulas_active_orders_data');
+          if (rawOrders) {
+            const parsed = JSON.parse(rawOrders);
+            if (Array.isArray(parsed)) existingOrders = parsed;
+          }
+        } catch {
+          // ignore
+        }
+        if (!existingOrders.some((o) => o.id === newOrder.id)) {
+          existingOrders.push(serializedNewOrder);
+        }
+
+        localStorage.setItem('gulas_active_order_ids', JSON.stringify(existingIds));
+        localStorage.setItem('gulas_active_orders_data', JSON.stringify(existingOrders));
         localStorage.setItem('gulas_active_order_id', newOrder.id);
-        localStorage.setItem(
-          'gulas_active_order_data',
-          JSON.stringify({
-            id: newOrder.id,
-            orderNumber: newOrder.orderNumber,
-            tableNumber: newOrder.tableNumber,
-            tableName: newOrder.tableName,
-            restaurantId: newOrder.restaurantId,
-            restaurantSlug: newOrder.restaurantSlug,
-            restaurantName: newOrder.restaurantName,
-            status: newOrder.status,
-            subtotal: newOrder.subtotal,
-            total: newOrder.total,
-            customerNotes: newOrder.customerNotes,
-            createdAt: newOrder.createdAt,
-            items: newOrder.items.map((i) => ({
-              id: i.product.id,
-              productName: i.product.name,
-              quantity: i.quantity,
-              unitPrice: i.product.price,
-              notes: i.notes,
-            })),
-          })
-        );
+        localStorage.setItem('gulas_active_order_data', JSON.stringify(serializedNewOrder));
+
         window.dispatchEvent(
           new CustomEvent('gulas_active_order_created', {
             detail: {
@@ -264,7 +294,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         );
         window.dispatchEvent(
           new CustomEvent('gulas_order_status_update', {
-            detail: { orderId: newOrder.id, status: newOrder.status },
+            detail: { orderId: newOrder.id, status: newOrder.status, order: newOrder },
           })
         );
       } catch {
