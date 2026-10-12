@@ -6,12 +6,9 @@ import { OrderStatus } from '@/types/restaurant';
 import {
   getOrderByIdSchema,
   updateOrderStatusSchema,
+  reopenOrderSchema,
   isValidStatusTransition,
 } from '@/lib/validations/order-management';
-
-// ============================================================================
-// Tipos & Interfaces Estruturados
-// ============================================================================
 
 export interface ManagedOrderItem {
   id: string;
@@ -20,6 +17,7 @@ export interface ManagedOrderItem {
   quantity: number;
   unitPrice: number;
   notes: string | null;
+  categorySlug: string | null;
 }
 
 export interface ManagedOrder {
@@ -40,6 +38,7 @@ export type OrderManagementErrorCode =
   | 'INVALID_INPUT'
   | 'ORDER_NOT_FOUND'
   | 'INVALID_STATUS_TRANSITION'
+  | 'OPTIMISTIC_CONFLICT'
   | 'DATABASE_ERROR';
 
 export interface OrderManagementError {
@@ -49,17 +48,13 @@ export interface OrderManagementError {
 
 export type OrderManagementActionResult<T> =
   | {
-      success: true;
-      data: T;
-    }
+    success: true;
+    data: T;
+  }
   | {
-      success: false;
-      error: OrderManagementError;
-    };
-
-// ============================================================================
-// Helpers Internos de Mapeamento
-// ============================================================================
+    success: false;
+    error: OrderManagementError;
+  };
 
 interface RawOrderItemRow {
   id: string;
@@ -68,6 +63,11 @@ interface RawOrderItemRow {
   quantity: number;
   unit_price: number;
   notes: string | null;
+  products?: {
+    categories?: {
+      slug: string;
+    } | null;
+  } | null;
 }
 
 interface RawOrderRow {
@@ -86,13 +86,14 @@ interface RawOrderRow {
 function mapRawOrderToManagedOrder(row: RawOrderRow): ManagedOrder {
   const items: ManagedOrderItem[] = Array.isArray(row.order_items)
     ? row.order_items.map((item) => ({
-        id: String(item.id),
-        productId: item.product_id ? String(item.product_id) : null,
-        productName: String(item.product_name),
-        quantity: Number(item.quantity),
-        unitPrice: Number(item.unit_price),
-        notes: item.notes ? String(item.notes) : null,
-      }))
+      id: String(item.id),
+      productId: item.product_id ? String(item.product_id) : null,
+      productName: String(item.product_name),
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unit_price),
+      notes: item.notes ? String(item.notes) : null,
+      categorySlug: item.products?.categories?.slug ?? null,
+    }))
     : [];
 
   return {
@@ -109,22 +110,61 @@ function mapRawOrderToManagedOrder(row: RawOrderRow): ManagedOrder {
   };
 }
 
-// ============================================================================
-// Server Actions de Gestão de Pedidos (M4.2)
-// ============================================================================
+const ORDER_SELECT = `
+  id,
+  order_number,
+  table_number,
+  status,
+  subtotal,
+  total,
+  customer_notes,
+  created_at,
+  updated_at,
+  order_items (
+    id,
+    product_id,
+    product_name,
+    quantity,
+    unit_price,
+    notes,
+    products (
+      categories (
+        slug
+      )
+    )
+  )
+` as const;
 
-/**
- * 1. getActiveOrders
- * Consulta todos os pedidos ativos pertencentes ao restaurante do staff autenticado.
- * Exclui pedidos já finalizados ('completed') ou cancelados ('cancelled').
- * Ordena por data de criação ascendente (FIFO / mais antigos primeiro).
- */
+function toComparableTimestamp(value: string): number | null {
+  const timestamp = new Date(value).getTime();
+
+  return Number.isNaN(timestamp) ? null : timestamp;
+}
+
+function hasTimestampConflict(
+  expectedUpdatedAt: string | undefined,
+  databaseUpdatedAt: string | null
+): boolean {
+  if (!expectedUpdatedAt || !databaseUpdatedAt) {
+    return false;
+  }
+
+  const expectedTimestamp = toComparableTimestamp(expectedUpdatedAt);
+  const databaseTimestamp = toComparableTimestamp(databaseUpdatedAt);
+
+  if (expectedTimestamp === null || databaseTimestamp === null) {
+    return true;
+  }
+
+  return expectedTimestamp !== databaseTimestamp;
+}
+
 export async function getActiveOrders(): Promise<
   OrderManagementActionResult<ManagedOrder[]>
 > {
   try {
-    // 1. Autenticar staff e obter o restaurante associado
     const staff = await getAuthenticatedStaff();
+
     if (!staff) {
       return {
         success: false,
@@ -135,8 +175,8 @@ export async function getActiveOrders(): Promise<
       };
     }
 
-    // 2. Obter cliente Supabase com sessão do utilizador
     const supabase = await createServerSupabaseClient();
+
     if (!supabase) {
       return {
         success: false,
@@ -147,7 +187,6 @@ export async function getActiveOrders(): Promise<
       };
     }
 
-    // 3. Consultar pedidos ativos isolados pelo restaurant_id do staff
     const activeStatuses: OrderStatus[] = [
       'pending',
       'accepted',
@@ -157,27 +196,7 @@ export async function getActiveOrders(): Promise<
 
     const { data, error } = await supabase
       .from('orders')
-      .select(
-        `
-        id,
-        order_number,
-        table_number,
-        status,
-        subtotal,
-        total,
-        customer_notes,
-        created_at,
-        updated_at,
-        order_items (
-          id,
-          product_id,
-          product_name,
-          quantity,
-          unit_price,
-          notes
-        )
-      `
-      )
+      .select(ORDER_SELECT)
       .eq('restaurant_id', staff.restaurant.id)
       .in('status', activeStatuses)
       .order('created_at', { ascending: true });
@@ -187,6 +206,7 @@ export async function getActiveOrders(): Promise<
         '[getActiveOrders] Erro ao consultar pedidos ativos:',
         error.message
       );
+
       return {
         success: false,
         error: {
@@ -206,6 +226,7 @@ export async function getActiveOrders(): Promise<
     };
   } catch (err: unknown) {
     console.error('[getActiveOrders] Exceção inesperada:', err);
+
     return {
       success: false,
       error: {
@@ -216,37 +237,32 @@ export async function getActiveOrders(): Promise<
   }
 }
 
-/**
- * 2. getOrderById
- * Obtém os detalhes completos de um pedido específico com validação de pertença
- * ao restaurante do staff autenticado.
- */
 export async function getOrderById(
   orderIdOrInput: unknown
 ): Promise<OrderManagementActionResult<ManagedOrder>> {
   try {
-    // 1. Validação do input com Zod
     const rawInput =
       typeof orderIdOrInput === 'string'
         ? { orderId: orderIdOrInput }
         : orderIdOrInput;
 
     const parsed = getOrderByIdSchema.safeParse(rawInput);
+
     if (!parsed.success) {
       return {
         success: false,
         error: {
           code: 'INVALID_INPUT',
           message:
-            parsed.error.issues[0]?.message ?? 'Identificador de pedido inválido.',
+            parsed.error.issues[0]?.message ??
+            'Identificador de pedido inválido.',
         },
       };
     }
 
     const { orderId } = parsed.data;
-
-    // 2. Autenticar staff
     const staff = await getAuthenticatedStaff();
+
     if (!staff) {
       return {
         success: false,
@@ -257,8 +273,8 @@ export async function getOrderById(
       };
     }
 
-    // 3. Obter cliente Supabase
     const supabase = await createServerSupabaseClient();
+
     if (!supabase) {
       return {
         success: false,
@@ -269,30 +285,9 @@ export async function getOrderById(
       };
     }
 
-    // 4. Consultar o pedido garantindo isolamento estrito por restaurant_id
     const { data, error } = await supabase
       .from('orders')
-      .select(
-        `
-        id,
-        order_number,
-        table_number,
-        status,
-        subtotal,
-        total,
-        customer_notes,
-        created_at,
-        updated_at,
-        order_items (
-          id,
-          product_id,
-          product_name,
-          quantity,
-          unit_price,
-          notes
-        )
-      `
-      )
+      .select(ORDER_SELECT)
       .eq('id', orderId)
       .eq('restaurant_id', staff.restaurant.id)
       .maybeSingle();
@@ -302,6 +297,7 @@ export async function getOrderById(
         `[getOrderById] Erro ao consultar pedido ${orderId}:`,
         error.message
       );
+
       return {
         success: false,
         error: {
@@ -328,6 +324,7 @@ export async function getOrderById(
     };
   } catch (err: unknown) {
     console.error('[getOrderById] Exceção inesperada:', err);
+
     return {
       success: false,
       error: {
@@ -338,41 +335,33 @@ export async function getOrderById(
   }
 }
 
-/**
- * 3. updateOrderStatus
- * Atualiza o estado de um pedido, aplicando:
- * - Validação de input com Zod
- * - Autenticação e isolamento por restaurant_id
- * - Verificação da máquina de estados permitida
- * - Atualização apenas de status e updated_at
- */
 export async function updateOrderStatus(
   orderIdOrInput: unknown,
   maybeNextStatus?: unknown
 ): Promise<OrderManagementActionResult<ManagedOrder>> {
   try {
-    // 1. Normalizar e validar input com Zod
     const rawInput =
       typeof orderIdOrInput === 'string' && typeof maybeNextStatus === 'string'
         ? { orderId: orderIdOrInput, nextStatus: maybeNextStatus }
         : orderIdOrInput;
 
     const parsed = updateOrderStatusSchema.safeParse(rawInput);
+
     if (!parsed.success) {
       return {
         success: false,
         error: {
           code: 'INVALID_INPUT',
           message:
-            parsed.error.issues[0]?.message ?? 'Dados de atualização inválidos.',
+            parsed.error.issues[0]?.message ??
+            'Dados de atualização inválidos.',
         },
       };
     }
 
-    const { orderId, nextStatus } = parsed.data;
-
-    // 2. Autenticar staff
+    const { orderId, nextStatus, expectedUpdatedAt } = parsed.data;
     const staff = await getAuthenticatedStaff();
+
     if (!staff) {
       return {
         success: false,
@@ -383,8 +372,8 @@ export async function updateOrderStatus(
       };
     }
 
-    // 3. Obter cliente Supabase
     const supabase = await createServerSupabaseClient();
+
     if (!supabase) {
       return {
         success: false,
@@ -395,10 +384,9 @@ export async function updateOrderStatus(
       };
     }
 
-    // 4. Obter estado atual do pedido e garantir pertença ao restaurante
     const { data: currentOrder, error: fetchError } = await supabase
       .from('orders')
-      .select('id, status, restaurant_id')
+      .select('id, status, updated_at, restaurant_id')
       .eq('id', orderId)
       .eq('restaurant_id', staff.restaurant.id)
       .maybeSingle();
@@ -408,6 +396,7 @@ export async function updateOrderStatus(
         `[updateOrderStatus] Erro ao verificar estado do pedido ${orderId}:`,
         fetchError.message
       );
+
       return {
         success: false,
         error: {
@@ -428,8 +417,21 @@ export async function updateOrderStatus(
       };
     }
 
-    // 5. Validar transição de estado permitida
+    const databaseUpdatedAt = String(currentOrder.updated_at);
+
+    if (hasTimestampConflict(expectedUpdatedAt, databaseUpdatedAt)) {
+      return {
+        success: false,
+        error: {
+          code: 'OPTIMISTIC_CONFLICT',
+          message:
+            'Este pedido foi alterado por outro utilizador. A lista foi atualizada.',
+        },
+      };
+    }
+
     const currentStatus = currentOrder.status as OrderStatus;
+
     if (!isValidStatusTransition(currentStatus, nextStatus as OrderStatus)) {
       return {
         success: false,
@@ -440,9 +442,9 @@ export async function updateOrderStatus(
       };
     }
 
-    // 6. Atualizar estritamente o estado e timestamp
     const now = new Date().toISOString();
-    const { data: updatedOrder, error: updateError } = await supabase
+
+    let updateQuery = supabase
       .from('orders')
       .update({
         status: nextStatus as OrderStatus,
@@ -450,39 +452,38 @@ export async function updateOrderStatus(
       })
       .eq('id', orderId)
       .eq('restaurant_id', staff.restaurant.id)
-      .select(
-        `
-        id,
-        order_number,
-        table_number,
-        status,
-        subtotal,
-        total,
-        customer_notes,
-        created_at,
-        updated_at,
-        order_items (
-          id,
-          product_id,
-          product_name,
-          quantity,
-          unit_price,
-          notes
-        )
-      `
-      )
-      .single();
+      .eq('status', currentStatus);
 
-    if (updateError || !updatedOrder) {
+    if (expectedUpdatedAt) {
+      updateQuery = updateQuery.eq('updated_at', databaseUpdatedAt);
+    }
+
+    const { data: updatedOrder, error: updateError } = await updateQuery
+      .select(ORDER_SELECT)
+      .maybeSingle();
+
+    if (updateError) {
       console.error(
         `[updateOrderStatus] Erro ao atualizar pedido ${orderId}:`,
-        updateError?.message
+        updateError.message
       );
+
       return {
         success: false,
         error: {
           code: 'DATABASE_ERROR',
           message: 'Ocorreu um erro ao atualizar o estado do pedido.',
+        },
+      };
+    }
+
+    if (!updatedOrder) {
+      return {
+        success: false,
+        error: {
+          code: 'OPTIMISTIC_CONFLICT',
+          message:
+            'Este pedido foi alterado por outro utilizador. A lista foi atualizada.',
         },
       };
     }
@@ -495,28 +496,23 @@ export async function updateOrderStatus(
     };
   } catch (err: unknown) {
     console.error('[updateOrderStatus] Exceção inesperada:', err);
+
     return {
       success: false,
       error: {
         code: 'DATABASE_ERROR',
-        message: 'Ocorreu um erro inesperado ao atualizar o pedido.',
+        message: 'Ocorreu um erro inesperado ao atualizar o estado do pedido.',
       },
     };
   }
 }
 
-/**
- * 4. getOrderHistory
- * Obtém os pedidos finalizados ('completed' ou 'cancelled') pertencentes
- * exclusivamente ao restaurante do staff autenticado.
- * Ordena por created_at decrescente (mais recentes primeiro) com limite padrão de 50.
- */
 export async function getOrderHistory(
   options?: { limit?: number }
 ): Promise<OrderManagementActionResult<ManagedOrder[]>> {
   try {
-    // 1. Autenticar staff e obter o restaurante associado
     const staff = await getAuthenticatedStaff();
+
     if (!staff) {
       return {
         success: false,
@@ -527,8 +523,8 @@ export async function getOrderHistory(
       };
     }
 
-    // 2. Obter cliente Supabase
     const supabase = await createServerSupabaseClient();
+
     if (!supabase) {
       return {
         success: false,
@@ -539,33 +535,12 @@ export async function getOrderHistory(
       };
     }
 
-    // 3. Consultar histórico garantindo isolamento por restaurant_id
     const limit = Math.min(Math.max(Number(options?.limit) || 50, 1), 100);
     const historyStatuses: OrderStatus[] = ['completed', 'cancelled'];
 
     const { data, error } = await supabase
       .from('orders')
-      .select(
-        `
-        id,
-        order_number,
-        table_number,
-        status,
-        subtotal,
-        total,
-        customer_notes,
-        created_at,
-        updated_at,
-        order_items (
-          id,
-          product_id,
-          product_name,
-          quantity,
-          unit_price,
-          notes
-        )
-      `
-      )
+      .select(ORDER_SELECT)
       .eq('restaurant_id', staff.restaurant.id)
       .in('status', historyStatuses)
       .order('created_at', { ascending: false })
@@ -576,6 +551,7 @@ export async function getOrderHistory(
         '[getOrderHistory] Erro ao consultar histórico de pedidos:',
         error.message
       );
+
       return {
         success: false,
         error: {
@@ -595,6 +571,7 @@ export async function getOrderHistory(
     };
   } catch (err: unknown) {
     console.error('[getOrderHistory] Exceção inesperada:', err);
+
     return {
       success: false,
       error: {
@@ -605,3 +582,168 @@ export async function getOrderHistory(
   }
 }
 
+export async function reopenCompletedOrder(
+  input: unknown
+): Promise<OrderManagementActionResult<ManagedOrder>> {
+  try {
+    const parsed = reopenOrderSchema.safeParse(
+      typeof input === 'string' ? { orderId: input } : input
+    );
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message:
+            parsed.error.issues[0]?.message ??
+            'Identificador de pedido inválido.',
+        },
+      };
+    }
+
+    const { orderId, expectedUpdatedAt } = parsed.data;
+    const staff = await getAuthenticatedStaff();
+
+    if (!staff) {
+      return {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Sessão expirada ou utilizador não autorizado.',
+        },
+      };
+    }
+
+    const supabase = await createServerSupabaseClient();
+
+    if (!supabase) {
+      return {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Serviço de base de dados indisponível.',
+        },
+      };
+    }
+
+    const { data: currentOrder, error: fetchError } = await supabase
+      .from('orders')
+      .select('id, status, updated_at, restaurant_id')
+      .eq('id', orderId)
+      .eq('restaurant_id', staff.restaurant.id)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error(
+        `[reopenCompletedOrder] Erro ao verificar pedido ${orderId}:`,
+        fetchError.message
+      );
+
+      return {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Ocorreu um erro ao verificar o pedido.',
+        },
+      };
+    }
+
+    if (!currentOrder) {
+      return {
+        success: false,
+        error: {
+          code: 'ORDER_NOT_FOUND',
+          message:
+            'Pedido não encontrado ou não pertence a este restaurante.',
+        },
+      };
+    }
+
+    if (currentOrder.status !== 'completed') {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_STATUS_TRANSITION',
+          message: `Apenas pedidos concluídos podem ser reabertos. Estado atual: "${currentOrder.status}".`,
+        },
+      };
+    }
+
+    const databaseUpdatedAt = String(currentOrder.updated_at);
+
+    if (hasTimestampConflict(expectedUpdatedAt, databaseUpdatedAt)) {
+      return {
+        success: false,
+        error: {
+          code: 'OPTIMISTIC_CONFLICT',
+          message:
+            'Este pedido foi alterado por outro utilizador. A lista foi atualizada.',
+        },
+      };
+    }
+
+    const now = new Date().toISOString();
+
+    let updateQuery = supabase
+      .from('orders')
+      .update({
+        status: 'accepted' as OrderStatus,
+        updated_at: now,
+      })
+      .eq('id', orderId)
+      .eq('restaurant_id', staff.restaurant.id)
+      .eq('status', 'completed');
+
+    if (expectedUpdatedAt) {
+      updateQuery = updateQuery.eq('updated_at', databaseUpdatedAt);
+    }
+
+    const { data: reopenedOrder, error: updateError } = await updateQuery
+      .select(ORDER_SELECT)
+      .maybeSingle();
+
+    if (updateError) {
+      console.error(
+        `[reopenCompletedOrder] Erro ao reabrir pedido ${orderId}:`,
+        updateError.message
+      );
+
+      return {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Ocorreu um erro ao reabrir o pedido.',
+        },
+      };
+    }
+
+    if (!reopenedOrder) {
+      return {
+        success: false,
+        error: {
+          code: 'OPTIMISTIC_CONFLICT',
+          message:
+            'Este pedido foi alterado por outro utilizador. A lista foi atualizada.',
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: mapRawOrderToManagedOrder(
+        reopenedOrder as unknown as RawOrderRow
+      ),
+    };
+  } catch (err: unknown) {
+    console.error('[reopenCompletedOrder] Exceção inesperada:', err);
+
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'Ocorreu um erro inesperado ao reabrir o pedido.',
+      },
+    };
+  }
+}

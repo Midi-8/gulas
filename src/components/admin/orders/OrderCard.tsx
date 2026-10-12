@@ -4,7 +4,8 @@ import { ValidNextStatus } from '@/lib/validations/order-management';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { OrderItemsList } from './OrderItemsList';
 import { OrderStatusActions } from './OrderStatusActions';
-import { Clock, MessageSquare, AlertTriangle, Sparkles, X } from 'lucide-react';
+import { Clock, MessageSquare, AlertTriangle, Sparkles, X, Timer } from 'lucide-react';
+import { useOrderTimer } from '@/hooks/useOrderTimer';
 
 interface OrderCardProps {
   order: ManagedOrder;
@@ -15,6 +16,25 @@ interface OrderCardProps {
   onUpdateStatus: (orderId: string, nextStatus: ValidNextStatus) => Promise<void>;
 }
 
+function getTimerStyles(minutes: number) {
+  if (minutes < 10) {
+    return {
+      badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      ring: 'border-emerald-300',
+    };
+  }
+  if (minutes < 20) {
+    return {
+      badge: 'bg-amber-100 text-amber-800 border-amber-200',
+      ring: 'border-amber-300',
+    };
+  }
+  return {
+    badge: 'bg-rose-100 text-rose-800 border-rose-200',
+    ring: 'border-rose-300',
+  };
+}
+
 export function OrderCard({
   order,
   isUpdating,
@@ -23,6 +43,9 @@ export function OrderCard({
   onClearError,
   onUpdateStatus,
 }: OrderCardProps) {
+  const elapsedMinutes = useOrderTimer(order.createdAt);
+  const timerStyles = getTimerStyles(elapsedMinutes);
+
   // Format order creation time (HH:mm)
   const formatTime = (dateString: string) => {
     try {
@@ -46,17 +69,16 @@ export function OrderCard({
   return (
     <article
       aria-labelledby={`order-card-title-${order.id}`}
-      className={`bg-white rounded-2xl border transition-all flex flex-col justify-between shadow-xs hover:shadow-md ${
-        isNew
+      className={`bg-white rounded-2xl border transition-all flex flex-col justify-between shadow-xs hover:shadow-md ${isNew
           ? 'border-emerald-400 ring-2 ring-emerald-200/90 shadow-md animate-in fade-in zoom-in-98 duration-300'
           : order.status === 'pending'
-          ? 'border-amber-300 ring-2 ring-amber-100'
-          : order.status === 'preparing'
-          ? 'border-orange-200'
-          : order.status === 'ready'
-          ? 'border-emerald-300 ring-2 ring-emerald-100 bg-emerald-50/20'
-          : 'border-gulas-gray-200'
-      }`}
+            ? 'border-amber-300 ring-2 ring-amber-100'
+            : order.status === 'preparing'
+              ? 'border-orange-200'
+              : order.status === 'ready'
+                ? 'border-emerald-300 ring-2 ring-emerald-100 bg-emerald-50/20'
+                : 'border-gulas-gray-200'
+        }`}
     >
       {/* Top Card Header */}
       <div className="p-4 sm:p-5 pb-3">
@@ -86,7 +108,18 @@ export function OrderCard({
             </div>
           </div>
 
-          <OrderStatusBadge status={order.status} size="sm" />
+          <div className="flex flex-col items-end gap-1.5">
+            {/* Temporizador visual por pedido */}
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-xs font-bold ${timerStyles.badge}`}
+              title="Tempo desde a criação do pedido"
+            >
+              <Timer className="w-3.5 h-3.5" />
+              {elapsedMinutes} min
+            </span>
+
+            <OrderStatusBadge status={order.status} size="sm" />
+          </div>
         </div>
 
         {/* Customer General Notes */}

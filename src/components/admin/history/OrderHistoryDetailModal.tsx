@@ -2,16 +2,18 @@ import React, { useEffect } from 'react';
 import { ManagedOrder } from '@/actions/order-management';
 import { OrderStatusBadge } from '../orders/OrderStatusBadge';
 import { OrderItemsList } from '../orders/OrderItemsList';
-import { X, Calendar, Clock, MessageSquare } from 'lucide-react';
+import { X, Calendar, Clock, MessageSquare, Undo2 } from 'lucide-react';
 
 interface OrderHistoryDetailModalProps {
   order: ManagedOrder | null;
   onClose: () => void;
+  onReopen?: (order: ManagedOrder) => void;
 }
 
 export function OrderHistoryDetailModal({
   order,
   onClose,
+  onReopen,
 }: OrderHistoryDetailModalProps) {
   useEffect(() => {
     if (!order) return;
@@ -131,7 +133,7 @@ export function OrderHistoryDetailModal({
         </div>
 
         {/* Footer Financials */}
-        <div className="p-5 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between">
+        <div className="p-5 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between gap-3">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-400 block">
               Subtotal: {formatPrice(order.subtotal)}
@@ -141,13 +143,26 @@ export function OrderHistoryDetailModal({
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-gulas-dark hover:bg-black text-white text-xs font-bold focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none transition-all cursor-pointer"
-          >
-            Fechar
-          </button>
+          <div className="flex items-center gap-2">
+            {order.status === 'completed' && onReopen && (
+              <button
+                type="button"
+                onClick={() => onReopen(order)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:outline-none transition-all cursor-pointer"
+                aria-label={`Desfazer conclusão do pedido ${order.orderNumber}`}
+              >
+                <Undo2 className="w-4 h-4" />
+                Desfazer conclusão
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl bg-gulas-dark hover:bg-black text-white text-xs font-bold focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none transition-all cursor-pointer"
+            >
+              Fechar
+            </button>
+          </div>
         </div>
       </div>
     </div>
