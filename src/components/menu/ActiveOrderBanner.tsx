@@ -26,26 +26,46 @@ const subscribeStorage = (callback: () => void) => {
   };
 };
 
-const getStoredOrderIds = (): string[] => {
-  try {
-    const rawMulti = localStorage.getItem('gulas_active_order_ids');
-    if (rawMulti) {
-      const parsed = JSON.parse(rawMulti);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.filter((id) => typeof id === 'string' && id.trim() !== '');
-      }
-    }
-    const single = localStorage.getItem('gulas_active_order_id');
-    if (single && single.trim() !== '') {
-      return [single.trim()];
-    }
-  } catch {
-    // ignore
-  }
-  return [];
-};
+// FORA DO COMPONENTE (Constante imutável em cache na memória do módulo):
+const EMPTY_ORDER_IDS: string[] = [];
 
-const getServerSnapshot = () => [];
+// Snapshot seguro para SSR (devolve sempre a mesma referência estática):
+const getServerSnapshot = () => EMPTY_ORDER_IDS;
+
+// Snapshot de Leitura Local (Garantir cache de referência):
+let cachedRawValue: string | null = null;
+let cachedParsedIds: string[] = EMPTY_ORDER_IDS;
+
+const getStoredOrderIds = (): string[] => {
+  if (typeof window === 'undefined') return EMPTY_ORDER_IDS;
+
+  try {
+    const raw =
+      localStorage.getItem('gulas_active_order_ids') ||
+      localStorage.getItem('gulas_active_order_id');
+    if (!raw) {
+      cachedRawValue = null;
+      cachedParsedIds = EMPTY_ORDER_IDS;
+      return EMPTY_ORDER_IDS;
+    }
+
+    // Se o valor bruto no localStorage não mudou, devolve a mesma referência em cache:
+    if (raw === cachedRawValue) {
+      return cachedParsedIds;
+    }
+
+    cachedRawValue = raw;
+    if (raw.startsWith('[')) {
+      const parsed = JSON.parse(raw);
+      cachedParsedIds = Array.isArray(parsed) ? parsed : EMPTY_ORDER_IDS;
+    } else {
+      cachedParsedIds = [raw];
+    }
+    return cachedParsedIds;
+  } catch {
+    return EMPTY_ORDER_IDS;
+  }
+};
 
 export const ActiveOrderBanner: React.FC = () => {
   const {
