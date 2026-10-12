@@ -45,7 +45,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
   const variantStyles: Record<string, string> = {
     novidade:
-      'bg-[#15803D] text-white font-bold tracking-wide uppercase',
+      'bg-[#5E4939] text-[#F5F4F1] font-bold tracking-wide uppercase',
     picante:
       'bg-red-50 text-red-700 border border-red-200/80',
     vegetariano:
@@ -53,17 +53,17 @@ export const Badge: React.FC<BadgeProps> = ({
     vegan:
       'bg-teal-50 text-teal-800 border border-teal-200/80',
     especialidade:
-      'bg-emerald-900/5 text-[#15803D] border border-emerald-700/20 font-bold',
+      'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/40 font-bold',
     house_special:
-      'bg-emerald-900/5 text-[#15803D] border border-emerald-700/20 font-bold',
+      'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/40 font-bold',
     popular:
-      'bg-amber-50 text-amber-900 border border-amber-200/80 font-medium',
+      'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6] font-medium',
     primary:
-      'bg-emerald-50 text-emerald-800 border border-emerald-200',
+      'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/30',
     secondary:
-      'bg-zinc-100 text-zinc-700 border border-zinc-200/80',
+      'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6]',
     muted:
-      'bg-zinc-100 text-zinc-500',
+      'bg-[#EAE5DF] text-[#4C453F]',
   };
 
   const renderDefaultIcon = () => {
@@ -76,7 +76,7 @@ export const Badge: React.FC<BadgeProps> = ({
         return <Leaf className="w-2.5 h-2.5 text-teal-700" />;
       case 'especialidade':
       case 'house_special':
-        return <Sparkles className="w-2.5 h-2.5 text-[#15803D]" />;
+        return <Sparkles className="w-2.5 h-2.5 text-[#C09573]" />;
       default:
         return null;
     }

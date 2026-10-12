@@ -52,46 +52,46 @@ const BCG_CONFIG: Record<
     label: string;
     description: string;
     badgeStyle: string;
-    glowBorder: string;
+    cardStyle: string;
     icon: React.ComponentType<{ className?: string }>;
   }
 > = {
   star: {
     label: 'Estrela',
     description: 'Alto volume e alta margem',
-    badgeStyle: 'bg-amber-400/10 text-amber-300 border-amber-400/25',
-    glowBorder: 'border-amber-500/30 hover:border-amber-400/50',
+    badgeStyle: 'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/40',
+    cardStyle: 'border-[#C09573] bg-[#C09573]/10',
     icon: Sparkles,
   },
   plowhorse: {
     label: 'Cavalo de Batalha',
     description: 'Alto volume e menor margem',
-    badgeStyle: 'bg-sky-400/10 text-sky-300 border-sky-400/25',
-    glowBorder: 'border-sky-500/30 hover:border-sky-400/50',
+    badgeStyle: 'bg-[#5E4939]/10 text-[#4C392D] border border-[#5E4939]/30',
+    cardStyle: 'border-[#5E4939] bg-[#5E4939]/10',
     icon: Award,
   },
   puzzle: {
     label: 'Quebra-Cabeças',
     description: 'Baixo volume e alta margem',
-    badgeStyle: 'bg-purple-400/10 text-purple-300 border-purple-400/25',
-    glowBorder: 'border-purple-500/30 hover:border-purple-400/50',
+    badgeStyle: 'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6]',
+    cardStyle: 'border-[#A77B59] bg-[#EAE5DF]/80',
     icon: HelpCircle,
   },
   dog: {
     label: 'Inerte / Cão',
     description: 'Baixo volume e baixa rentabilidade',
-    badgeStyle: 'bg-rose-400/10 text-rose-300 border-rose-400/25',
-    glowBorder: 'border-rose-500/30 hover:border-rose-400/50',
+    badgeStyle: 'bg-[#F5F4F1] text-[#4C453F] border border-[#E5DED6]',
+    cardStyle: 'border-[#E5DED6] bg-[#F5F4F1]',
     icon: Footprints,
   },
 };
 
 function Sparkline({
   data,
-  color = '#10b981',
+  color = '#C09573',
   gradientId,
-  height = 32,
-  width = 96,
+  height = 42,
+  width = 110,
 }: {
   data: number[];
   color?: string;
@@ -107,7 +107,7 @@ function Sparkline({
 
   const coords = data.map((val, i) => {
     const x = i * step;
-    const y = height - ((val - min) / range) * (height - 8) - 4;
+    const y = height - ((val - min) / range) * (height - 10) - 5;
     return { x, y };
   });
 
@@ -126,7 +126,7 @@ function Sparkline({
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.35" />
           <stop offset="100%" stopColor={color} stopOpacity="0.0" />
         </linearGradient>
       </defs>
@@ -135,7 +135,7 @@ function Sparkline({
         d={linePath}
         fill="none"
         stroke={color}
-        strokeWidth="2"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -243,14 +243,12 @@ export function AnalyticsDashboardView({
     }
 
     const priceMultiplier = 1 + simulatedPriceAdjustmentPct / 100;
-    // Volume adjustment based on elasticity: % delta volume = elasticity * % delta price
     const volumeMultiplier = 1 + (demandElasticity * simulatedPriceAdjustmentPct) / 100;
 
     const simulatedUnits = baseline.totalUnitsSold * volumeMultiplier;
     const simulatedPrice = baseline.averageUnitPrice * priceMultiplier;
     const simulatedRevenue = simulatedUnits * simulatedPrice;
 
-    // Costs scale with units produced
     const simulatedCost = simulatedUnits * baseline.averageUnitCost;
     const simulatedProfit = simulatedRevenue - simulatedCost;
 
@@ -275,36 +273,36 @@ export function AnalyticsDashboardView({
   }, [summary.whatIfBaseline, summary.totalOrders, simulatedPriceAdjustmentPct, demandElasticity]);
 
   return (
-    <div className="space-y-8 pb-16 text-zinc-100 font-sans selection:bg-emerald-500/20 selection:text-emerald-300">
-      {/* 1. CABEÇALHO EXECUTIVO (Stripe / Linear / Vercel Pattern) */}
-      <div className="relative rounded-3xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/70 p-6 sm:p-8 shadow-2xl overflow-hidden">
-        {/* Directional ambient glows */}
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="space-y-8 pb-16 text-[#35271F] font-sans">
+      {/* 1. CABEÇALHO EXECUTIVO (Preto Carvão #0C0F14 com Destaques Caramelo #C09573) */}
+      <div className="relative rounded-3xl bg-[#0C0F14] text-[#F5F4F1] border border-[#E5DED6]/20 p-6 sm:p-8 shadow-xl overflow-hidden">
+        {/* Ambient Warm Directional Glows */}
+        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#C09573]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#5E4939]/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2.5 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wide bg-[#C09573]/20 text-[#C09573] border border-[#C09573]/40">
+                <span className="w-2 h-2 rounded-full bg-[#C09573] animate-pulse" />
                 LIVE SYNC
               </span>
-              <span className="text-xs font-mono text-zinc-400">
-                v2.4 Executivo • {restaurantName}
+              <span className="text-xs font-mono text-[#EAE5DF]/70">
+                Centro de Comando &bull; {restaurantName}
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-100 flex items-center gap-3">
-              Centro de Comando & BI
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#F5F4F1]">
+              Inteligência de Negócio &amp; BI
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-xl leading-relaxed">
-              Análise preditiva de faturação, matriz BCG de rentabilidade, cesta de compras cruzadas e auditoria de fugas operacionais.
+            <p className="text-xs sm:text-sm text-[#EAE5DF]/80 mt-1 max-w-xl leading-relaxed">
+              Métricas de rentabilidade BCG, análise de cestas de compra, pressão operacional de cozinha e simulação preditiva.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Period Selector Toggle */}
-            <div className="inline-flex p-1 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl shadow-inner">
+            <div className="inline-flex p-1 bg-[#1A1F26] border border-white/10 rounded-2xl shadow-inner">
               {(['today', '7days', '30days'] as AnalyticsPeriod[]).map((p) => {
                 const isActive = period === p;
                 return (
@@ -312,11 +310,11 @@ export function AnalyticsDashboardView({
                     key={p}
                     onClick={() => handlePeriodChange(p)}
                     disabled={isPending}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                       isActive
-                        ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700/50'
-                        : 'text-zinc-400 hover:text-zinc-200'
-                    } disabled:opacity-50`}
+                        ? 'bg-[#5E4939] text-[#F5F4F1] shadow-sm border border-[#C09573]/40'
+                        : 'text-[#EAE5DF]/70 hover:text-white'
+                    } disabled:opacity-50 cursor-pointer`}
                   >
                     {PERIOD_LABELS[p]}
                   </button>
@@ -328,183 +326,279 @@ export function AnalyticsDashboardView({
             <button
               onClick={handleExportCsv}
               disabled={isExporting || isPending}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-800 hover:bg-zinc-700/80 border border-zinc-700/60 text-xs sm:text-sm font-semibold text-zinc-100 shadow-sm transition-all active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#C09573] hover:bg-[#A77B59] text-[#0C0F14] text-xs sm:text-sm font-bold shadow-md shadow-[#C09573]/20 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
-              <Download className={`w-4 h-4 text-emerald-400 ${isExporting ? 'animate-bounce' : ''}`} />
-              <span>{isExporting ? 'A Exportar...' : 'Exportar Relatório'}</span>
+              <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
+              <span>{isExporting ? 'A Exportar...' : 'Exportar Relatório (CSV)'}</span>
             </button>
           </div>
         </div>
 
         {isPending && (
-          <div className="mt-4 flex items-center gap-2 text-xs font-mono text-emerald-400 animate-pulse">
+          <div className="mt-4 flex items-center gap-2 text-xs font-mono text-[#C09573] animate-pulse">
             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            <span>A sincronizar modelos preditivos com o Supabase...</span>
+            <span>A recalcular agregações em tempo real...</span>
           </div>
         )}
 
         {errorMessage && (
-          <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-xl flex items-center gap-2">
+          <div className="mt-4 p-3 bg-rose-500/15 border border-rose-500/30 text-rose-200 text-xs rounded-xl flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-rose-400 flex-shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
       </div>
 
-      {/* 2. FAIXA DE KPIS COM SPARKLINES (5 CARDS EXECUTIVOS) */}
+      {/* 2. FAIXA DE KPIS COM SPARKLINES (Cartões em #FFFFFF, Bordas #E5DED6, Destaque #C09573) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* KPI 1: Faturação Total */}
-        <div className="rounded-2xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/60 p-5 relative overflow-hidden group hover:border-zinc-700/80 transition-all">
-          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/50 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Faturação Total</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <TrendingUp className="w-3.5 h-3.5" />
+            <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
+              Faturação Total
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-[#C09573]/15 text-[#5E4939] flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-[#C09573]" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-semibold tracking-tight text-zinc-100">
+          <div className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-[#35271F]">
             {summary.totalRevenue.toLocaleString('pt-PT', {
               style: 'currency',
               currency: 'EUR',
             })}
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <div className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
-              <span>{summary.runRate.hourlyVelocity.toFixed(2)}€/h</span>
-            </div>
+            <span className="text-xs font-mono font-bold text-[#5E4939]">
+              {summary.runRate.hourlyVelocity.toFixed(2)}€/h
+            </span>
             <Sparkline
               data={summary.sparklines.revenuePoints}
-              color="#10b981"
+              color="#C09573"
               gradientId="kpi-rev"
             />
           </div>
         </div>
 
         {/* KPI 2: Ticket Médio */}
-        <div className="rounded-2xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/60 p-5 relative overflow-hidden group hover:border-zinc-700/80 transition-all">
-          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-sky-500/0 via-sky-500/50 to-sky-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Ticket Médio</span>
-            <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center">
-              <Receipt className="w-3.5 h-3.5" />
+            <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
+              Ticket Médio
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-[#5E4939]/10 text-[#5E4939] flex items-center justify-center">
+              <Receipt className="w-4 h-4 text-[#5E4939]" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-semibold tracking-tight text-zinc-100">
+          <div className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-[#35271F]">
             {summary.averageTicket.toLocaleString('pt-PT', {
               style: 'currency',
               currency: 'EUR',
             })}
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <div className="text-[11px] text-zinc-400">
-              {summary.totalOrders} faturados
-            </div>
+            <span className="text-xs text-[#4C453F] font-semibold">
+              {summary.totalOrders} pedidos
+            </span>
             <Sparkline
               data={summary.sparklines.ordersPoints}
-              color="#0ea5e9"
+              color="#5E4939"
               gradientId="kpi-orders"
             />
           </div>
         </div>
 
         {/* KPI 3: Cumprimento SLA (<20m) */}
-        <div className="rounded-2xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/60 p-5 relative overflow-hidden group hover:border-zinc-700/80 transition-all">
-          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-amber-500/0 via-amber-500/50 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Cumprimento SLA</span>
+            <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
+              Cumprimento SLA
+            </span>
             <div
-              className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+              className={`w-8 h-8 rounded-xl flex items-center justify-center ${
                 summary.slaComplianceRate >= 80
-                  ? 'bg-emerald-500/10 text-emerald-400'
-                  : 'bg-rose-500/10 text-rose-400'
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-rose-50 text-rose-700'
               }`}
             >
               {summary.slaComplianceRate >= 80 ? (
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               ) : (
-                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertTriangle className="w-4 h-4 text-rose-600" />
               )}
             </div>
           </div>
-          <div className="text-2xl font-mono font-semibold tracking-tight text-zinc-100">
+          <div className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-[#35271F]">
             {summary.slaComplianceRate}%
           </div>
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between text-xs">
             <span
-              className={`text-[11px] px-1.5 py-0.5 rounded font-mono ${
+              className={`px-2 py-0.5 rounded-md font-mono font-bold ${
                 summary.slaViolationCount > 0
-                  ? 'bg-rose-500/15 text-rose-300'
-                  : 'bg-emerald-500/15 text-emerald-300'
+                  ? 'bg-rose-100 text-rose-800'
+                  : 'bg-emerald-100 text-emerald-800'
               }`}
             >
               {summary.slaViolationCount} violações (&gt;20m)
             </span>
-            <span className="text-[11px] font-mono text-zinc-400">
+            <span className="font-mono text-[#4C453F]">
               Méd: {summary.averageTurnaroundMinutes}m
             </span>
           </div>
         </div>
 
-        {/* KPI 4: Volume & Velocidade */}
-        <div className="rounded-2xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/60 p-5 relative overflow-hidden group hover:border-zinc-700/80 transition-all">
-          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-purple-500/0 via-purple-500/50 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* KPI 4: Ritmo de Pedidos */}
+        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Ritmo de Pedidos</span>
-            <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5" />
+            <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
+              Ritmo de Pedidos
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-[#EAE5DF] text-[#5E4939] flex items-center justify-center">
+              <Zap className="w-4 h-4 text-[#5E4939]" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-semibold tracking-tight text-zinc-100">
-            {summary.totalOrders} <span className="text-sm font-normal text-zinc-400">pedidos</span>
+          <div className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-[#35271F]">
+            {summary.totalOrders} <span className="text-sm font-normal text-[#4C453F]">ped</span>
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-[11px] font-mono text-purple-400">
+            <span className="text-xs font-mono font-bold text-[#5E4939]">
               {summary.runRate.ordersVelocity} ped/h
             </span>
             <Sparkline
               data={summary.sparklines.ordersPoints}
-              color="#a855f7"
+              color="#A77B59"
               gradientId="kpi-orders-pace"
             />
           </div>
         </div>
 
-        {/* KPI 5: Projeção de Fecho / Run-Rate */}
-        <div className="rounded-2xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/60 p-5 relative overflow-hidden group hover:border-zinc-700/80 transition-all">
-          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-amber-500/0 via-amber-500/50 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* KPI 5: Projeção Live */}
+        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-5 shadow-xs relative overflow-hidden group hover:border-[#C09573]/60 transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Projeção Live</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
-              <Flame className="w-3.5 h-3.5" />
+            <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider">
+              Projeção Live
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-[#C09573]/15 text-[#C09573] flex items-center justify-center">
+              <Flame className="w-4 h-4 text-[#C09573]" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-semibold tracking-tight text-zinc-100">
+          <div className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-[#35271F]">
             {summary.runRate.projectedPeriodRevenue.toLocaleString('pt-PT', {
               style: 'currency',
               currency: 'EUR',
             })}
           </div>
-          <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-400">
-            <span>{summary.runRate.projectionLabel}</span>
-            <span className="text-amber-400 font-bold uppercase text-[10px]">
+          <div className="mt-3 flex items-center justify-between text-xs text-[#4C453F]">
+            <span className="truncate">{summary.runRate.projectionLabel}</span>
+            <span className="font-bold text-[#C09573] uppercase text-[10px] bg-[#EAE5DF] px-2 py-0.5 rounded">
               {summary.runRate.paceIndicator === 'high' ? 'Acelerado' : 'Estável'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* 3. SECÇÃO 1: ENGENHARIA DE MENU & CROSS-SELLING */}
+      {/* 3. HISTOGRAMA DE FLUXO HORÁRIO EXPANDIDO (Altura h-80, Min-Width 800px, Tons Gulas) */}
+      <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E5DED6]">
+          <div>
+            <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider mb-1">
+              <Clock className="w-4 h-4 text-[#C09573]" />
+              Pressão Operacional de Cozinha &amp; Sala
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-[#35271F]">
+              Fluxo Horário &amp; Picos de Serviço (24 Horas)
+            </h2>
+            <p className="text-xs sm:text-sm text-[#4C453F] mt-0.5">
+              Volume de pedidos e tempo médio de resolução distribuídos de 00:00 às 23:00.
+            </p>
+          </div>
+          <div className="flex items-center gap-4 text-xs font-semibold text-[#4C453F]">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-[#5E4939] inline-block" />
+              <span>Volume Padrão</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-gradient-to-t from-[#5E4939] to-[#C09573] inline-block" />
+              <span>Pico de Turno</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Expanded SVG Histogram */}
+        <div className="w-full overflow-x-auto pb-4 pt-6">
+          <div className="min-w-[800px] h-80 relative flex items-end gap-2 pb-8 border-b-2 border-[#E5DED6]">
+            {summary.hourlyPerformance.map((h) => {
+              const heightPct =
+                maxHourlyOrders > 0
+                  ? Math.round((h.orderCount / maxHourlyOrders) * 100)
+                  : 0;
+              const isPeak = h.orderCount === maxHourlyOrders && h.orderCount > 0;
+
+              return (
+                <div
+                  key={h.hour}
+                  className="flex-1 flex flex-col items-center h-full justify-end group relative"
+                >
+                  {/* Floating Hover Tooltip */}
+                  <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0C0F14] text-[#F5F4F1] text-xs rounded-xl py-2 px-3 pointer-events-none whitespace-nowrap shadow-xl z-30 border border-[#C09573]/40">
+                    <div className="font-bold text-[#C09573]">{h.hourLabel}</div>
+                    <div>{h.orderCount} pedidos • {h.totalRevenue.toFixed(2)}€</div>
+                    <div className="text-amber-300">Tempo médio: {h.avgTurnaroundMinutes} min</div>
+                  </div>
+
+                  {/* Persistent Numeric Label on top of active bars */}
+                  {h.orderCount > 0 && (
+                    <span
+                      className={`text-xs font-mono font-bold mb-1.5 transition-colors ${
+                        isPeak
+                          ? 'text-[#C09573] text-sm scale-110'
+                          : 'text-[#35271F] group-hover:text-[#5E4939]'
+                      }`}
+                    >
+                      {h.orderCount}
+                    </span>
+                  )}
+
+                  {/* Bar with Gulas Brand Gradient and Rounded Corners */}
+                  <div
+                    style={{ height: `${Math.max(heightPct, 5)}%` }}
+                    className={`w-full rounded-t-lg transition-all duration-300 ${
+                      h.orderCount === 0
+                        ? 'bg-[#EAE5DF]/60'
+                        : isPeak
+                        ? 'bg-gradient-to-t from-[#5E4939] via-[#C09573] to-[#A77B59] shadow-md shadow-[#C09573]/30 ring-2 ring-[#C09573]/50'
+                        : 'bg-gradient-to-t from-[#5E4939] to-[#C09573] group-hover:brightness-110'
+                    }`}
+                  />
+
+                  {/* Hour Label */}
+                  <span className="absolute -bottom-6 text-xs font-mono font-bold text-[#4C453F] group-hover:text-[#35271F]">
+                    {h.hour}h
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between text-xs text-[#4C453F] font-semibold pt-2">
+          <span>Abertura / Manhã (08h — 11h)</span>
+          <span className="text-[#5E4939] font-bold">Serviço de Almoço (12h — 15h)</span>
+          <span className="text-[#5E4939] font-bold">Serviço de Jantar (19h — 23h)</span>
+        </div>
+      </div>
+
+      {/* 4. SECÇÃO: ENGENHARIA DE MENU & CROSS-SELLING */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Coluna 1 & 2: Matriz BCG Interativa */}
-        <div className="lg:col-span-2 rounded-3xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/70 p-6 sm:p-7 space-y-6">
+        <div className="lg:col-span-2 rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-amber-400 text-xs font-mono uppercase tracking-wider mb-1">
-                <Layers className="w-4 h-4" />
-                Matriz BCG de Engenharia de Menu
+              <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider mb-1">
+                <Layers className="w-4 h-4 text-[#C09573]" />
+                Matriz BCG de Rentabilidade
               </div>
-              <h2 className="text-xl font-bold text-zinc-100">
-                Rentabilidade & Desempenho por Artigo
+              <h2 className="text-xl sm:text-2xl font-black text-[#35271F]">
+                Engenharia de Menu &amp; Artigos
               </h2>
             </div>
 
@@ -526,14 +620,14 @@ export function AnalyticsDashboardView({
                   <button
                     key={cat}
                     onClick={() => setSelectedBcgFilter(isSelected ? 'all' : cat)}
-                    className={`px-3 py-2 rounded-xl text-left border transition-all ${
+                    className={`px-3 py-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                       isSelected
-                        ? `${cfg.badgeStyle} ring-1 ring-white/20`
-                        : 'bg-zinc-950/40 border-zinc-800/80 hover:border-zinc-700 text-zinc-400'
+                        ? `${cfg.cardStyle} ring-2 ring-[#C09573]`
+                        : 'bg-[#F5F4F1] border-[#E5DED6] hover:border-[#C09573]/50 text-[#4C453F]'
                     }`}
                   >
-                    <div className="text-[10px] font-semibold truncate">{cfg.label}</div>
-                    <div className="text-lg font-mono font-bold text-zinc-100">{count}</div>
+                    <div className="text-[11px] font-bold truncate text-[#35271F]">{cfg.label}</div>
+                    <div className="text-lg font-mono font-black text-[#35271F]">{count}</div>
                   </button>
                 );
               })}
@@ -543,44 +637,44 @@ export function AnalyticsDashboardView({
           {/* Search & Filter */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4C453F]" />
               <input
                 type="text"
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
-                placeholder="Filtrar por nome do artigo ou categoria..."
-                className="w-full pl-10 pr-4 py-2 bg-zinc-950/60 border border-zinc-800/80 rounded-xl text-xs sm:text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                placeholder="Pesquisar por artigo ou categoria..."
+                className="w-full pl-10 pr-4 py-2.5 bg-[#F5F4F1] border border-[#E5DED6] rounded-xl text-xs sm:text-sm text-[#35271F] placeholder-[#4C453F]/60 focus:outline-none focus:border-[#C09573] transition-colors"
               />
             </div>
             {selectedBcgFilter !== 'all' && (
               <button
                 onClick={() => setSelectedBcgFilter('all')}
-                className="text-xs text-zinc-400 hover:text-zinc-200 px-3 py-2 rounded-xl bg-zinc-800/50"
+                className="text-xs font-bold text-[#5E4939] hover:text-[#35271F] px-3.5 py-2.5 rounded-xl bg-[#EAE5DF] cursor-pointer"
               >
-                Limpar ({selectedBcgFilter})
+                Limpar Filtro ({selectedBcgFilter})
               </button>
             )}
           </div>
 
-          {/* Products Table */}
-          <div className="overflow-x-auto rounded-2xl border border-zinc-800/70 max-h-96 overflow-y-auto">
-            <table className="w-full text-left text-xs text-zinc-300">
-              <thead className="bg-zinc-950/90 sticky top-0 z-10 text-zinc-400 font-semibold border-b border-zinc-800">
+          {/* Spacious Products Table */}
+          <div className="overflow-x-auto rounded-2xl border border-[#E5DED6] max-h-96 overflow-y-auto">
+            <table className="w-full text-left text-xs sm:text-sm text-[#35271F]">
+              <thead className="bg-[#EAE5DF] sticky top-0 z-10 text-[#35271F] font-bold border-b border-[#E5DED6]">
                 <tr>
-                  <th className="py-2.5 px-3">Classificação</th>
-                  <th className="py-2.5 px-3">Artigo</th>
-                  <th className="py-2.5 px-3 text-right">Qtd.</th>
-                  <th className="py-2.5 px-3 text-right">PVP</th>
-                  <th className="py-2.5 px-3 text-right">Margem Unit.</th>
-                  <th className="py-2.5 px-3 text-right">Faturação</th>
-                  <th className="py-2.5 px-3 text-right">Lucro Bruto</th>
+                  <th className="py-3 px-3.5">Classificação</th>
+                  <th className="py-3 px-3.5">Artigo</th>
+                  <th className="py-3 px-3.5 text-right">Qtd.</th>
+                  <th className="py-3 px-3.5 text-right">PVP</th>
+                  <th className="py-3 px-3.5 text-right">Margem Unit.</th>
+                  <th className="py-3 px-3.5 text-right">Faturação</th>
+                  <th className="py-3 px-3.5 text-right">Lucro Bruto</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40 bg-zinc-900/20">
+              <tbody className="divide-y divide-[#E5DED6] bg-[#FFFFFF]">
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-zinc-500">
-                      Nenhum artigo encontrado para o filtro atual.
+                    <td colSpan={7} className="py-8 text-center text-[#4C453F]">
+                      Nenhum artigo encontrado para o filtro selecionado.
                     </td>
                   </tr>
                 ) : (
@@ -588,37 +682,37 @@ export function AnalyticsDashboardView({
                     const bcg = BCG_CONFIG[p.classification];
                     const Icon = bcg.icon;
                     return (
-                      <tr key={p.productId} className="hover:bg-zinc-800/30 transition-colors">
-                        <td className="py-2.5 px-3 whitespace-nowrap">
+                      <tr key={p.productId} className="hover:bg-[#F5F4F1] transition-colors">
+                        <td className="py-3 px-3.5 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${bcg.badgeStyle}`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${bcg.badgeStyle}`}
                           >
-                            <Icon className="w-3 h-3" />
+                            <Icon className="w-3.5 h-3.5" />
                             <span>{bcg.label}</span>
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 font-semibold text-zinc-100">
+                        <td className="py-3 px-3.5 font-bold text-[#35271F]">
                           {p.productName}
-                          <span className="block text-[10px] text-zinc-400 font-normal">
+                          <span className="block text-xs text-[#4C453F] font-normal">
                             {p.categoryName}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-zinc-200">
+                        <td className="py-3 px-3.5 text-right font-mono font-bold text-[#35271F]">
                           {p.quantitySold}
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-zinc-300">
+                        <td className="py-3 px-3.5 text-right font-mono text-[#35271F]">
                           {p.unitPrice.toFixed(2)}€
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-emerald-400">
+                        <td className="py-3 px-3.5 text-right font-mono text-[#5E4939] font-bold">
                           +{p.unitMargin.toFixed(2)}€{' '}
-                          <span className="text-[10px] text-zinc-400">
+                          <span className="text-[11px] text-[#4C453F]">
                             ({p.marginPercent.toFixed(0)}%)
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-zinc-100">
+                        <td className="py-3 px-3.5 text-right font-mono font-black text-[#35271F]">
                           {p.totalRevenue.toFixed(2)}€
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-300">
+                        <td className="py-3 px-3.5 text-right font-mono font-bold text-[#C09573]">
                           {p.totalProfit.toFixed(2)}€
                         </td>
                       </tr>
@@ -631,60 +725,60 @@ export function AnalyticsDashboardView({
         </div>
 
         {/* Coluna 3: Market Basket / Top Combos de Cross-Selling */}
-        <div className="rounded-3xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/70 p-6 sm:p-7 flex flex-col justify-between space-y-6">
+        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 text-sky-400 text-xs font-mono uppercase tracking-wider">
-                <ShoppingBag className="w-4 h-4" />
-                Cross-Selling & Cesta
+              <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider">
+                <ShoppingBag className="w-4 h-4 text-[#C09573]" />
+                Cross-Selling &amp; Cesta
               </div>
-              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-950 px-2 py-0.5 rounded-full border border-zinc-800">
+              <span className="text-xs font-mono font-bold text-[#5E4939] bg-[#EAE5DF] px-2.5 py-0.5 rounded-full border border-[#E5DED6]">
                 Afinidade de Venda
               </span>
             </div>
-            <h2 className="text-xl font-bold text-zinc-100">
+            <h2 className="text-xl font-black text-[#35271F]">
               Top Combos Pedidos em Conjunto
             </h2>
-            <p className="text-xs text-zinc-400 mt-1">
-              Probabilidade de compra combinada no mesmo pedido de cliente.
+            <p className="text-xs text-[#4C453F] mt-1">
+              Probabilidade de compra combinada no mesmo pedido de mesa.
             </p>
 
             {summary.marketBasketCombos.length === 0 ? (
-              <div className="py-12 text-center text-zinc-500 text-xs">
+              <div className="py-12 text-center text-[#4C453F] text-xs">
                 Ainda sem pedidos suficientes com múltiplos itens para calcular afinidade.
               </div>
             ) : (
-              <div className="space-y-3 mt-4">
+              <div className="space-y-4 mt-5">
                 {summary.marketBasketCombos.map((combo, idx) => (
                   <div
                     key={combo.id}
-                    className="p-3.5 rounded-2xl bg-zinc-950/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all"
+                    className="p-4 rounded-2xl bg-[#F5F4F1] border border-[#E5DED6] hover:border-[#C09573]/60 transition-all"
                   >
-                    <div className="flex items-center justify-between text-xs font-bold text-zinc-200 mb-1.5">
+                    <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-[#35271F] mb-2">
                       <div className="flex items-center gap-2 truncate">
-                        <span className="w-5 h-5 rounded-md bg-zinc-800 text-zinc-300 font-mono text-[10px] flex items-center justify-center flex-shrink-0">
+                        <span className="w-6 h-6 rounded-lg bg-[#5E4939] text-[#F5F4F1] font-mono text-xs flex items-center justify-center flex-shrink-0 font-bold">
                           #{idx + 1}
                         </span>
                         <span className="truncate">{combo.itemA}</span>
-                        <span className="text-zinc-500 text-[10px]">+</span>
-                        <span className="text-emerald-400 truncate">{combo.itemB}</span>
+                        <span className="text-[#C09573] text-sm">+</span>
+                        <span className="text-[#5E4939] truncate">{combo.itemB}</span>
                       </div>
-                      <span className="font-mono text-sky-300 text-xs flex-shrink-0 ml-2">
+                      <span className="font-mono text-[#C09573] font-black text-sm flex-shrink-0 ml-2">
                         {combo.affinityPercent}%
                       </span>
                     </div>
 
-                    {/* Progress indicator of affinity */}
-                    <div className="w-full bg-zinc-800/80 h-1.5 rounded-full overflow-hidden my-1.5">
+                    {/* Progress indicator with required h-3 height and #C09573 fill */}
+                    <div className="w-full bg-[#EAE5DF] h-3 rounded-full overflow-hidden my-2">
                       <div
                         style={{ width: `${Math.min(100, combo.affinityPercent)}%` }}
-                        className="h-full bg-gradient-to-r from-sky-500 to-emerald-400 rounded-full"
+                        className="h-full bg-[#C09573] rounded-full transition-all duration-300"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                    <div className="flex items-center justify-between text-xs text-[#4C453F] font-semibold">
                       <span>{combo.coOccurrenceCount} pedidos combinados</span>
-                      <span className="font-mono text-zinc-300">
+                      <span className="font-mono text-[#35271F] font-bold">
                         Méd: {combo.estimatedComboRevenue.toFixed(2)}€
                       </span>
                     </div>
@@ -694,119 +788,45 @@ export function AnalyticsDashboardView({
             )}
           </div>
 
-          <div className="p-3 rounded-2xl bg-zinc-950/60 border border-zinc-800/60 text-[11px] text-zinc-400 leading-relaxed">
-            <strong className="text-zinc-300 block mb-0.5">Sugestão de Cardápio:</strong>
-            Itens com afinidade superior a 60% devem ser promovidos como sugestão de acompanhamento no ecrã de checkout para elevar o ticket médio.
+          <div className="p-4 rounded-2xl bg-[#EAE5DF] border border-[#E5DED6] text-xs text-[#35271F] leading-relaxed">
+            <strong className="text-[#5E4939] block mb-1">Dica de Cardápio:</strong>
+            Itens com afinidade superior a 60% devem ser promovidos como sugestão de acompanhamento no menu digital para maximizar o ticket médio.
           </div>
         </div>
       </div>
 
-      {/* 4. SECÇÃO 2: RITMO DE COZINHA & MINERAÇÃO SEMÂNTICA */}
+      {/* 5. SECÇÃO: MINERAÇÃO DE NOTAS & SIMULADOR WHAT-IF */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Coluna 1: Histograma SVG com Fluxo Horário */}
-        <div className="rounded-3xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/70 p-6 sm:p-7 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-amber-400 text-xs font-mono uppercase tracking-wider mb-1">
-                <Clock className="w-4 h-4" />
-                Pressão Operacional de Cozinha
-              </div>
-              <h2 className="text-xl font-bold text-zinc-100">
-                Fluxo Horário &amp; Picos de Serviço
-              </h2>
-            </div>
-            <span className="text-xs font-mono text-zinc-400">00:00 — 23:00</span>
-          </div>
-
-          {/* SVG Histogram with rounded corners & gradients */}
-          <div className="w-full overflow-x-auto pb-2 pt-4">
-            <div className="min-w-[550px] h-48 relative flex items-end gap-1.5 pb-6 border-b border-zinc-800/80">
-              {summary.hourlyPerformance.map((h) => {
-                const heightPct =
-                  maxHourlyOrders > 0
-                    ? Math.round((h.orderCount / maxHourlyOrders) * 100)
-                    : 0;
-                const isPeak = h.orderCount === maxHourlyOrders && h.orderCount > 0;
-
-                return (
-                  <div
-                    key={h.hour}
-                    className="flex-1 flex flex-col items-center h-full justify-end group relative"
-                  >
-                    {/* Hover Tooltip */}
-                    <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-950 text-zinc-100 text-[11px] rounded-lg py-1 px-2 pointer-events-none whitespace-nowrap shadow-xl z-20 border border-zinc-700">
-                      <div className="font-bold">{h.hourLabel}</div>
-                      <div>{h.orderCount} pedidos • {h.totalRevenue.toFixed(2)}€</div>
-                      <div className="text-amber-300">Tempo médio: {h.avgTurnaroundMinutes} min</div>
-                    </div>
-
-                    {h.orderCount > 0 && (
-                      <span className="text-[10px] font-mono text-zinc-400 mb-1 group-hover:text-zinc-100 transition-colors">
-                        {h.orderCount}
-                      </span>
-                    )}
-
-                    {/* Bar with rx="4" */}
-                    <div
-                      style={{ height: `${Math.max(heightPct, 4)}%` }}
-                      className={`w-full rounded-t-md transition-all duration-300 ${
-                        h.orderCount === 0
-                          ? 'bg-zinc-800/30'
-                          : isPeak
-                          ? 'bg-gradient-to-t from-emerald-600 via-amber-400 to-amber-300 shadow-md shadow-amber-500/20'
-                          : 'bg-gradient-to-t from-emerald-600 to-emerald-400 group-hover:brightness-125'
-                      }`}
-                    />
-
-                    <span className="absolute -bottom-5 text-[10px] font-mono text-zinc-500 group-hover:text-zinc-300">
-                      {h.hour}h
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-zinc-400 pt-2">
-            <span>Serviço Almoço (12h-15h)</span>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-t from-emerald-600 to-amber-400 inline-block" />
-              <span>Hora de Pico Máximo</span>
-            </div>
-            <span>Serviço Jantar (19h-23h)</span>
-          </div>
-        </div>
-
-        {/* Coluna 2: Mineração Semântica de Observações */}
-        <div className="rounded-3xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/70 p-6 sm:p-7 space-y-5 flex flex-col justify-between">
+        {/* Painel Semântico de Observações (NLP em Português) */}
+        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2 text-rose-400 text-xs font-mono uppercase tracking-wider">
-                <AlertOctagon className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider">
+                <AlertOctagon className="w-4 h-4 text-[#C09573]" />
                 Auditoria de Custos &amp; Preferências
               </div>
               {summary.totalMarginLeakageEur > 0 && (
-                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200">
                   -{summary.totalMarginLeakageEur.toFixed(2)}€ fuga estimada
                 </span>
               )}
             </div>
-            <h2 className="text-xl font-bold text-zinc-100">
+            <h2 className="text-xl sm:text-2xl font-black text-[#35271F]">
               Mineração Semântica de Observações (NLP)
             </h2>
-            <p className="text-xs text-zinc-400 mt-1">
-              Classificação entre customizações operacionais e pedidos de adicionais sem cobrança.
+            <p className="text-xs sm:text-sm text-[#4C453F] mt-1">
+              Discriminação entre preferências de confeção e pedidos de extras sem cobrança.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
               {/* Painel A: Fugas de Margem (Extras não cobrados) */}
-              <div className="p-4 rounded-2xl bg-zinc-950/60 border border-rose-500/20 space-y-3">
-                <div className="flex items-center justify-between text-xs font-bold text-rose-300">
+              <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-200/80 space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-rose-900">
                   <span>Extras / Fugas de Margem</span>
-                  <Flame className="w-3.5 h-3.5 text-rose-400" />
+                  <Flame className="w-4 h-4 text-rose-600" />
                 </div>
                 {summary.marginLeakages.length === 0 ? (
-                  <p className="text-[11px] text-zinc-500 py-3 text-center">
+                  <p className="text-xs text-[#4C453F] py-3 text-center">
                     Sem pedidos de molhos/extras não cobrados registados.
                   </p>
                 ) : (
@@ -814,17 +834,17 @@ export function AnalyticsDashboardView({
                     {summary.marginLeakages.slice(0, 5).map((leak) => (
                       <div
                         key={leak.term}
-                        className="flex items-center justify-between text-xs p-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800"
+                        className="flex items-center justify-between text-xs p-2 rounded-xl bg-[#FFFFFF] border border-rose-200/60 shadow-2xs"
                       >
                         <div>
-                          <span className="font-semibold text-zinc-200 block">{leak.term}</span>
-                          <span className="text-[10px] text-zinc-400">{leak.category}</span>
+                          <span className="font-bold text-[#35271F] block">{leak.term}</span>
+                          <span className="text-[10px] text-[#4C453F]">{leak.category}</span>
                         </div>
                         <div className="text-right">
-                          <span className="font-mono text-rose-400 font-bold block">
+                          <span className="font-mono text-rose-700 font-bold block">
                             {leak.count}x
                           </span>
-                          <span className="text-[10px] font-mono text-zinc-400">
+                          <span className="text-[10px] font-mono text-[#4C453F]">
                             ~{leak.totalEstimatedLossEur.toFixed(2)}€
                           </span>
                         </div>
@@ -835,24 +855,24 @@ export function AnalyticsDashboardView({
               </div>
 
               {/* Painel B: Preferências Operacionais */}
-              <div className="p-4 rounded-2xl bg-zinc-950/60 border border-zinc-800/80 space-y-3">
-                <div className="flex items-center justify-between text-xs font-bold text-sky-300">
+              <div className="p-4 rounded-2xl bg-[#F5F4F1] border border-[#E5DED6] space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-[#35271F]">
                   <span>Preferências de Clientes</span>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-sky-400" />
+                  <CheckCircle2 className="w-4 h-4 text-[#5E4939]" />
                 </div>
                 {summary.operationalPreferences.length === 0 ? (
-                  <p className="text-[11px] text-zinc-500 py-3 text-center">
-                    Sem preferências ou notas operacionais no período.
+                  <p className="text-xs text-[#4C453F] py-3 text-center">
+                    Sem preferências operacionais registadas no período.
                   </p>
                 ) : (
                   <div className="space-y-2">
                     {summary.operationalPreferences.slice(0, 5).map((op) => (
                       <div
                         key={op.term}
-                        className="flex items-center justify-between text-xs p-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800"
+                        className="flex items-center justify-between text-xs p-2 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] shadow-2xs"
                       >
-                        <span className="font-semibold text-zinc-200">{op.term}</span>
-                        <span className="font-mono text-sky-300 font-bold px-1.5 py-0.5 rounded bg-sky-500/10">
+                        <span className="font-bold text-[#35271F]">{op.term}</span>
+                        <span className="font-mono text-[#5E4939] font-bold px-2 py-0.5 rounded bg-[#EAE5DF]">
                           {op.count}x
                         </span>
                       </div>
@@ -861,210 +881,208 @@ export function AnalyticsDashboardView({
                 )}
               </div>
             </div>
-          </div>
 
-          <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-200">
-            <strong>Recomendação de Gestão:</strong> Se o cliente pede repetidamente &quot;molho extra&quot; ou &quot;mais batatas&quot; nas notas, adicione essa opção como modificador pago (+0,75€) no menu para estancar a perda de margem.
-          </div>
-        </div>
-      </div>
-
-      {/* 5. SECÇÃO 3: SIMULADOR DINÂMICO &quot;WHAT-IF&quot; (SUPORTE À DECISÃO) */}
-      <div className="rounded-3xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/70 p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-wider mb-1">
-              <Sliders className="w-4 h-4" />
-              Simulador Estratégico &quot;What-If&quot;
+            {/* Nuvem de Tags Expandida */}
+            <div className="mt-5 pt-4 border-t border-[#E5DED6]">
+              <span className="text-xs font-bold text-[#4C453F] uppercase tracking-wider block mb-2.5">
+                Termos Mais Frequentes nas Notas:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {summary.topNoteTerms.slice(0, 10).map((t) => (
+                  <span
+                    key={t.term}
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6]"
+                  >
+                    <span>{t.term}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#FFFFFF] text-[#5E4939] font-mono font-bold shadow-2xs text-[11px]">
+                      {t.count}
+                    </span>
+                  </span>
+                ))}
+              </div>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-zinc-100">
-              Projeção de Elasticidade &amp; Impacto na Margem
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-xl">
-              Simule ajustes de preços e veja instantaneamente o impacto no lucro bruto e na receita com base nas vendas reais registadas.
-            </p>
           </div>
 
-          {/* Quick preset buttons */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-400">Ajuste Rápido:</span>
-            {[2, 5, 10, 15].map((pct) => (
-              <button
-                key={pct}
-                onClick={() => setSimulatedPriceAdjustmentPct(pct)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all ${
-                  simulatedPriceAdjustmentPct === pct
-                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                }`}
-              >
-                +{pct}%
-              </button>
-            ))}
+          <div className="p-3.5 rounded-2xl bg-[#EAE5DF] border border-[#E5DED6] text-xs text-[#35271F]">
+            <strong className="text-[#5E4939]">Ação Recomendada:</strong> Se os clientes pedem com frequência &quot;molho extra&quot; ou &quot;mais batatas&quot; nas notas, adicione estes adicionais como opções pagas no menu digital para proteger as margens.
           </div>
         </div>
 
-        {/* Sliders and Controls */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-5 rounded-2xl bg-zinc-950/60 border border-zinc-800/80">
-          {/* Slider 1: Ajuste de Preço (%) */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-semibold">
-              <span className="text-zinc-300 flex items-center gap-1.5">
-                <Percent className="w-3.5 h-3.5 text-emerald-400" />
-                Variação Média de Preço
+        {/* Simulador Dinâmico "What-If" */}
+        <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider mb-1">
+                <Sliders className="w-4 h-4 text-[#C09573]" />
+                Simulador Estratégico &quot;What-If&quot;
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-[#35271F]">
+                Impacto de Ajuste de Preço
+              </h2>
+              <p className="text-xs text-[#4C453F] mt-0.5">
+                Simule variações e calcule o ganho projetado em lucro bruto.
+              </p>
+            </div>
+
+            {/* Presets */}
+            <div className="flex items-center gap-1.5">
+              {[2, 5, 10, 15].map((pct) => (
+                <button
+                  key={pct}
+                  onClick={() => setSimulatedPriceAdjustmentPct(pct)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                    simulatedPriceAdjustmentPct === pct
+                      ? 'bg-[#5E4939] text-[#F5F4F1] shadow-xs'
+                      : 'bg-[#EAE5DF] text-[#35271F] hover:bg-[#E5DED6]'
+                  }`}
+                >
+                  +{pct}%
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sliders in brand colors */}
+          <div className="space-y-4 p-5 rounded-2xl bg-[#F5F4F1] border border-[#E5DED6]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-bold text-[#35271F] mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <Percent className="w-3.5 h-3.5 text-[#C09573]" />
+                  Ajuste Médio de PVP
+                </span>
+                <span className="font-mono text-[#5E4939] font-black text-sm">
+                  +{simulatedPriceAdjustmentPct}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="25"
+                step="1"
+                value={simulatedPriceAdjustmentPct}
+                onChange={(e) => setSimulatedPriceAdjustmentPct(Number(e.target.value))}
+                className="w-full accent-[#C09573] cursor-pointer h-2 bg-[#EAE5DF] rounded-lg"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between text-xs font-bold text-[#35271F] mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5 text-[#C09573]" />
+                  Elasticidade da Procura
+                </span>
+                <span className="font-mono text-[#5E4939] font-bold text-xs">
+                  {demandElasticity === 0
+                    ? 'Inelástica (0)'
+                    : demandElasticity === -0.2
+                    ? 'Conservadora (-0.2)'
+                    : 'Moderada (-0.4)'}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                {[
+                  { val: 0, label: 'Inelástica (0)' },
+                  { val: -0.2, label: 'Conservadora (-0.2)' },
+                  { val: -0.4, label: 'Moderada (-0.4)' },
+                ].map((opt) => (
+                  <button
+                    key={opt.val}
+                    onClick={() => setDemandElasticity(opt.val)}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                      demandElasticity === opt.val
+                        ? 'border-[#5E4939] bg-[#5E4939] text-[#F5F4F1]'
+                        : 'border-[#E5DED6] bg-[#FFFFFF] text-[#4C453F] hover:bg-[#EAE5DF]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Results Grid */}
+          <div className="grid grid-cols-2 gap-3.5">
+            <div className="p-4 rounded-2xl bg-[#EAE5DF] border border-[#E5DED6]">
+              <span className="text-xs font-bold text-[#4C453F] block mb-1">
+                Lucro Bruto Adicional
               </span>
-              <span className="font-mono text-emerald-400 font-bold text-sm">
-                +{simulatedPriceAdjustmentPct}%
+              <div className="text-2xl font-mono font-black text-[#5E4939]">
+                +{simulationResults.profitDelta.toLocaleString('pt-PT', {
+                  style: 'currency',
+                  currency: 'EUR',
+                })}
+              </div>
+              <span className="text-[11px] text-[#4C453F] font-semibold mt-1 block">
+                Novo Total: {simulationResults.newProfit.toFixed(2)}€
               </span>
             </div>
-            <input
-              type="range"
-              min="0"
-              max="25"
-              step="1"
-              value={simulatedPriceAdjustmentPct}
-              onChange={(e) => setSimulatedPriceAdjustmentPct(Number(e.target.value))}
-              className="w-full accent-emerald-500 cursor-pointer h-2 bg-zinc-800 rounded-lg"
-            />
-            <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
-              <span>0% (Sem alteração)</span>
-              <span>+10%</span>
-              <span>+25% (Agressivo)</span>
-            </div>
-          </div>
 
-          {/* Slider 2: Sensibilidade de Elasticidade da Procura */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-semibold">
-              <span className="text-zinc-300 flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-sky-400" />
-                Elasticidade da Procura (Sensibilidade ao Preço)
+            <div className="p-4 rounded-2xl bg-[#F5F4F1] border border-[#E5DED6]">
+              <span className="text-xs font-bold text-[#4C453F] block mb-1">
+                Nova Faturação Estimada
               </span>
-              <span className="font-mono text-sky-400 font-bold text-sm">
-                {demandElasticity === 0
-                  ? 'Inelástica (0.0)'
-                  : demandElasticity === -0.2
-                  ? 'Conservadora (-0.2)'
-                  : demandElasticity === -0.4
-                  ? 'Moderada (-0.4)'
-                  : `${demandElasticity}`}
+              <div className="text-2xl font-mono font-black text-[#35271F]">
+                {simulationResults.newRevenue.toLocaleString('pt-PT', {
+                  style: 'currency',
+                  currency: 'EUR',
+                })}
+              </div>
+              <span className="text-[11px] text-[#C09573] font-bold mt-1 block">
+                +{simulationResults.revenueDelta.toFixed(2)}€ receita
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setDemandElasticity(0)}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                  demandElasticity === 0
-                    ? 'border-sky-500 bg-sky-500/15 text-sky-200'
-                    : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                Inelástica (0)
-              </button>
-              <button
-                onClick={() => setDemandElasticity(-0.2)}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                  demandElasticity === -0.2
-                    ? 'border-sky-500 bg-sky-500/15 text-sky-200'
-                    : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                Conservadora (-0.2)
-              </button>
-              <button
-                onClick={() => setDemandElasticity(-0.4)}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                  demandElasticity === -0.4
-                    ? 'border-sky-500 bg-sky-500/15 text-sky-200'
-                    : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                Moderada (-0.4)
-              </button>
-            </div>
-            <p className="text-[10px] text-zinc-500">
-              * A elasticidade estima a eventual retração de volume quando o preço sobe.
-            </p>
-          </div>
-        </div>
 
-        {/* Live Simulation Projection Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-          {/* Card 1: Ganho de Lucro Bruto */}
-          <div className="p-4 rounded-2xl bg-zinc-950/70 border border-emerald-500/30">
-            <span className="text-xs text-zinc-400 block mb-1">Lucro Bruto Adicional</span>
-            <div className="text-2xl font-mono font-bold text-emerald-400">
-              +{simulationResults.profitDelta.toLocaleString('pt-PT', {
-                style: 'currency',
-                currency: 'EUR',
-              })}
+            <div className="p-4 rounded-2xl bg-[#F5F4F1] border border-[#E5DED6]">
+              <span className="text-xs font-bold text-[#4C453F] block mb-1">
+                Expansão de Margem
+              </span>
+              <div className="text-2xl font-mono font-black text-[#C09573]">
+                +{simulationResults.marginExpansionPct}%
+              </div>
+              <span className="text-[11px] text-[#4C453F] mt-1 block">
+                Base: {summary.whatIfBaseline.currentMarginPercent.toFixed(1)}%
+              </span>
             </div>
-            <span className="text-[11px] text-zinc-400 mt-1 block">
-              Novo Total: {simulationResults.newProfit.toFixed(2)}€
-            </span>
-          </div>
 
-          {/* Card 2: Nova Faturação Projetada */}
-          <div className="p-4 rounded-2xl bg-zinc-950/70 border border-zinc-800/80">
-            <span className="text-xs text-zinc-400 block mb-1">Nova Faturação Projetada</span>
-            <div className="text-2xl font-mono font-bold text-zinc-100">
-              {simulationResults.newRevenue.toLocaleString('pt-PT', {
-                style: 'currency',
-                currency: 'EUR',
-              })}
+            <div className="p-4 rounded-2xl bg-[#F5F4F1] border border-[#E5DED6]">
+              <span className="text-xs font-bold text-[#4C453F] block mb-1">
+                Impacto Médio / Mesa
+              </span>
+              <div className="text-2xl font-mono font-black text-[#35271F]">
+                +{simulationResults.ticketDelta.toFixed(2)}€
+              </div>
+              <span className="text-[11px] text-[#4C453F] mt-1 block">
+                por cliente atendido
+              </span>
             </div>
-            <span className="text-[11px] text-emerald-400 mt-1 block">
-              +{simulationResults.revenueDelta.toFixed(2)}€ de receita
-            </span>
-          </div>
-
-          {/* Card 3: Expansão da Margem */}
-          <div className="p-4 rounded-2xl bg-zinc-950/70 border border-zinc-800/80">
-            <span className="text-xs text-zinc-400 block mb-1">Expansão de Margem Bruta</span>
-            <div className="text-2xl font-mono font-bold text-sky-400">
-              +{simulationResults.marginExpansionPct}%
-            </div>
-            <span className="text-[11px] text-zinc-400 mt-1 block">
-              Base: {summary.whatIfBaseline.currentMarginPercent.toFixed(1)}%
-            </span>
-          </div>
-
-          {/* Card 4: Impacto no Ticket Médio */}
-          <div className="p-4 rounded-2xl bg-zinc-950/70 border border-zinc-800/80">
-            <span className="text-xs text-zinc-400 block mb-1">Impacto Médio por Pedido</span>
-            <div className="text-2xl font-mono font-bold text-amber-400">
-              +{simulationResults.ticketDelta.toFixed(2)}€
-            </div>
-            <span className="text-[11px] text-zinc-400 mt-1 block">
-              por cada mesa atendida
-            </span>
           </div>
         </div>
       </div>
 
       {/* 6. ANÁLISE DE MESAS & ESPAÇO */}
-      <div className="rounded-3xl bg-zinc-900/60 backdrop-blur-md border border-zinc-800/70 p-6 sm:p-7 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="rounded-3xl bg-[#FFFFFF] border border-[#E5DED6] p-6 sm:p-8 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[#E5DED6]">
           <div>
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-wider mb-1">
-              <ArrowUpRight className="w-4 h-4" />
-              Ranking de Mesas &amp; Faturação de Sala
+            <div className="flex items-center gap-2 text-[#C09573] text-xs font-mono uppercase tracking-wider mb-1">
+              <ArrowUpRight className="w-4 h-4 text-[#C09573]" />
+              Faturação por Mesa &amp; Sala
             </div>
-            <h2 className="text-xl font-bold text-zinc-100">
-              Desempenho por Mesa &amp; Zona
+            <h2 className="text-xl sm:text-2xl font-black text-[#35271F]">
+              Performance de Espaço &amp; Mesas
             </h2>
           </div>
-          <span className="text-xs font-mono text-zinc-400 bg-zinc-950 px-3 py-1 rounded-xl border border-zinc-800">
+          <span className="text-xs font-mono font-bold text-[#5E4939] bg-[#EAE5DF] px-3 py-1.5 rounded-xl border border-[#E5DED6]">
             {summary.tablePerformance.length} Mesas Faturadas
           </span>
         </div>
 
         {summary.tablePerformance.length === 0 ? (
-          <div className="py-8 text-center text-zinc-500 text-xs">
-            Sem mesas faturadas no período.
+          <div className="py-8 text-center text-[#4C453F] text-xs">
+            Sem pedidos faturados por mesa no período.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
             {summary.tablePerformance.slice(0, 8).map((tbl, idx) => {
               const pct =
                 maxTableRevenue > 0
@@ -1074,28 +1092,28 @@ export function AnalyticsDashboardView({
               return (
                 <div
                   key={tbl.tableNumber}
-                  className="p-3.5 rounded-2xl bg-zinc-950/60 border border-zinc-800/80 hover:border-zinc-700 transition-all"
+                  className="p-4 rounded-2xl bg-[#F5F4F1] border border-[#E5DED6] hover:border-[#C09573]/60 transition-all"
                 >
-                  <div className="flex items-center justify-between text-xs font-bold text-zinc-200 mb-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-md bg-zinc-800 text-zinc-400 font-mono text-[10px] flex items-center justify-center">
+                  <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-[#35271F] mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-md bg-[#5E4939] text-[#F5F4F1] font-mono text-[10px] flex items-center justify-center font-bold">
                         #{idx + 1}
                       </span>
                       <span>Mesa {tbl.tableNumber}</span>
                     </div>
-                    <span className="font-mono text-emerald-400 font-bold">
+                    <span className="font-mono text-[#5E4939] font-black">
                       {tbl.totalRevenue.toFixed(2)}€
                     </span>
                   </div>
 
-                  <div className="w-full bg-zinc-800/80 h-1.5 rounded-full overflow-hidden my-2">
+                  <div className="w-full bg-[#EAE5DF] h-2 rounded-full overflow-hidden my-2">
                     <div
                       style={{ width: `${pct}%` }}
-                      className="h-full bg-emerald-500 rounded-full"
+                      className="h-full bg-[#C09573] rounded-full transition-all duration-300"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                  <div className="flex items-center justify-between text-xs font-mono text-[#4C453F] pt-1">
                     <span>{tbl.orderCount} ped</span>
                     <span>Ticket: {tbl.averageTicket.toFixed(2)}€</span>
                     <span>{tbl.avgTurnaroundMinutes}m</span>

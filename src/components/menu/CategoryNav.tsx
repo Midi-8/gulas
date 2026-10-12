@@ -28,7 +28,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   };
 
   return (
-    <div className="sticky top-0 z-30 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-zinc-200/80 py-2.5 transition-all">
+    <div className="sticky top-0 z-30 bg-[#F5F4F1]/95 backdrop-blur-md border-b border-[#E5DED6] py-2.5 transition-all">
       <div className="max-w-4xl mx-auto px-4">
         <div
           ref={scrollContainerRef}
@@ -43,8 +43,8 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                 className={clsx(
                   'whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer active:scale-95 border',
                   isActive
-                    ? 'bg-[#15803D] text-white border-[#15803D] shadow-xs'
-                    : 'bg-white text-[#141619] border-zinc-200/80 hover:border-zinc-300 hover:bg-zinc-50'
+                    ? 'bg-[#5E4939] text-[#F5F4F1] border-[#5E4939] shadow-xs'
+                    : 'bg-[#FFFFFF] text-[#35271F] border-[#E5DED6] hover:border-[#C09573]/60 hover:bg-[#EAE5DF]'
                 )}
               >
                 {category.name}
