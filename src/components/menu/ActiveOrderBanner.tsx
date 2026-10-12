@@ -67,7 +67,15 @@ const getStoredOrderIds = (): string[] => {
   }
 };
 
+const emptySubscribe = () => () => {};
+
 export const ActiveOrderBanner: React.FC = () => {
+  const isClient = React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
   const {
     activeOrderIds,
     activeOrders,
@@ -83,6 +91,11 @@ export const ActiveOrderBanner: React.FC = () => {
     getStoredOrderIds,
     getServerSnapshot
   );
+
+  // IMPEDE O DESFASAMENTO DE HIDRATAÇÃO (SSR vs Client):
+  if (!isClient) {
+    return null;
+  }
 
   const effectiveIds =
     activeOrderIds.length > 0 ? activeOrderIds : storedIds;
