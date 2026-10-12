@@ -23,6 +23,7 @@ import {
   Bell,
   BellOff,
   BellRing,
+  Boxes,
   Clock,
   Coffee,
   CookingPot,
@@ -36,6 +37,8 @@ import {
   UtensilsCrossed,
   X,
 } from 'lucide-react';
+import { QuickStockDrawer } from '@/components/admin/stock/QuickStockDrawer';
+import { getRestaurantStockList } from '@/actions/product-stock';
 
 interface OrderDashboardProps {
   restaurantId: string;
@@ -96,6 +99,27 @@ export function OrderDashboard({
   );
 
   const [isRefreshing, startRefreshTransition] = useTransition();
+  const [isStockDrawerOpen, setIsStockDrawerOpen] = useState(false);
+  const [outOfStockCount, setOutOfStockCount] = useState(0);
+
+  const refreshStockCount = useCallback(async () => {
+    try {
+      const res = await getRestaurantStockList();
+      if (res.success) {
+        const outCount = res.data.filter((p) => !p.isAvailable).length;
+        setOutOfStockCount(outCount);
+      }
+    } catch {
+      // Ignorar erros de rede silenciosamente
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void refreshStockCount();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [refreshStockCount]);
 
   const {
     alertsState,
@@ -424,6 +448,22 @@ export function OrderDashboard({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+          {/* Quick Stock Management Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setIsStockDrawerOpen(true)}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#E5DED6] bg-[#FFFFFF] px-3.5 py-2 text-xs font-bold text-[#35271F] shadow-xs transition-all hover:bg-[#EAE5DF] hover:border-[#C09573]/50 sm:text-sm"
+            aria-label="Gerir stock e artigos esgotados"
+          >
+            <Boxes className="h-4 w-4 text-[#C09573]" />
+            <span>Gerir Stock / Esgotados</span>
+            {outOfStockCount > 0 && (
+              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-amber-900 border border-amber-300">
+                {outOfStockCount} esgotados
+              </span>
+            )}
+          </button>
+
           {lastRefreshedAt && (
             <span className="hidden text-xs text-gulas-gray-400 sm:inline-block">
               Última atualização:{' '}
@@ -680,6 +720,16 @@ export function OrderDashboard({
           </div>
         </aside>
       )}
+
+      {/* Quick Stock Management Drawer */}
+      <QuickStockDrawer
+        isOpen={isStockDrawerOpen}
+        onClose={() => setIsStockDrawerOpen(false)}
+        restaurantId={restaurantId}
+        onStockChanged={() => {
+          refreshStockCount();
+        }}
+      />
     </div>
   );
 }

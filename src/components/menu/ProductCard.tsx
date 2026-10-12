@@ -59,8 +59,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
                 </span>
               )}
               {!product.available && (
-                <span className="text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-bold">
-                  Esgotado
+                <span className="text-[10px] text-amber-950 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full font-bold tracking-tight">
+                  Temporariamente Esgotado
                 </span>
               )}
             </div>
@@ -141,7 +141,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
             </button>
           )
         ) : (
-          <span className="text-xs text-[#A89F95] font-medium italic">Indisponível</span>
+          <button
+            type="button"
+            disabled
+            onClick={(e) => e.stopPropagation()}
+            className="px-3 py-1 rounded-full bg-[#EAE5DF] text-[#A89F95] text-xs font-bold border border-[#E5DED6] cursor-not-allowed select-none"
+          >
+            Esgotado
+          </button>
         )}
       </div>
     </div>

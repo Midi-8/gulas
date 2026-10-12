@@ -177,10 +177,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <button
             onClick={handleAddToCart}
             disabled={!product.available}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-[#15803D] hover:bg-[#166534] disabled:bg-zinc-200 text-white disabled:text-zinc-400 font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-xs active:scale-[0.99] cursor-pointer"
+            className="flex-1 py-2.5 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] disabled:bg-[#EAE5DF] text-[#F5F4F1] disabled:text-[#A89F95] font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-xs active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
           >
-            <span>Adicionar ao pedido</span>
-            <span>{formatCurrency(totalPrice)}</span>
+            <span>{product.available ? 'Adicionar ao pedido' : 'Temporariamente Esgotado'}</span>
+            {product.available && <span>{formatCurrency(totalPrice)}</span>}
           </button>
         </div>
       </div>
