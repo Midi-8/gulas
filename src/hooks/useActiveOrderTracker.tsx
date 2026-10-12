@@ -9,7 +9,10 @@ import React, {
   useState,
 } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getOrderPublicStatus } from '@/actions/orders';
+import {
+  getOrderPublicStatus,
+  getMultipleOrdersPublicStatus,
+} from '@/actions/orders';
 import { Order, OrderStatus } from '@/types/restaurant';
 
 export const ACTIVE_ORDER_IDS_KEY = 'gulas_active_order_ids';
@@ -68,6 +71,16 @@ export interface ActiveOrderTrackerContextValue {
 const ActiveOrderTrackerContext =
   createContext<ActiveOrderTrackerContextValue | null>(null);
 
+function isRecentOrder(createdAt?: string): boolean {
+  if (!createdAt) return false;
+  try {
+    const age = Date.now() - new Date(createdAt).getTime();
+    return age < 12 * 60 * 60 * 1000; // Máximo 12 horas para um pedido de mesa ativo
+  } catch {
+    return false;
+  }
+}
+
 function getInitialActiveOrderIds(): string[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -104,7 +117,8 @@ function getInitialActiveOrders(ids: string[]): ActiveTrackerOrder[] {
                 typeof o.id === 'string' &&
                 ids.includes(o.id) &&
                 o.status !== 'completed' &&
-                o.status !== 'cancelled'
+                o.status !== 'cancelled' &&
+                isRecentOrder(o.createdAt)
             )
         );
       }
@@ -117,7 +131,8 @@ function getInitialActiveOrders(ids: string[]): ActiveTrackerOrder[] {
         typeof parsed.id === 'string' &&
         ids.includes(parsed.id) &&
         parsed.status !== 'completed' &&
-        parsed.status !== 'cancelled'
+        parsed.status !== 'cancelled' &&
+        isRecentOrder(parsed.createdAt)
       ) {
         return [parsed];
       }
@@ -198,6 +213,54 @@ export const ActiveOrderTrackerProvider: React.FC<{
     }
   }, []);
 
+  const purgeOrphanOrders = useCallback(
+    (orphanIds?: string[]) => {
+      setActiveOrderIdsState((prevIds) => {
+        const nextIds =
+          orphanIds && orphanIds.length > 0
+            ? prevIds.filter((id) => !orphanIds.includes(id))
+            : [];
+
+        setActiveOrders((prevOrders) => {
+          const nextOrders =
+            orphanIds && orphanIds.length > 0
+              ? prevOrders.filter((o) => !orphanIds.includes(o.id))
+              : [];
+
+          persistOrders(nextIds, nextOrders);
+          return nextOrders;
+        });
+
+        setSelectedOrderId((current) =>
+          current && (!orphanIds || orphanIds.includes(current))
+            ? nextIds[nextIds.length - 1] || null
+            : current
+        );
+
+        if (nextIds.length === 0) {
+          try {
+            localStorage.removeItem(ACTIVE_ORDER_IDS_KEY);
+            localStorage.removeItem(ACTIVE_ORDERS_DATA_KEY);
+            localStorage.removeItem(ACTIVE_ORDER_ID_KEY);
+            localStorage.removeItem(ACTIVE_ORDER_DATA_KEY);
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('storage'));
+              window.dispatchEvent(new Event('gulas_order_status_update'));
+            }
+          } catch {
+            // ignore
+          }
+        } else if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('storage'));
+          window.dispatchEvent(new Event('gulas_order_status_update'));
+        }
+
+        return nextIds;
+      });
+    },
+    [persistOrders]
+  );
+
   const removeActiveOrder = useCallback(
     (orderIdToRemove: string) => {
       setActiveOrderIdsState((prevIds) => {
@@ -213,6 +276,24 @@ export const ActiveOrderTrackerProvider: React.FC<{
             ? nextIds[nextIds.length - 1] || null
             : current
         );
+
+        if (nextIds.length === 0) {
+          try {
+            localStorage.removeItem(ACTIVE_ORDER_IDS_KEY);
+            localStorage.removeItem(ACTIVE_ORDERS_DATA_KEY);
+            localStorage.removeItem(ACTIVE_ORDER_ID_KEY);
+            localStorage.removeItem(ACTIVE_ORDER_DATA_KEY);
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('storage'));
+              window.dispatchEvent(new Event('gulas_order_status_update'));
+            }
+          } catch {
+            // ignore
+          }
+        } else if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('storage'));
+          window.dispatchEvent(new Event('gulas_order_status_update'));
+        }
 
         return nextIds;
       });
@@ -399,22 +480,99 @@ export const ActiveOrderTrackerProvider: React.FC<{
           ) {
             handleStatusTransition(fetched.id, currentStatus);
           }
+        } else if (!result.success) {
+          // O pedido não foi encontrado na base de dados: purga imediata
+          removeActiveOrder(orderIdToFetch);
         }
       } catch {
         // Falha tolerada em modo offline
       }
     },
-    [handleStatusTransition, persistOrders]
+    [handleStatusTransition, persistOrders, removeActiveOrder]
   );
 
   const fetchAllActiveStatuses = useCallback(async () => {
     const ids = activeOrderIdsRef.current;
     if (ids.length === 0) return;
 
-    for (const id of ids) {
-      await fetchLatestStatus(id);
+    try {
+      const res = await getMultipleOrdersPublicStatus(ids);
+      if (res.success) {
+        const { orders, missingIds } = res.data;
+
+        // Se a base de dados não devolver nenhum pedido existente (tabela limpa / DB reset):
+        if (orders.length === 0) {
+          purgeOrphanOrders();
+          return;
+        }
+
+        // Se existirem IDs órfãos parciais:
+        if (missingIds.length > 0) {
+          purgeOrphanOrders(missingIds);
+        }
+
+        // Filtrar pedidos ainda em confeção/entrega
+        const stillActive = orders.filter(
+          (o) => o.status !== 'completed' && o.status !== 'cancelled'
+        );
+        const finishedOrders = orders.filter(
+          (o) => o.status === 'completed' || o.status === 'cancelled'
+        );
+
+        if (stillActive.length === 0) {
+          if (finishedOrders.length > 0) {
+            const last = finishedOrders[finishedOrders.length - 1];
+            handleStatusTransition(last.id, last.status as OrderStatus);
+          } else {
+            purgeOrphanOrders();
+          }
+          return;
+        }
+
+        // Atualizar pedidos ativos confirmados
+        setActiveOrders((prev) => {
+          const map = new Map<string, ActiveTrackerOrder>(
+            prev.map((o) => [o.id, o])
+          );
+
+          stillActive.forEach((fetched) => {
+            const currentStatus = fetched.status as OrderStatus;
+            map.set(fetched.id, {
+              id: fetched.id,
+              orderNumber: fetched.orderNumber,
+              tableNumber: fetched.tableNumber,
+              tableName: fetched.tableName || `Mesa ${fetched.tableNumber}`,
+              status: currentStatus,
+              subtotal: fetched.subtotal,
+              total: fetched.total,
+              createdAt: fetched.createdAt,
+              updatedAt: fetched.updatedAt,
+              items: fetched.items || [],
+            });
+          });
+
+          // Remover os missing e os terminados
+          missingIds.forEach((id) => map.delete(id));
+          finishedOrders.forEach((o) => map.delete(o.id));
+
+          const nextList = Array.from(map.values()).filter(
+            (o) => o.status !== 'completed' && o.status !== 'cancelled'
+          );
+
+          const nextIds = nextList.map((o) => o.id);
+          persistOrders(nextIds, nextList);
+          return nextList;
+        });
+
+        setActiveOrderIdsState((prev) => {
+          const validSet = new Set(stillActive.map((o) => o.id));
+          return prev.filter((id) => validSet.has(id));
+        });
+      }
+    } catch {
+      // Falha tolerada em modo offline momentâneo
     }
-  }, [fetchLatestStatus]);
+  }, [handleStatusTransition, persistOrders, purgeOrphanOrders]);
 
   const refreshOrder = useCallback(async () => {
     setIsLoading(true);
@@ -422,7 +580,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
     setIsLoading(false);
   }, [fetchAllActiveStatuses]);
 
-  // 1. Reconciliação inicial com o backend se houver pedidos ativos
+  // 1. Reconciliação e Health Check inicial com o backend se houver pedidos ativos
   useEffect(() => {
     if (activeOrderIds.length > 0) {
       const timer = setTimeout(() => {
@@ -461,6 +619,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
 
           if (rec?.id && rec?.status) {
             handleStatusTransition(rec.id, rec.status);
+            void fetchLatestStatus(rec.id);
           }
         }
       );
@@ -477,6 +636,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
           activeOrderIdsRef.current.includes(data.id)
         ) {
           handleStatusTransition(data.id, data.status);
+          void fetchLatestStatus(data.id);
         }
       }
     );
@@ -486,7 +646,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [activeOrderIds, handleStatusTransition]);
+  }, [activeOrderIds, handleStatusTransition, fetchLatestStatus]);
 
   // 3. Reconciliação em mudanças de visibilidade ou reconexão Wi-Fi
   useEffect(() => {

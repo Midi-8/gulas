@@ -77,7 +77,6 @@ export const ActiveOrderBanner: React.FC = () => {
   );
 
   const {
-    activeOrderIds,
     activeOrders,
     status,
     completionNotice,
@@ -85,8 +84,8 @@ export const ActiveOrderBanner: React.FC = () => {
   } = useActiveOrderTracker();
   const { itemCount, selectedTableNumber } = useCart();
 
-  // Leitura síncrona segura de IDs a partir do localStorage
-  const storedIds = React.useSyncExternalStore(
+  // Subscrição a eventos de storage para forçar sincronização
+  React.useSyncExternalStore(
     subscribeStorage,
     getStoredOrderIds,
     getServerSnapshot
@@ -97,11 +96,9 @@ export const ActiveOrderBanner: React.FC = () => {
     return null;
   }
 
-  const effectiveIds =
-    activeOrderIds.length > 0 ? activeOrderIds : storedIds;
-
-  // Oculta se não houver pedidos ativos nem mensagem de conclusão temporária
-  if (effectiveIds.length === 0 && !completionNotice) {
+  // 2. SALVAGUARDA DE PEDIDOS CONFIRMADOS:
+  // Se a lista de pedidos ativos confirmados for vazia e não houver aviso de conclusão temporário:
+  if (activeOrders.length === 0 && !completionNotice) {
     return null;
   }
 
@@ -136,7 +133,7 @@ export const ActiveOrderBanner: React.FC = () => {
     );
   }
 
-  const ordersCount = Math.max(effectiveIds.length, activeOrders.length);
+  const ordersCount = activeOrders.length;
   const isMultiOrder = ordersCount > 1;
 
   // Determina o pedido mais recente ou de maior prioridade operacional
@@ -147,6 +144,10 @@ export const ActiveOrderBanner: React.FC = () => {
     activeOrders.find((o) => o.status === 'preparing') ||
     activeOrders[activeOrders.length - 1] ||
     null;
+
+  if (!primaryOrder) {
+    return null;
+  }
 
   const currentStatus =
     hasReady
@@ -254,7 +255,7 @@ export const ActiveOrderBanner: React.FC = () => {
                   ? statusText
                   : primaryOrder?.orderNumber
                   ? `Pedido #${primaryOrder.orderNumber}`
-                  : `Pedido #${effectiveIds[0].replace('ord_', '').slice(0, 6)}`}
+                  : `Pedido #${primaryOrder.id.replace('ord_', '').slice(0, 6)}`}
               </p>
             </div>
           </div>

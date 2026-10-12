@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useActiveOrderTracker, ActiveTrackerOrder } from '@/hooks/useActiveOrderTracker';
+import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency } from '@/data/mockRestaurant';
 import {
   X,
@@ -65,7 +65,6 @@ function formatTime(isoString?: string): string {
 
 export const ActiveOrderDetailModal: React.FC = () => {
   const {
-    activeOrderIds,
     activeOrders,
     isDetailModalOpen,
     selectedOrderId,
@@ -73,26 +72,10 @@ export const ActiveOrderDetailModal: React.FC = () => {
     closeDetailModal,
   } = useActiveOrderTracker();
 
-  // Garante uma lista estável de pedidos a exibir
+  // Garante apenas a exibição de pedidos ativos confirmados
   const displayOrders = useMemo(() => {
-    if (activeOrders.length > 0) return activeOrders;
-    if (activeOrderIds.length > 0) {
-      return activeOrderIds.map(
-        (id, idx): ActiveTrackerOrder => ({
-          id,
-          orderNumber: idx + 1,
-          tableNumber: 0,
-          tableName: 'Mesa',
-          status: 'pending',
-          subtotal: 0,
-          total: 0,
-          createdAt: new Date().toISOString(),
-          items: [],
-        })
-      );
-    }
-    return [];
-  }, [activeOrders, activeOrderIds]);
+    return activeOrders;
+  }, [activeOrders]);
 
   // Pedido selecionado atualmente
   const activeOrder =
