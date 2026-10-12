@@ -1,6 +1,6 @@
 # Gulas Platform — Digital Menu, Kitchen Display & Business Intelligence
 
-Plataforma digital para restauração e pedidos de mesa, concebida de raiz com arquitetura multi-tenant, zero-trust frontend, transações atómicas em base de dados, monitor de cozinha KDS em tempo real e centro de comando analítico executivo (Business Intelligence).
+Plataforma digital para restauração e pedidos de mesa, concebida de raiz com arquitetura multi-tenant, zero-trust frontend, transações atómicas em base de dados, monitor de cozinha KDS em tempo real, acompanhamento de pedidos ao vivo no cliente (Live Order Tracking) e centro de comando analítico executivo (Business Intelligence).
 
 Atualmente configurada para a operação do restaurante Gulas — Pizza, Burger & Coffee (Vila das Aves, Portugal).
 
@@ -14,10 +14,12 @@ A plataforma resolve os desafios operacionais, de segurança e de suporte à dec
 * **Atomicidade Transacional:** A submissão de pedidos é processada através de uma função PostgreSQL transacional `SECURITY DEFINER` (`create_order_atomic`).
 * **Segurança por Defeito (RLS):** Todas as tabelas possuem Row Level Security ativado. As tabelas `orders` e `order_items` encontram-se protegidas contra comandos diretos de `INSERT` público.
 * **Multi-Tenant Nativo:** A identificação do restaurante é resolvida no servidor por slug ou sessão de staff, isolando produtos, categorias, mesas, contadores e pedidos entre diferentes estabelecimentos.
-* **Autenticação & Autorização de Staff:** Gestão de acesso administrativo com verificação estrita de perfis (`owner`, `manager`, `staff`) associados ao restaurante em `public.profiles`.
+* **Autenticação & Autorização de Staff:** Gestão de acesso administrativo com verificação estrita de perfis (`owner`, `manager`, `staff`) associados ao restaurante em `public.profiles` e `public.staff_members`.
 * **Máquina de Estados de Cozinha:** Ciclo de vida estrito para transições de estado dos pedidos (`pending` -> `accepted` -> `preparing` -> `ready` -> `completed` / `cancelled`).
-* **Monitor KDS em Tempo Real:** Painel operacional para tablet e desktop com métricas em tempo real, cartões táteis de pedidos, observações de clientes e botões contextuais com proteção contra duplo clique.
-* **Supabase Realtime (Signal & Fetch):** Sincronização via WebSockets com padrão de reconciliação forçada após suspensão de ecrã ou reconexão Wi-Fi, garantindo estabilidade operacional.
+* **Monitor KDS em Tempo Real:** Painel operacional para tablet e desktop com métricas em tempo real, cartões táteis de pedidos com temporizadores de SLA, agrupamento consolidado de artigos para confeção e botões com proteção contra duplo clique.
+* **Gestão Rápida de Stock (Quick Stock):** Gaveta tátil no KDS para comutação instantânea de disponibilidade de artigos (`is_available`), com propagação em tempo real para o menu do cliente.
+* **Live Order Tracking no Cliente:** Acompanhamento discreto e em tempo real no menu do cliente via WebSockets, com stepper visual de 4 etapas, suporte a múltiplos pedidos simultâneos e persistência no armazenamento local do dispositivo.
+* **Supabase Realtime (Signal & Fetch):** Sincronização via WebSockets com padrão de reconciliação forçada após suspensão de ecrã ou reconexão Wi-Fi, garantindo estabilidade operacional contínua em ambientes de cozinha e sala.
 * **Arquivo e Histórico:** Registo detalhado de pedidos concluídos e cancelados com filtros dinâmicos por mesa, estado e intervalo temporal.
 * **Centro de Comando & BI Avançado:** Módulo analítico com matriz BCG de rentabilidade, cesta de compras (Market Basket / Cross-Selling), SLA de confeção, mineração semântica de preferências (NLP em português) e simulador preditivo de elasticidade de preços ("What-If").
 
@@ -28,11 +30,12 @@ A plataforma resolve os desafios operacionais, de segurança e de suporte à dec
 * **Framework:** Next.js 16 (App Router com Turbopack)
 * **Linguagem:** TypeScript 5 (tipagem estrita de ponta a ponta)
 * **Biblioteca UI:** React 19 (Server Components e Client Components otimizados)
-* **Estilização:** Tailwind CSS v4 com tokens semânticos e modo escuro executivo
+* **Estilização & Design System:** Tailwind CSS v4 com paleta oficial da marca Gulas (Branco Quente `#F5F4F1`, Castanho Escuro `#5E4939`, Caramelo `#C09573`)
 * **Validação de Esquemas:** Zod v4 (validação de payloads, identificadores UUID e integridade de dados)
 * **Base de Dados e Autenticação:** Supabase com PostgreSQL 15+
 * **Sincronização em Tempo Real:** Supabase Realtime (WebSockets com Replicação Lógica)
 * **Integração Supabase:** `@supabase/ssr` e `@supabase/supabase-js` (padrão singleton no browser e SSR server client)
+* **Áudio e Haptics:** Web Audio API pura (tons sintetizados em código) e `navigator.vibrate` sem ficheiros de áudio pesados
 * **Visualizações e Gráficos:** SVG nativo e Tailwind CSS (sem dependências externas pesadas)
 * **Iconografia:** Lucide React
 
@@ -47,10 +50,11 @@ A plataforma resolve os desafios operacionais, de segurança e de suporte à dec
 | **M3** | Real Ordering System | Concluído | Server Actions (`createOrder`), validação Zod, RPC PostgreSQL atómica e prevenção de pedidos duplicados. |
 | **M4.1** | Staff Auth & Protected Routes | Concluído | Autenticação de staff, controlo de permissões por perfil (`owner`, `manager`, `staff`) e rotas administrativas protegidas. |
 | **M4.2** | Order Management Backend | Concluído | Server Actions de gestão (`getActiveOrders`, `getOrderById`, `updateOrderStatus`) e máquina de estados estrita. |
-| **M4.3** | Kitchen Display System (KDS) UI | Concluído | Dashboard interativo de cozinha com contadores operacionais (KPIs), cartões detalhados e ações de transição. |
-| **M4.4** | Supabase Realtime KDS | Concluído | Sincronização em tempo real via WebSockets com reconciliação automática em retoma de rede e foco de ecrã. |
+| **M4.3** | Kitchen Display System (KDS) UI | Concluído | Dashboard interativo de cozinha com KPIs operacionais, cartões detalhados, temporizadores de SLA e ações de transição. |
+| **M4.4** | Supabase Realtime KDS & Áudio | Concluído | Sincronização via WebSockets com reconciliação em retoma de rede/foco, sintetizador de áudio Web Audio API e vibração. |
 | **M4.5** | Order History & Multi-Filters | Concluído | Histórico de pedidos finalizados com pesquisa por ID/número, filtros por mesa/período e modal de inspeção. |
-| **M5** | Business Intelligence & Analytics | Concluído | Centro de comando executivo (`/admin/analytics`) com matriz BCG, cross-selling, SLA, NLP e simulador What-If. |
+| **M5** | Business Intelligence & Analytics | Concluído | Centro de comando executivo (`/admin/analytics`) com matriz BCG, cross-selling, SLA, NLP de notas e simulador What-If. |
+| **M6** | Quick Stock & Live Order Tracking | Concluído | Comutação rápida de disponibilidade no KDS, banner persistente e modal com stepper para acompanhamento de pedidos no menu. |
 
 ---
 
@@ -59,50 +63,81 @@ A plataforma resolve os desafios operacionais, de segurança e de suporte à dec
 ### 4.1. Menu Digital e Pedidos de Mesa (Cliente)
 * Navegação fluida por categorias com barra adesiva superior.
 * Pesquisa em tempo real com filtros por alergénios e destaques.
+* Atualização instantânea de artigos esgotados via WebSockets (selo "Temporariamente Esgotado" e desativação de compra).
 * Drawer de carrinho com revisão detalhada e inserção de notas personalizadas.
 * Seleção manual de mesa ou bloqueio automático de mesa através de URL/QR Code (`/menu/[slug]/table/[tableNumber]`).
-* Modal de confirmação com acompanhamento do estado do pedido.
+* Modal de confirmação com integração direta no sistema de rastreio em tempo real.
 
-### 4.2. Monitor de Cozinha KDS (Operação)
-* Vista em grelha responsiva adaptada a tablets e ecrãs táteis de cozinha.
-* Badges de estado contextuais com contagem decrescente e alertas visuais para pedidos em atraso.
-* Discriminação de observações do cliente e de alérgenos com destaque visual.
-* Botões de avanço de fluxo protegidos contra cliques repetidos.
-* Alertas sonoros sintetizados nativos para novos pedidos.
+### 4.2. Live Order Tracking (Cliente)
+* Pílula flutuante persistente no rodapé do menu (`ActiveOrderBanner`) com leitura em cache estática imutável para prevenir ciclos de renderização do `useSyncExternalStore`.
+* Modal de detalhe (`ActiveOrderDetailModal`) com stepper de 4 etapas:
+  * Recebido (`pending`)
+  * Em Preparação (`preparing`)
+  * Pronto / A Caminho (`ready`)
+  * Concluído (`completed`)
+* Suporte nativo a múltiplos pedidos simultâneos no mesmo dispositivo (ex.: pedido principal seguido de bebidas/sobremesas) com navegação por separadores e limpeza automática após conclusão.
 
-### 4.3. Histórico e Auditoria de Pedidos
+### 4.3. Monitor de Cozinha KDS (Operação)
+* Vista em grelha adaptada a tablets e ecrãs táteis de cozinha.
+* Temporizadores dinâmicos de SLA por pedido com código de cores:
+  * Menos de 10 minutos: Normal
+  * 10 a 19 minutos: Atenção
+  * 20 ou mais minutos: Crítico
+* Barra de agregação de artigos em preparação (`ConsolidatedItems`) que soma as quantidades totais de artigos idênticos em confeção.
+* Alertas sonoros sintetizados por Web Audio API (tons a 880Hz e 1100Hz) e vibração hátil, com ativação por gesto explícito do utilizador para conformidade com navegadores modernos.
+* Janela de reversão de conclusão de 6 segundos ("Desfazer") para recuperar pedidos marcados por engano.
+* Gaveta de Gestão Rápida de Stock (`QuickStockDrawer`) para desativar e ativar artigos esgotados com um toque.
+
+### 4.4. Histórico e Auditoria de Pedidos
 * Tabela consolidada de pedidos concluídos e cancelados.
 * Filtros rápidos por período (Hoje, 7 Dias, 30 Dias ou Todo o Histórico).
 * Pesquisa direta por número de pedido ou mesa.
 * Modal com discriminação de artigos, preços unitários e timestamps de ciclo de vida.
 
-### 4.4. Centro de Comando & BI Avançado (/admin/analytics)
+### 4.5. Centro de Comando & BI Avançado (/admin/analytics)
 * **Faixa de KPIs com Sparklines Nativos:** Faturação total, ticket médio por cliente, cumprimento de SLA de cozinha (< 20 minutos), ritmo de pedidos por hora e projeção de fecho de turno/mês.
-* **Engenharia de Menu (Matriz BCG):** Classificação automática de produtos em Estrelas (alto volume, alta margem), Cavalos de Batalha (alto volume, margem menor), Quebra-Cabeças (baixo volume, margem elevada) e Inertes (candidatos a revisão).
-* **Análise de Cross-Selling (Market Basket):** Identificação dos pares de artigos mais frequentemente pedidos em conjunto com cálculo de probabilidade e receita média do combo.
-* **Pressão Operacional de Cozinha:** Histograma SVG de fluxo de pedidos distribuído por hora do dia com indicação de picos de almoço e jantar.
+* **Engenharia de Menu (Matriz BCG):** Classificação automática de produtos em Estrelas (alto volume, alta margem), Cavalos de Batalha (alto volume, margem menor), Quebra-Cabeças (baixo volume, margem elevada) e Inertes (candidatos a revisão). Fallback automático de custo a 32% para produtos sem custo unitário cadastrado.
+* **Análise de Cross-Selling (Market Basket):** Identificação dos pares de artigos mais frequentemente pedidos em conjunto com cálculo de afinidade e receita média do combo.
+* **Histograma de Fluxo Horário:** Gráfico SVG de fluxo de pedidos distribuído por hora do dia com largura mínima de 800px, scroll horizontal responsivo e etiquetas persistentes sem sobreposição.
 * **Mineração Semântica de Observações (NLP em Português):** Separação automática entre preferências operacionais de clientes ("sem cebola", "bem passado", "ao ponto") e deteção de fugas de margem por extras não cobrados ("molho extra", "mais batatas", "dose reforçada").
 * **Simulador Estratégico "What-If":** Ferramenta interativa de suporte à decisão que permite ao gestor simular aumentos médios de preço com sensibilidade de elasticidade de procura e calcular o impacto projetado no lucro bruto em tempo real.
-* **Exportação de Dados:** Geração de relatórios consolidados em formato CSV (delimitador ponto e vírgula e codificação UTF-8 BOM para compatibilidade com Excel e Numbers).
+* **Exportação de Dados:** Geração de relatórios consolidados em formato CSV (delimitador ponto e vírgula e codificação UTF-8 com BOM `\uFEFF` para compatibilidade com Excel e Numbers).
 
 ---
 
-## 5. Arquitetura de Dados (PostgreSQL)
+## 5. Design System e Identidade Visual Gulas
+
+O ecossistema adota uma estética minimalista, quente e funcional, concebida para ambientes gastronómicos:
+
+* **Fundo Principal (Branco Quente):** `#F5F4F1`
+* **Fundo Secundário / Superfícies Suaves:** `#EAE5DF`
+* **Cartões e Superfícies:** `#FFFFFF`
+* **Bordas e Divisórias:** `#E5DED6`
+* **Texto Principal / Títulos:** `#35271F`
+* **Texto Secundário / Corpo:** `#4C453F`
+* **Identidade Principal (Castanho Escuro):** `#5E4939`
+* **Cor de Destaque (Caramelo):** `#C09573`
+* **Superfícies Planas (Flat Design):** Eliminação de vidros foscos pesados e transparências agressivas em áreas de trabalho, garantindo máxima legibilidade sob luz natural ou de cozinha.
+
+---
+
+## 6. Arquitetura de Dados (PostgreSQL)
 
 O modelo de dados é estruturado em tabelas relacionais com integridade referencial estrita e políticas de RLS ativas:
 
 1. **`restaurants`**: Configuração central do restaurante (nome, slug, morada, horários e estado de abertura).
 2. **`profiles`**: Registo de utilizadores com associação ao restaurante e papel de autorização (`owner`, `manager`, `staff`).
-3. **`categories`**: Categorias de produtos com ordenação de exibição (`display_order`).
-4. **`products`**: Catálogo de artigos com preço de venda, custo de produção, disponibilidade e etiquetas de alérgenos.
-5. **`tables`**: Mesas ativas do restaurante identificadas por número e nome de sala.
-6. **`restaurant_counters`**: Sequenciadores atómicos para numeração incremental e legível de pedidos (`order_number`).
-7. **`orders`**: Registo de cabeçalho de pedido com `table_number`, totais monetários, notas do cliente e timestamps de auditoria.
-8. **`order_items`**: Linhas de pedido imutáveis com snapshot histórico de preço de venda e custo na data da compra.
+3. **`staff_members`**: Vínculo operacional entre utilizadores autenticados e o respetivo restaurante.
+4. **`categories`**: Categorias de produtos com ordenação de exibição (`display_order`).
+5. **`products`**: Catálogo de artigos com preço de venda, custo de produção, disponibilidade (`is_available`) e etiquetas de alérgenos.
+6. **`tables`**: Mesas ativas do restaurante identificadas por número e nome de sala.
+7. **`restaurant_counters`**: Sequenciadores atómicos para numeração incremental e legível de pedidos (`order_number`).
+8. **`orders`**: Registo de cabeçalho de pedido com `table_number`, totais monetários, notas do cliente e timestamps de auditoria.
+9. **`order_items`**: Linhas de pedido imutáveis com snapshot histórico de preço de venda e custo na data da compra.
 
 ---
 
-## 6. Ciclo de Vida do Pedido
+## 7. Ciclo de Vida do Pedido
 
 ```
 [ pending ] ──────> [ accepted ] ──────> [ preparing ] ──────> [ ready ] ──────> [ completed ]
@@ -119,7 +154,7 @@ O modelo de dados é estruturado em tabelas relacionais com integridade referenc
 
 ---
 
-## 7. Estrutura de Diretórios
+## 8. Estrutura de Diretórios
 
 ```
 gulas/
@@ -127,8 +162,9 @@ gulas/
 │   ├── actions/
 │   │   ├── analytics.ts             # Motor de BI, cálculos BCG, cross-selling, NLP e CSV
 │   │   ├── auth.ts                  # Autenticação de staff e gestão de sessão
-│   │   ├── order-management.ts      # Ações do KDS e histórico de pedidos
-│   │   ├── orders.ts                # Submissão pública de pedidos com RPC atómica
+│   │   ├── order-management.ts      # Ações do KDS, reversão e histórico de pedidos
+│   │   ├── orders.ts                # Submissão pública de pedidos e consulta de estado
+│   │   ├── product-stock.ts         # Comutação rápida de disponibilidade de stock
 │   │   └── test-bench.ts            # Ações de disparo de pedidos simulados para bancada
 │   ├── app/
 │   │   ├── admin/
@@ -164,47 +200,56 @@ gulas/
 │   │   │   ├── history/
 │   │   │   │   ├── OrderHistoryDetailModal.tsx # Inspeção detalhada de pedido
 │   │   │   │   └── OrderHistoryView.tsx        # Tabela e filtros de histórico
-│   │   │   └── orders/
-│   │   │       ├── OrderCard.tsx           # Cartão tátil de pedido no KDS
-│   │   │       ├── OrderDashboard.tsx      # Grelha KDS com KPIs operacionais
-│   │   │       ├── OrderItemsList.tsx      # Listagem de artigos e observações
-│   │   │       ├── OrderStatusActions.tsx  # Botões de transição de estado
-│   │   │       └── OrderStatusBadge.tsx    # Badges visuais de estado
+│   │   │   ├── kds/
+│   │   │   │   └── ConsolidatedItems.tsx       # Agrupamento de artigos em preparação
+│   │   │   ├── orders/
+│   │   │   │   ├── OrderCard.tsx           # Cartão tátil de pedido no KDS
+│   │   │   │   ├── OrderDashboard.tsx      # Grelha KDS com KPIs operacionais
+│   │   │   │   ├── OrderItemsList.tsx      # Listagem de artigos e observações
+│   │   │   │   ├── OrderStatusActions.tsx  # Botões de transição de estado
+│   │   │   │   └── OrderStatusBadge.tsx    # Badges visuais de estado
+│   │   │   └── stock/
+│   │   │       └── QuickStockDrawer.tsx    # Gaveta tátil de gestão de stock
 │   │   ├── menu/
-│   │   │   ├── CartDrawer.tsx       # Gaveta lateral de revisão de carrinho
-│   │   │   ├── CategoryNav.tsx      # Navegação adesiva de categorias
-│   │   │   ├── FloatingCartBar.tsx  # Barra flutuante de checkout
-│   │   │   ├── OrderConfirmationModal.tsx # Acompanhamento de pedido submetido
-│   │   │   ├── ProductCard.tsx      # Cartão de artigo do menu
-│   │   │   ├── ProductDetailModal.tsx # Modal com detalhes e notas do artigo
-│   │   │   ├── RestaurantHeader.tsx # Cabeçalho do menu com seleção de mesa
-│   │   │   ├── RestaurantMenuView.tsx # Vista principal agregadora do menu
-│   │   │   └── SearchBar.tsx        # Pesquisa com filtros rápidos
+│   │   │   ├── ActiveOrderBanner.tsx    # Pílula flutuante de rastreio de pedido
+│   │   │   ├── ActiveOrderDetailModal.tsx # Modal com stepper e abas multi-pedido
+│   │   │   ├── CartDrawer.tsx           # Gaveta lateral de revisão de carrinho
+│   │   │   ├── CategoryNav.tsx          # Navegação adesiva de categorias
+│   │   │   ├── FloatingCartBar.tsx      # Barra flutuante de checkout
+│   │   │   ├── OrderConfirmationModal.tsx # Acompanhamento imediato pós-submissão
+│   │   │   ├── ProductCard.tsx          # Cartão de artigo do menu
+│   │   │   ├── ProductDetailModal.tsx   # Modal com detalhes e notas do artigo
+│   │   │   ├── RestaurantHeader.tsx     # Cabeçalho do menu com seleção de mesa
+│   │   │   ├── RestaurantMenuView.tsx   # Vista principal agregadora do menu
+│   │   │   └── SearchBar.tsx            # Pesquisa com filtros rápidos
 │   │   └── ui/
-│   │       ├── Badge.tsx            # Etiqueta visual utilitária
-│   │       └── Toast.tsx            # Notificações contextuais
+│   │       ├── Badge.tsx                # Etiqueta visual utilitária
+│   │       └── Toast.tsx                # Notificações contextuais
 │   ├── context/
-│   │   └── CartContext.tsx          # Gestão de estado global do carrinho de compras
+│   │   └── CartContext.tsx              # Gestão de estado global do carrinho de compras
 │   ├── hooks/
-│   │   └── useOrdersRealtime.ts     # Hook com resiliência a reconexão e foco
+│   │   ├── useActiveOrderTracker.tsx    # Hook de rastreio de pedidos e sincronização
+│   │   ├── useKdsAlerts.ts              # Síntese Web Audio e vibração para KDS
+│   │   ├── useOrdersRealtime.ts         # Hook KDS com reconciliação em retoma de rede
+│   │   └── useOrderTimer.ts             # Temporizador reativo de minutos de pedido
 │   ├── lib/
 │   │   ├── auth/
-│   │   │   └── staff.ts             # Verificação de credenciais e perfil de staff
+│   │   │   └── staff.ts                 # Verificação de credenciais e perfil de staff
 │   │   ├── supabase/
-│   │   │   ├── client.ts            # Cliente singleton para o browser
-│   │   │   ├── server.ts            # Cliente SSR para Server Components/Actions
-│   │   │   └── types.ts             # Tipos TypeScript sincronizados com PostgreSQL
+│   │   │   ├── client.ts                # Cliente singleton para o browser
+│   │   │   ├── server.ts                # Cliente SSR para Server Components/Actions
+│   │   │   └── types.ts                 # Tipos TypeScript sincronizados com PostgreSQL
 │   │   └── validations/
-│   │       ├── auth.ts              # Validação de credenciais de login
-│   │       ├── order-management.ts # Validação de transições de estado
-│   │       └── order.ts             # Validação de submissão de pedidos
+│   │       ├── auth.ts                  # Validação de credenciais de login
+│   │       ├── order-management.ts     # Validação de transições de estado
+│   │       └── order.ts                 # Validação de submissão de pedidos
 │   ├── services/
-│   │   └── restaurantService.ts     # Camada de consulta de dados públicos do menu
+│   │   └── restaurantService.ts         # Camada de consulta de dados públicos do menu
 │   └── types/
-│       └── restaurant.ts            # Interfaces e modelos centrais da aplicação
+│       └── restaurant.ts                # Interfaces e modelos centrais da aplicação
 ├── supabase/
-│   ├── migrations/                  # Ficheiros SQL de migração versionados
-│   └── seed.sql                     # Dados iniciais para ambiente de desenvolvimento
+│   ├── migrations/                      # Ficheiros SQL de migração versionados
+│   └── seed.sql                         # Dados reais e catálogo do restaurante Gulas
 ├── package.json
 ├── tsconfig.json
 └── next.config.ts
@@ -212,7 +257,7 @@ gulas/
 
 ---
 
-## 8. Instalação e Execução Local
+## 9. Instalação e Execução Local
 
 ### Pré-requisitos
 * Node.js >= 18.17.0
@@ -229,7 +274,7 @@ Crie um ficheiro `.env.local` na raiz do projeto com as credenciais do seu proje
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://seu-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sua-chave-publica-aqui
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-publica-aqui
 NEXT_PUBLIC_DEFAULT_RESTAURANT_SLUG=gulas
 ```
 
@@ -242,25 +287,25 @@ O projeto ficará acessível em [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 9. Rotas Disponíveis
+## 10. Rotas Disponíveis
 
 ### Menu Público (Cliente)
 * **`/`** — Apresentação da plataforma e atalhos rápidos de navegação.
-* **`/menu/gulas`** — Menu digital do restaurante Gulas com seleção de mesa no carrinho.
-* **`/menu/gulas/table/4`** — Menu digital com a Mesa 4 fixa e pré-selecionada.
+* **`/menu/gulas`** — Menu digital do restaurante Gulas com seleção de mesa no carrinho e banner de Live Order Tracking.
+* **`/menu/gulas/table/4`** — Menu digital com a Mesa 4 fixa e bloqueada no contexto.
 
 ### Administração & Operação (Staff Autenticado)
 * **`/admin/login`** — Formulário de autenticação de staff.
-* **`/admin/orders`** — Monitor KDS de cozinha em tempo real.
+* **`/admin/orders`** — Monitor KDS de cozinha em tempo real, gaveta Quick Stock e alertas sonoros.
 * **`/admin/orders/history`** — Histórico e arquivo com pesquisa e filtros combinados.
-* **`/admin/analytics`** — Centro de comando executivo, matriz BCG, SLA e simulador What-If.
+* **`/admin/analytics`** — Centro de comando executivo, matriz BCG, SLA, análise semântica e simulador What-If.
 
 ### Diagnóstico & Testes
 * **`/test`** — Rota de bancada para disparo e simulação de pedidos controlados.
 
 ---
 
-## 10. Validação de Código e Qualidade
+## 11. Validação de Código e Qualidade
 
 O repositório cumpre integralmente os requisitos de compilação estrita e linting:
 
@@ -277,9 +322,10 @@ npm run build
 
 ---
 
-## 11. Políticas de Segurança e Boas Práticas
+## 12. Políticas de Segurança e Boas Práticas
 
 1. **Princípio do Menor Privilégio:** A chave privilegiada `service_role` nunca é exposta no cliente nem em Server Actions com execução de utilizador.
 2. **Isolamento de Restaurante no Servidor:** Todas as consultas e mutações administrativas filtram estritamente por `restaurant_id` resolvido via `getAuthenticatedStaff()`.
-3. **Resiliência a Desconexões:** O hook de subscrição em tempo real deteta automaticamente eventos de suspensão de ecrã (`visibilitychange`) e retoma de ligação de rede (`online`), efetuando reconciliações forçadas com a base de dados.
-4. **Resoluções Seguras de Custos:** Caso o custo de um produto não esteja configurado, o motor de BI aplica estimativas com base em margens padrão da restauração, evitando divisões por zero ou falhas de processamento.
+3. **Resiliência a Desconexões:** Os hooks de subscrição em tempo real detetam automaticamente eventos de suspensão de ecrã (`visibilitychange`) e retoma de ligação de rede (`online`), efetuando reconciliações forçadas com a base de dados.
+4. **Resoluções Seguras de Custos:** Caso o custo de um produto não esteja configurado, o motor de BI aplica estimativas com base em margens padrão da restauração (32%), evitando divisões por zero ou falhas de processamento.
+5. **Estabilidade de Snapshot em SSR:** Todas as leituras locais de estado baseadas em `useSyncExternalStore` utilizam referências imutáveis de módulo, prevenindo loops de re-renderização infinitos entre o servidor e o cliente.
