@@ -216,6 +216,14 @@ export default function TestBenchPage() {
             'realtime',
             `🔄 WebSocket [UPDATE]: Pedido #${orderNum} transitou para estado "${status}".`
           );
+
+          if (rec?.id && rec?.status) {
+            window.dispatchEvent(
+              new CustomEvent('gulas_order_status_update', {
+                detail: { orderId: rec.id, status: rec.status },
+              })
+            );
+          }
         }
       )
       .on(
@@ -474,6 +482,14 @@ export default function TestBenchPage() {
       if (!advanceRes.success) {
         addLog('error', `Falha ao avançar pedido: ${advanceRes.error.message}`);
       } else {
+        window.dispatchEvent(
+          new CustomEvent('gulas_order_status_update', {
+            detail: {
+              orderId: advanceRes.data.id,
+              status: advanceRes.data.status,
+            },
+          })
+        );
         addLog(
           'success',
           `✅ Pedido #${advanceRes.data.orderNumber} avançou com sucesso para "${advanceRes.data.status}"!`
@@ -521,6 +537,14 @@ export default function TestBenchPage() {
       if (!completeRes.success) {
         addLog('error', `Falha ao concluir pedido: ${completeRes.error.message}`);
       } else {
+        window.dispatchEvent(
+          new CustomEvent('gulas_order_status_update', {
+            detail: {
+              orderId: completeRes.data.id,
+              status: completeRes.data.status,
+            },
+          })
+        );
         setLastCompletedOrder({
           id: completeRes.data.id,
           orderNumber: completeRes.data.orderNumber,

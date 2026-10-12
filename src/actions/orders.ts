@@ -274,3 +274,140 @@ export async function createOrder(
     };
   }
 }
+
+export interface PublicOrderStatusResult {
+  id: string;
+  orderNumber: number;
+  tableNumber: number;
+  tableName?: string;
+  status: string;
+  subtotal: number;
+  total: number;
+  createdAt: string;
+  updatedAt: string;
+  items: Array<{
+    id: string;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    notes: string | null;
+  }>;
+}
+
+export type GetOrderPublicStatusResult =
+  | {
+      success: true;
+      data: PublicOrderStatusResult;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+/**
+ * Server Action para consulta pública resiliente do estado de um pedido ativo.
+ * Permite ao cliente acompanhar o progresso em tempo real mesmo se a ligação WebSocket falhar.
+ */
+export async function getOrderPublicStatus(
+  orderId: string
+): Promise<GetOrderPublicStatusResult> {
+  if (!orderId || typeof orderId !== 'string' || orderId.trim() === '') {
+    return {
+      success: false,
+      error: 'Identificador do pedido inválido.',
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) {
+    return {
+      success: false,
+      error: 'Serviço de base de dados indisponível.',
+    };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        order_number,
+        table_number,
+        status,
+        subtotal,
+        total,
+        created_at,
+        updated_at,
+        order_items (
+          id,
+          product_name,
+          quantity,
+          unit_price,
+          notes
+        )
+      `)
+      .eq('id', orderId.trim())
+      .maybeSingle();
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    if (!data) {
+      return {
+        success: false,
+        error: 'Pedido não encontrado.',
+      };
+    }
+
+    const rawOrder = data as unknown as {
+      id: string;
+      order_number: number;
+      table_number: number;
+      status: string;
+      subtotal: number;
+      total: number;
+      created_at: string;
+      updated_at: string;
+      order_items: Array<{
+        id: string;
+        product_name: string;
+        quantity: number;
+        unit_price: number;
+        notes: string | null;
+      }>;
+    };
+
+    return {
+      success: true,
+      data: {
+        id: rawOrder.id,
+        orderNumber: rawOrder.order_number,
+        tableNumber: rawOrder.table_number,
+        tableName: `Mesa ${rawOrder.table_number}`,
+        status: rawOrder.status,
+        subtotal: Number(rawOrder.subtotal),
+        total: Number(rawOrder.total),
+        createdAt: rawOrder.created_at,
+        updatedAt: rawOrder.updated_at,
+        items: (rawOrder.order_items || []).map((item) => ({
+          id: item.id,
+          productName: item.product_name,
+          quantity: item.quantity,
+          unitPrice: Number(item.unit_price),
+          notes: item.notes,
+        })),
+      },
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erro ao consultar pedido.';
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+

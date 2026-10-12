@@ -10,6 +10,8 @@ import { ProductDetailModal } from '@/components/menu/ProductDetailModal';
 import { CartDrawer } from '@/components/menu/CartDrawer';
 import { FloatingCartBar } from '@/components/menu/FloatingCartBar';
 import { OrderConfirmationModal } from '@/components/menu/OrderConfirmationModal';
+import { ActiveOrderBanner } from '@/components/menu/ActiveOrderBanner';
+import { ActiveOrderDetailModal } from '@/components/menu/ActiveOrderDetailModal';
 import { Toast } from '@/components/ui/Toast';
 import { useCart } from '@/context/CartContext';
 import { Utensils } from 'lucide-react';
@@ -237,6 +239,9 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       {/* Floating Bottom Cart Bar (Mobile & Desktop) */}
       <FloatingCartBar />
 
+      {/* Live Order Tracking Banner (Pílula Flutuante) */}
+      <ActiveOrderBanner />
+
       {/* Cart Slide Drawer */}
       <CartDrawer />
 
@@ -249,6 +254,9 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
 
       {/* Order Confirmation & Status Tracker Modal */}
       <OrderConfirmationModal />
+
+      {/* Live Order Detail & Stepper Modal */}
+      <ActiveOrderDetailModal />
     </div>
   );
 };

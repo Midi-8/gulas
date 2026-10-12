@@ -226,6 +226,43 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // 5. Atualizar estado e limpar carrinho em sucesso
       setActiveOrder(newOrder);
+
+      // Persistir no localStorage para o Live Order Tracking e emitir evento reativo
+      try {
+        localStorage.setItem('gulas_active_order_id', newOrder.id);
+        localStorage.setItem(
+          'gulas_active_order_data',
+          JSON.stringify({
+            id: newOrder.id,
+            orderNumber: newOrder.orderNumber,
+            tableNumber: newOrder.tableNumber,
+            tableName: newOrder.tableName,
+            restaurantId: newOrder.restaurantId,
+            restaurantSlug: newOrder.restaurantSlug,
+            restaurantName: newOrder.restaurantName,
+            status: newOrder.status,
+            subtotal: newOrder.subtotal,
+            total: newOrder.total,
+            customerNotes: newOrder.customerNotes,
+            createdAt: newOrder.createdAt,
+            items: newOrder.items.map((i) => ({
+              id: i.product.id,
+              productName: i.product.name,
+              quantity: i.quantity,
+              unitPrice: i.product.price,
+              notes: i.notes,
+            })),
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent('gulas_order_status_update', {
+            detail: { orderId: newOrder.id, status: newOrder.status },
+          })
+        );
+      } catch {
+        // ignore
+      }
+
       setIsOrderSuccessModalOpen(true);
       setIsCartOpen(false);
       clearCart();

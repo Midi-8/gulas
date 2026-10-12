@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useCart } from '@/context/CartContext';
+import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency, mockRestaurant } from '@/data/mockRestaurant';
 import { CheckCircle2, UtensilsCrossed, X } from 'lucide-react';
 
@@ -11,6 +12,7 @@ export const OrderConfirmationModal: React.FC = () => {
     isOrderSuccessModalOpen,
     setIsOrderSuccessModalOpen,
   } = useCart();
+  const { openDetailModal } = useActiveOrderTracker();
 
   if (!isOrderSuccessModalOpen || !activeOrder) return null;
 
@@ -124,13 +126,24 @@ export const OrderConfirmationModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Button */}
-        <button
-          onClick={() => setIsOrderSuccessModalOpen(false)}
-          className="w-full py-2.5 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] font-bold text-xs transition-colors cursor-pointer shadow-xs"
-        >
-          Voltar ao Menu
-        </button>
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          <button
+            onClick={() => {
+              setIsOrderSuccessModalOpen(false);
+              openDetailModal();
+            }}
+            className="w-full py-2.5 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] font-bold text-xs transition-colors cursor-pointer shadow-xs"
+          >
+            Acompanhar Pedido em Tempo Real
+          </button>
+          <button
+            onClick={() => setIsOrderSuccessModalOpen(false)}
+            className="w-full py-2 px-4 rounded-xl bg-[#EAE5DF] hover:bg-[#E5DED6] text-[#35271F] font-bold text-xs transition-colors cursor-pointer"
+          >
+            Continuar a ver o Menu
+          </button>
+        </div>
       </div>
     </div>
   );
