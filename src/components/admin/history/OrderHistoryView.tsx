@@ -62,7 +62,13 @@ export function OrderHistoryView({
 
   // Set the timestamp only after client mount (avoids SSR hydration mismatch)
   useEffect(() => {
-    setLastRefreshedAt(new Date());
+    const mountTimer = setTimeout(() => {
+      setLastRefreshedAt(new Date());
+    }, 0);
+
+    return () => {
+      clearTimeout(mountTimer);
+    };
   }, []);
 
 

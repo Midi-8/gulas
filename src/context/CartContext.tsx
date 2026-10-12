@@ -63,19 +63,19 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
 
   const [selectedTableNumber, setSelectedTableNumber] = useState<number | null>(() => {
-    if (typeof window === 'undefined') return 4;
+    if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (typeof parsed.selectedTableNumber === 'number') {
+        if (typeof parsed.selectedTableNumber === 'number' && parsed.selectedTableNumber > 0) {
           return parsed.selectedTableNumber;
         }
       }
     } catch {
       // ignore
     }
-    return 4;
+    return null;
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -174,6 +174,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('O carrinho está vazio');
     }
     if (!selectedTableNumber) {
+      setIsCartOpen(true);
       throw new Error('Por favor selecione o número da mesa');
     }
     if (!restaurantSlug) {

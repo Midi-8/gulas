@@ -1,37 +1,39 @@
-# Gulas Platform — Digital Menu & Real Ordering System
+# Gulas Platform — Digital Menu, Kitchen Display & Business Intelligence
 
-Plataforma digital para restauração e pedidos de mesa, desenvolvida de raiz com arquitetura multi-tenant, zero-trust frontend, transações atómicas na base de dados, monitor KDS de cozinha em tempo real e experiência de utilizador mobile-first de alto desempenho.
+Plataforma digital para restauração e pedidos de mesa, concebida de raiz com arquitetura multi-tenant, zero-trust frontend, transações atómicas em base de dados, monitor de cozinha KDS em tempo real e centro de comando analítico executivo (Business Intelligence).
 
-Atualmente configurada para o restaurante **Gulas — Pizza, Burger & Coffee** (Vila das Aves, Portugal).
+Atualmente configurada para a operação do restaurante Gulas — Pizza, Burger & Coffee (Vila das Aves, Portugal).
 
 ---
 
 ## 1. Visão Geral e Destaques Arquiteturais
 
-A plataforma foi desenhada para resolver os principais desafios operacionais e de segurança de menus digitais, pedidos de mesa e operação de cozinha no próprio restaurante:
+A plataforma resolve os desafios operacionais, de segurança e de suporte à decisão de unidades de restauração modernas:
 
-* **Zero-Trust Frontend:** O browser do cliente nunca é a fonte de verdade para preços, nomes ou totais. O cliente envia apenas identificadores de produto, quantidades e observações. O servidor valida a existência, disponibilidade, categoria ativa e calcula todos os montantes com precisão monetária em base de dados.
-* **Atomicidade Transacional:** Toda a submissão de pedidos é executada através de uma função PostgreSQL transacional `SECURITY DEFINER` (`create_order_atomic`).
-* **Segurança por Defeito (RLS):** Todas as tabelas possuem Row Level Security ativado. As tabelas `orders` e `order_items` permanecem 100% blindadas contra comandos diretos de `INSERT` público.
-* **Multi-Tenant Nativo:** A identificação do restaurante é resolvida server-side por slug ou sessão de staff, isolando completamente produtos, categorias, mesas, contadores e pedidos entre diferentes estabelecimentos.
-* **Autenticação & Autorização de Staff (M4.1):** Gestão de acesso administrativo com verificação estrita de papéis (`owner`, `manager`, `staff`) associados ao perfil do restaurante em `public.profiles`.
-* **Backend de Gestão e Máquina de Estados (M4.2):** Ciclo de vida estrito para transições de estado dos pedidos (`pending` ➔ `accepted` ➔ `preparing` ➔ `ready` ➔ `completed` / `cancelled`).
-* **Monitor de Cozinha KDS (M4.3):** Painel administrativo desktop/tablet com métricas operacionais em tempo real, cartões táteis de pedidos, observações de clientes e botões contextuais de transição de estado com proteção contra duplo clique.
-* **Supabase Realtime (M4.4):** Sincronização automática em tempo real via WebSockets (Postgres Changes) com o padrão *Signal & Fetch*, garantindo que novos pedidos e atualizações reflitam instantaneamente em múltiplos ecrãs sem recurso a polling.
-* **Histórico de Pedidos (M4.5.1):** Arquivo dedicado de pedidos finalizados (`completed` e `cancelled`) com consulta detalhada de itens, notas e valores monetários.
+* **Zero-Trust Frontend:** O browser do cliente nunca é a fonte de verdade para preços, nomes de artigos ou totais de conta. O cliente submete unicamente identificadores de produto, quantidades e observações. O servidor valida a existência, disponibilidade, categoria ativa e calcula todos os montantes com precisão monetária em PostgreSQL.
+* **Atomicidade Transacional:** A submissão de pedidos é processada através de uma função PostgreSQL transacional `SECURITY DEFINER` (`create_order_atomic`).
+* **Segurança por Defeito (RLS):** Todas as tabelas possuem Row Level Security ativado. As tabelas `orders` e `order_items` encontram-se protegidas contra comandos diretos de `INSERT` público.
+* **Multi-Tenant Nativo:** A identificação do restaurante é resolvida no servidor por slug ou sessão de staff, isolando produtos, categorias, mesas, contadores e pedidos entre diferentes estabelecimentos.
+* **Autenticação & Autorização de Staff:** Gestão de acesso administrativo com verificação estrita de perfis (`owner`, `manager`, `staff`) associados ao restaurante em `public.profiles`.
+* **Máquina de Estados de Cozinha:** Ciclo de vida estrito para transições de estado dos pedidos (`pending` -> `accepted` -> `preparing` -> `ready` -> `completed` / `cancelled`).
+* **Monitor KDS em Tempo Real:** Painel operacional para tablet e desktop com métricas em tempo real, cartões táteis de pedidos, observações de clientes e botões contextuais com proteção contra duplo clique.
+* **Supabase Realtime (Signal & Fetch):** Sincronização via WebSockets com padrão de reconciliação forçada após suspensão de ecrã ou reconexão Wi-Fi, garantindo estabilidade operacional.
+* **Arquivo e Histórico:** Registo detalhado de pedidos concluídos e cancelados com filtros dinâmicos por mesa, estado e intervalo temporal.
+* **Centro de Comando & BI Avançado:** Módulo analítico com matriz BCG de rentabilidade, cesta de compras (Market Basket / Cross-Selling), SLA de confeção, mineração semântica de preferências (NLP em português) e simulador preditivo de elasticidade de preços ("What-If").
 
 ---
 
 ## 2. Stack Tecnológica
 
 * **Framework:** Next.js 16 (App Router com Turbopack)
-* **Linguagem:** TypeScript 5 (com tipagem estrita de ponta a ponta)
+* **Linguagem:** TypeScript 5 (tipagem estrita de ponta a ponta)
 * **Biblioteca UI:** React 19 (Server Components e Client Components otimizados)
-* **Estilização:** Tailwind CSS v4 com sistema de design responsivo e tokens semânticos
-* **Validação de Esquemas:** Zod v4 (validação server-side de payloads, identificadores UUID e rejeição de duplicados)
+* **Estilização:** Tailwind CSS v4 com tokens semânticos e modo escuro executivo
+* **Validação de Esquemas:** Zod v4 (validação de payloads, identificadores UUID e integridade de dados)
 * **Base de Dados e Autenticação:** Supabase com PostgreSQL 15+
-* **Tempo Real:** Supabase Realtime (WebSockets com Replicação Lógica PostgreSQL)
-* **Integração Supabase:** `@supabase/ssr` e `@supabase/supabase-js` (padrão singleton seguro no browser e SSR server client)
+* **Sincronização em Tempo Real:** Supabase Realtime (WebSockets com Replicação Lógica)
+* **Integração Supabase:** `@supabase/ssr` e `@supabase/supabase-js` (padrão singleton no browser e SSR server client)
+* **Visualizações e Gráficos:** SVG nativo e Tailwind CSS (sem dependências externas pesadas)
 * **Iconografia:** Lucide React
 
 ---
@@ -41,135 +43,168 @@ A plataforma foi desenhada para resolver os principais desafios operacionais e d
 | Milestone | Designação | Estado | Descrição |
 | :--- | :--- | :--- | :--- |
 | **M1** | Digital Menu Interface | Concluído | Menu mobile-first, navegação por categorias, drawer de carrinho, pesquisa com filtros e modais de detalhe. |
-| **M2** | Supabase Multi-Tenant Integration | Concluído | Schema relacional, Row Level Security, seed de 57 produtos, 10 categorias e 10 mesas reais do Gulas. |
-| **M3** | Real Ordering System | Concluído | Server Actions (`createOrder`), validação Zod, RPC PostgreSQL atómica, proteção contra double-submit e confirmação real de pedidos. |
+| **M2** | Supabase Multi-Tenant Integration | Concluído | Esquema relacional, Row Level Security, catálogo de artigos, categorias e mesas com isolamento por restaurante. |
+| **M3** | Real Ordering System | Concluído | Server Actions (`createOrder`), validação Zod, RPC PostgreSQL atómica e prevenção de pedidos duplicados. |
 | **M4.1** | Staff Auth & Protected Routes | Concluído | Autenticação de staff, controlo de permissões por perfil (`owner`, `manager`, `staff`) e rotas administrativas protegidas. |
-| **M4.2** | Order Management Backend | Concluído | Server Actions seguras (`getActiveOrders`, `getOrderById`, `updateOrderStatus`), isolamento por `restaurant_id` e máquina de estados estrita. |
-| **M4.3** | Kitchen Display System (KDS) UI | Concluído | Dashboard interativo de cozinha/sala com contadores operacionais (KPIs), cartões detalhados e transições de estado contextuais. |
-| **M4.4** | Supabase Realtime KDS | Concluído | Subscrição em tempo real com autenticação JWT prévia, padrão *Signal & Fetch*, coalescing/debounce (300ms) e `REPLICA IDENTITY FULL`. |
-| **M4.5.1** | Order History & Details | Concluído | Histórico de pedidos arquivados (`completed`/`cancelled`), modal com discriminação total de artigos e navegação integrada no cabeçalho. |
-| **M4.5.2** | History Search & Multi-Filters | Concluído | Pesquisa instantânea por número de pedido e filtros multicritério combinados (estado, mesa dinâmica e período temporal). |
-| **M4.5.3** | Admin UX & Polish | Concluído | Confirmação explícita de cancelamento, feedback de loading isolado por cartão, destaque visual para novos pedidos e acessibilidade total por teclado. |
-| **M5** | Backoffice & Analytics | Planeado | Gestão de ementa, controlo de stock/disponibilidade e métricas financeiras. |
+| **M4.2** | Order Management Backend | Concluído | Server Actions de gestão (`getActiveOrders`, `getOrderById`, `updateOrderStatus`) e máquina de estados estrita. |
+| **M4.3** | Kitchen Display System (KDS) UI | Concluído | Dashboard interativo de cozinha com contadores operacionais (KPIs), cartões detalhados e ações de transição. |
+| **M4.4** | Supabase Realtime KDS | Concluído | Sincronização em tempo real via WebSockets com reconciliação automática em retoma de rede e foco de ecrã. |
+| **M4.5** | Order History & Multi-Filters | Concluído | Histórico de pedidos finalizados com pesquisa por ID/número, filtros por mesa/período e modal de inspeção. |
+| **M5** | Business Intelligence & Analytics | Concluído | Centro de comando executivo (`/admin/analytics`) com matriz BCG, cross-selling, SLA, NLP e simulador What-If. |
 
 ---
 
-## 4. Arquitetura de Dados (PostgreSQL Schema)
+## 4. Módulos do Sistema
 
-O esquema da base de dados é gerido através de migrações versionadas em `supabase/migrations/`:
+### 4.1. Menu Digital e Pedidos de Mesa (Cliente)
+* Navegação fluida por categorias com barra adesiva superior.
+* Pesquisa em tempo real com filtros por alergénios e destaques.
+* Drawer de carrinho com revisão detalhada e inserção de notas personalizadas.
+* Seleção manual de mesa ou bloqueio automático de mesa através de URL/QR Code (`/menu/[slug]/table/[tableNumber]`).
+* Modal de confirmação com acompanhamento do estado do pedido.
 
-### Tabelas Principais
+### 4.2. Monitor de Cozinha KDS (Operação)
+* Vista em grelha responsiva adaptada a tablets e ecrãs táteis de cozinha.
+* Badges de estado contextuais com contagem decrescente e alertas visuais para pedidos em atraso.
+* Discriminação de observações do cliente e de alérgenos com destaque visual.
+* Botões de avanço de fluxo protegidos contra cliques repetidos.
+* Alertas sonoros sintetizados nativos para novos pedidos.
 
-1. **`restaurants`**: Metadados do restaurante (nome, slug, morada, horário, timezone, estado ativo e aberto).
-2. **`profiles`**: Associação de utilizadores (`auth.users`) a restaurantes com papéis de gestão (`owner`, `manager`, `staff`).
-3. **`categories`**: Categorias de menu ordenadas (`display_order`), associadas a cada restaurante.
-4. **`products`**: Catálogo de artigos com preços (`NUMERIC(10,2)`), custo interno opcional, badges, alergénios, notas e disponibilidade (`is_available`).
-5. **`tables`**: Mesas ativas do restaurante com número, nome descritivo e identificador único.
-6. **`restaurant_counters`**: Registo de contadores incrementais para geração do `order_number` sequencial por restaurante.
-7. **`orders`**: Registo principal do pedido com `order_number`, `table_id`, `table_number`, `subtotal`, `total`, `status` (`pending`, `accepted`, `preparing`, `ready`, `completed`, `cancelled`) e notas do cliente.
-8. **`order_items`**: Linhas do pedido com snapshots históricos imutáveis (`product_name`, `unit_price`, `unit_cost`, `quantity`, `notes`).
+### 4.3. Histórico e Auditoria de Pedidos
+* Tabela consolidada de pedidos concluídos e cancelados.
+* Filtros rápidos por período (Hoje, 7 Dias, 30 Dias ou Todo o Histórico).
+* Pesquisa direta por número de pedido ou mesa.
+* Modal com discriminação de artigos, preços unitários e timestamps de ciclo de vida.
+
+### 4.4. Centro de Comando & BI Avançado (/admin/analytics)
+* **Faixa de KPIs com Sparklines Nativos:** Faturação total, ticket médio por cliente, cumprimento de SLA de cozinha (< 20 minutos), ritmo de pedidos por hora e projeção de fecho de turno/mês.
+* **Engenharia de Menu (Matriz BCG):** Classificação automática de produtos em Estrelas (alto volume, alta margem), Cavalos de Batalha (alto volume, margem menor), Quebra-Cabeças (baixo volume, margem elevada) e Inertes (candidatos a revisão).
+* **Análise de Cross-Selling (Market Basket):** Identificação dos pares de artigos mais frequentemente pedidos em conjunto com cálculo de probabilidade e receita média do combo.
+* **Pressão Operacional de Cozinha:** Histograma SVG de fluxo de pedidos distribuído por hora do dia com indicação de picos de almoço e jantar.
+* **Mineração Semântica de Observações (NLP em Português):** Separação automática entre preferências operacionais de clientes ("sem cebola", "bem passado", "ao ponto") e deteção de fugas de margem por extras não cobrados ("molho extra", "mais batatas", "dose reforçada").
+* **Simulador Estratégico "What-If":** Ferramenta interativa de suporte à decisão que permite ao gestor simular aumentos médios de preço com sensibilidade de elasticidade de procura e calcular o impacto projetado no lucro bruto em tempo real.
+* **Exportação de Dados:** Geração de relatórios consolidados em formato CSV (delimitador ponto e vírgula e codificação UTF-8 BOM para compatibilidade com Excel e Numbers).
 
 ---
 
-## 5. Máquina de Estados de Pedidos (M4.2 / M4.3)
+## 5. Arquitetura de Dados (PostgreSQL)
+
+O modelo de dados é estruturado em tabelas relacionais com integridade referencial estrita e políticas de RLS ativas:
+
+1. **`restaurants`**: Configuração central do restaurante (nome, slug, morada, horários e estado de abertura).
+2. **`profiles`**: Registo de utilizadores com associação ao restaurante e papel de autorização (`owner`, `manager`, `staff`).
+3. **`categories`**: Categorias de produtos com ordenação de exibição (`display_order`).
+4. **`products`**: Catálogo de artigos com preço de venda, custo de produção, disponibilidade e etiquetas de alérgenos.
+5. **`tables`**: Mesas ativas do restaurante identificadas por número e nome de sala.
+6. **`restaurant_counters`**: Sequenciadores atómicos para numeração incremental e legível de pedidos (`order_number`).
+7. **`orders`**: Registo de cabeçalho de pedido com `table_number`, totais monetários, notas do cliente e timestamps de auditoria.
+8. **`order_items`**: Linhas de pedido imutáveis com snapshot histórico de preço de venda e custo na data da compra.
+
+---
+
+## 6. Ciclo de Vida do Pedido
 
 ```
-[ pending ] ──────► [ accepted ] ──────► [ preparing ] ──────► [ ready ] ──────► [ completed ]
+[ pending ] ──────> [ accepted ] ──────> [ preparing ] ──────> [ ready ] ──────> [ completed ]
      │                    │                    │
-     └────────────────────┴────────────────────┴────────► [ cancelled ]
+     └────────────────────┴────────────────────┴────────> [ cancelled ]
 ```
 
-* **Transições Permitidas:**
-  * `pending` ➔ `accepted` \| `cancelled`
-  * `accepted` ➔ `preparing` \| `cancelled`
-  * `preparing` ➔ `ready` \| `cancelled`
-  * `ready` ➔ `completed`
-  * `completed` / `cancelled`: Estados terminais imutáveis (arquivados para o Histórico).
+* **Transições Operacionais Válidas:**
+  * `pending` -> `accepted` ou `cancelled`
+  * `accepted` -> `preparing` ou `cancelled`
+  * `preparing` -> `ready` ou `cancelled`
+  * `ready` -> `completed`
+  * `completed` e `cancelled` são estados finais permanentes que alimentam os módulos de Histórico e Analytics.
 
 ---
 
-## 6. Estrutura de Diretórios do Projeto
+## 7. Estrutura de Diretórios
 
 ```
 gulas/
 ├── src/
 │   ├── actions/
-│   │   ├── auth.ts                  # Server Actions de autenticação e logout
-│   │   ├── order-management.ts      # Server Actions de gestão de pedidos (KDS e Histórico)
-│   │   └── orders.ts                # Server Action pública para submissão de pedidos
+│   │   ├── analytics.ts             # Motor de BI, cálculos BCG, cross-selling, NLP e CSV
+│   │   ├── auth.ts                  # Autenticação de staff e gestão de sessão
+│   │   ├── order-management.ts      # Ações do KDS e histórico de pedidos
+│   │   ├── orders.ts                # Submissão pública de pedidos com RPC atómica
+│   │   └── test-bench.ts            # Ações de disparo de pedidos simulados para bancada
 │   ├── app/
 │   │   ├── admin/
 │   │   │   ├── (protected)/
-│   │   │   │   ├── layout.tsx       # Layout protegido com verificação de sessão de staff
+│   │   │   │   ├── layout.tsx       # Layout com verificação de autenticação de staff
+│   │   │   │   ├── analytics/
+│   │   │   │   │   └── page.tsx     # Centro de Comando & BI Executivo
 │   │   │   │   ├── orders/
 │   │   │   │   │   ├── page.tsx     # Monitor KDS de cozinha em tempo real
 │   │   │   │   │   └── history/
-│   │   │   │   │       └── page.tsx # Histórico de pedidos finalizados
+│   │   │   │   │       └── page.tsx # Histórico e arquivo de pedidos
 │   │   │   ├── login/
 │   │   │   │   └── page.tsx         # Página de login administrativo
-│   │   │   ├── layout.tsx           # Layout base da área administrativa
-│   │   │   └── page.tsx             # Redirecionamento admin
+│   │   │   ├── layout.tsx           # Layout base da administração
+│   │   │   └── page.tsx             # Redirecionamento da raiz administrativa
 │   │   ├── menu/
 │   │   │   └── [restaurantSlug]/
 │   │   │       ├── page.tsx         # Menu digital público
 │   │   │       └── table/[tableNumber]/
-│   │   │           └── page.tsx     # Menu digital com mesa bloqueada por URL/QR code
-│   │   ├── globals.css              # Configurações globais e tokens semânticos Tailwind v4
-│   │   ├── layout.tsx               # Root Layout com injeção do CartProvider
-│   │   └── page.tsx                 # Página inicial de apresentação
+│   │   │           └── page.tsx     # Menu com mesa bloqueada por contexto
+│   │   ├── test/
+│   │   │   └── page.tsx             # Rota de diagnóstico e testes de bancada
+│   │   ├── globals.css              # Sistema de design e estilos globais Tailwind v4
+│   │   ├── layout.tsx               # Root Layout com provedores de contexto
+│   │   └── page.tsx                 # Página de apresentação da plataforma
 │   ├── components/
 │   │   ├── admin/
-│   │   │   ├── AdminHeader.tsx      # Cabeçalho administrativo com identidade e perfil
-│   │   │   ├── AdminNav.tsx         # Navegação entre Monitor KDS e Histórico
-│   │   │   ├── LogoutButton.tsx     # Botão seguro de término de sessão
+│   │   │   ├── AdminHeader.tsx      # Cabeçalho da administração com dados de staff
+│   │   │   ├── AdminNav.tsx         # Navegação entre KDS, Histórico e Analytics
+│   │   │   ├── LogoutButton.tsx     # Ação segura de encerramento de sessão
+│   │   │   ├── analytics/
+│   │   │   │   └── AnalyticsDashboardView.tsx # Dashboard executivo e simulador What-If
 │   │   │   ├── history/
-│   │   │   │   ├── OrderHistoryDetailModal.tsx # Modal de inspeção detalhada de pedido
-│   │   │   │   └── OrderHistoryView.tsx        # Tabela e cartões do histórico
+│   │   │   │   ├── OrderHistoryDetailModal.tsx # Inspeção detalhada de pedido
+│   │   │   │   └── OrderHistoryView.tsx        # Tabela e filtros de histórico
 │   │   │   └── orders/
 │   │   │       ├── OrderCard.tsx           # Cartão tátil de pedido no KDS
-│   │   │       ├── OrderDashboard.tsx      # Dashboard KDS com métricas e grelha
+│   │   │       ├── OrderDashboard.tsx      # Grelha KDS com KPIs operacionais
 │   │   │       ├── OrderItemsList.tsx      # Listagem de artigos e observações
-│   │   │       ├── OrderStatusActions.tsx  # Botões de transição com proteção de duplo clique
+│   │   │       ├── OrderStatusActions.tsx  # Botões de transição de estado
 │   │   │       └── OrderStatusBadge.tsx    # Badges visuais de estado
 │   │   ├── menu/
-│   │   │   ├── CartDrawer.tsx       # Gaveta lateral do carrinho e revisão do pedido
-│   │   │   ├── CategoryNav.tsx      # Barra adesiva de navegação por categorias
-│   │   │   ├── FloatingCartBar.tsx  # Barra flutuante inferior com total e contagem
-│   │   │   ├── OrderConfirmationModal.tsx # Modal de confirmação com stepper de estado
-│   │   │   ├── ProductCard.tsx      # Cartão de produto com imagem e badges
-│   │   │   ├── ProductDetailModal.tsx # Modal com detalhes, observações e alergénios
-│   │   │   ├── RestaurantHeader.tsx # Cabeçalho com informações do restaurante
+│   │   │   ├── CartDrawer.tsx       # Gaveta lateral de revisão de carrinho
+│   │   │   ├── CategoryNav.tsx      # Navegação adesiva de categorias
+│   │   │   ├── FloatingCartBar.tsx  # Barra flutuante de checkout
+│   │   │   ├── OrderConfirmationModal.tsx # Acompanhamento de pedido submetido
+│   │   │   ├── ProductCard.tsx      # Cartão de artigo do menu
+│   │   │   ├── ProductDetailModal.tsx # Modal com detalhes e notas do artigo
+│   │   │   ├── RestaurantHeader.tsx # Cabeçalho do menu com seleção de mesa
 │   │   │   ├── RestaurantMenuView.tsx # Vista principal agregadora do menu
-│   │   │   ├── SearchBar.tsx        # Pesquisa em tempo real com filtros por badge
-│   │   │   └── TableSelector.tsx    # Seletor de mesa para pedidos manuais
+│   │   │   └── SearchBar.tsx        # Pesquisa com filtros rápidos
 │   │   └── ui/
-│   │       ├── Badge.tsx            # Componente de tags
-│   │       └── Toast.tsx            # Notificações temporárias de feedback
+│   │       ├── Badge.tsx            # Etiqueta visual utilitária
+│   │       └── Toast.tsx            # Notificações contextuais
 │   ├── context/
-│   │   └── CartContext.tsx          # Gestão de estado do carrinho e ciclo de checkout
+│   │   └── CartContext.tsx          # Gestão de estado global do carrinho de compras
 │   ├── hooks/
-│   │   └── useOrdersRealtime.ts     # Hook dedicado à subscrição Supabase Realtime
+│   │   └── useOrdersRealtime.ts     # Hook com resiliência a reconexão e foco
 │   ├── lib/
 │   │   ├── auth/
-│   │   │   └── staff.ts             # Validação server-side de staff autenticado
+│   │   │   └── staff.ts             # Verificação de credenciais e perfil de staff
 │   │   ├── supabase/
-│   │   │   ├── client.ts            # Cliente Supabase Singleton para o browser
-│   │   │   ├── server.ts            # Cliente Supabase SSR para Server Components/Actions
-│   │   │   └── types.ts             # Tipos TypeScript sincronizados com o PostgreSQL
+│   │   │   ├── client.ts            # Cliente singleton para o browser
+│   │   │   ├── server.ts            # Cliente SSR para Server Components/Actions
+│   │   │   └── types.ts             # Tipos TypeScript sincronizados com PostgreSQL
 │   │   └── validations/
-│   │       ├── auth.ts              # Esquemas Zod para login
-│   │       ├── order-management.ts # Esquemas Zod e validadores de transição KDS
-│   │       └── order.ts             # Esquemas Zod para criação de pedidos
+│   │       ├── auth.ts              # Validação de credenciais de login
+│   │       ├── order-management.ts # Validação de transições de estado
+│   │       └── order.ts             # Validação de submissão de pedidos
 │   ├── services/
-│   │   └── restaurantService.ts     # Camada de acesso a dados públicos do menu
+│   │   └── restaurantService.ts     # Camada de consulta de dados públicos do menu
 │   └── types/
-│       └── restaurant.ts            # Definições de tipos centrais da aplicação
+│       └── restaurant.ts            # Interfaces e modelos centrais da aplicação
 ├── supabase/
-│   ├── migrations/
-│   │   ├── 20260928_initial_schema.sql       # Schema inicial, tabelas, índices e RLS
-│   │   ├── 20260928_create_order_atomic.sql  # RPC transacional para criação de pedidos
-│   │   └── 20260929_enable_orders_realtime.sql # Configuração Realtime e REPLICA IDENTITY
-│   └── seed.sql                     # Dados reais de teste (Gulas)
+│   ├── migrations/                  # Ficheiros SQL de migração versionados
+│   └── seed.sql                     # Dados iniciais para ambiente de desenvolvimento
 ├── package.json
 ├── tsconfig.json
 └── next.config.ts
@@ -177,20 +212,20 @@ gulas/
 
 ---
 
-## 7. Instalação e Execução Local
+## 8. Instalação e Execução Local
 
 ### Pré-requisitos
 * Node.js >= 18.17.0
 * npm >= 9.0.0
-* Projeto ativo no Supabase
+* Instância ativa do Supabase (Cloud ou Local via CLI)
 
-### Passo 1: Instalar Dependências
+### 1. Instalar Dependências
 ```bash
 npm install
 ```
 
-### Passo 2: Configurar Variáveis de Ambiente
-Crie um ficheiro `.env.local` na raiz do projeto:
+### 2. Configurar Variáveis de Ambiente
+Crie um ficheiro `.env.local` na raiz do projeto com as credenciais do seu projeto:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://seu-project-id.supabase.co
@@ -198,46 +233,53 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sua-chave-publica-aqui
 NEXT_PUBLIC_DEFAULT_RESTAURANT_SLUG=gulas
 ```
 
-### Passo 3: Iniciar o Servidor de Desenvolvimento
+### 3. Executar o Servidor de Desenvolvimento
 ```bash
 npm run dev
 ```
 
-Aceda a [http://localhost:3000](http://localhost:3000).
+O projeto ficará acessível em [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 8. Rotas Disponíveis
+## 9. Rotas Disponíveis
 
 ### Menu Público (Cliente)
-* **`/`** — Apresentação da plataforma e atalhos para os menus.
-* **`/menu/gulas`** — Menu digital completo do Gulas com seleção de mesa no carrinho.
-* **`/menu/gulas/table/4`** — Menu digital com a Mesa 4 pré-selecionada e bloqueada por contexto de URL/QR code.
+* **`/`** — Apresentação da plataforma e atalhos rápidos de navegação.
+* **`/menu/gulas`** — Menu digital do restaurante Gulas com seleção de mesa no carrinho.
+* **`/menu/gulas/table/4`** — Menu digital com a Mesa 4 fixa e pré-selecionada.
 
-### Administração & Cozinha (Staff)
-* **`/admin/login`** — Página de autenticação de staff.
-* **`/admin/orders`** — Monitor KDS de cozinha e sala em tempo real (Área Protegida).
-* **`/admin/orders/history`** — Histórico e arquivo de pedidos finalizados com inspeção de detalhes (Área Protegida).
+### Administração & Operação (Staff Autenticado)
+* **`/admin/login`** — Formulário de autenticação de staff.
+* **`/admin/orders`** — Monitor KDS de cozinha em tempo real.
+* **`/admin/orders/history`** — Histórico e arquivo com pesquisa e filtros combinados.
+* **`/admin/analytics`** — Centro de comando executivo, matriz BCG, SLA e simulador What-If.
+
+### Diagnóstico & Testes
+* **`/test`** — Rota de bancada para disparo e simulação de pedidos controlados.
 
 ---
 
-## 9. Validação e Qualidade de Código
+## 10. Validação de Código e Qualidade
 
-Para validar tipos TypeScript, regras de linter e integridade do bundle de produção:
+O repositório cumpre integralmente os requisitos de compilação estrita e linting:
 
 ```bash
-# Executar verificação estática com ESLint
+# Executar análise estática de código com ESLint
 npm run lint
 
-# Executar compilação TypeScript e build de produção Next.js
+# Executar verificação de tipos TypeScript sem emitir ficheiros
+npx tsc --noEmit
+
+# Compilar build de produção Next.js (App Router + Turbopack)
 npm run build
 ```
 
 ---
 
-## 10. Segurança e Boas Práticas Implementadas
+## 11. Políticas de Segurança e Boas Práticas
 
-1. **Isolamento de Credenciais:** A chave privilegiada `service_role` nunca é importada no projeto frontend nem em Server Actions. Toda a comunicação respeita estritamente o princípio do menor privilégio.
-2. **Multi-Tenant Server-Driven:** O identificador `restaurant_id` é sempre determinado no servidor através de `getAuthenticatedStaff()`, impedindo manipulação de dados entre restaurantes.
-3. **Padrão Signal & Fetch no Realtime:** O WebSocket do Realtime é utilizado apenas como gatilho de sinalização; a obtenção dos dados de pedidos é sempre executada via Server Action autorizada (`getActiveOrders()`), preservando a consistência das regras de negócio e de RLS.
-4. **Proteção de Dados e Sanitização:** Mensagens de erro internas da base de dados e estruturas SQL são intercetadas e convertidas em mensagens semânticas e amigáveis antes de chegarem ao utilizador.
+1. **Princípio do Menor Privilégio:** A chave privilegiada `service_role` nunca é exposta no cliente nem em Server Actions com execução de utilizador.
+2. **Isolamento de Restaurante no Servidor:** Todas as consultas e mutações administrativas filtram estritamente por `restaurant_id` resolvido via `getAuthenticatedStaff()`.
+3. **Resiliência a Desconexões:** O hook de subscrição em tempo real deteta automaticamente eventos de suspensão de ecrã (`visibilitychange`) e retoma de ligação de rede (`online`), efetuando reconciliações forçadas com a base de dados.
+4. **Resoluções Seguras de Custos:** Caso o custo de um produto não esteja configurado, o motor de BI aplica estimativas com base em margens padrão da restauração, evitando divisões por zero ou falhas de processamento.

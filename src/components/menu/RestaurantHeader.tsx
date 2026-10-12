@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import { Restaurant } from '@/types/restaurant';
 import { useCart } from '@/context/CartContext';
@@ -10,8 +10,15 @@ interface RestaurantHeaderProps {
   restaurant: Restaurant;
 }
 
+const emptySubscribe = () => () => {};
+
 export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }) => {
   const { selectedTableNumber, isTableLocked, itemCount, setIsCartOpen } = useCart();
+  const hasMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   return (
     <header className="w-full bg-[#FAF8F5] pt-3 pb-2">
@@ -30,7 +37,16 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
 
           {/* Right Actions: Table & Cart Trigger */}
           <div className="flex items-center gap-2">
-            {selectedTableNumber && (
+            {!hasMounted ? (
+              // Stable SSR shell matching layout dimensions without hydration mismatch
+              <div
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-100/60 border border-zinc-200/50 text-xs font-bold text-transparent select-none animate-pulse"
+                aria-hidden="true"
+              >
+                <UtensilsCrossed className="w-3 h-3 text-zinc-300" />
+                <span className="invisible">Mesa 00</span>
+              </div>
+            ) : selectedTableNumber ? (
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-zinc-200/80 text-xs font-bold text-[#141619] shadow-xs">
                 <UtensilsCrossed className="w-3 h-3 text-[#15803D]" />
                 <span>Mesa {selectedTableNumber}</span>
@@ -38,6 +54,16 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                   <span className="text-[10px] text-[#15803D] font-bold">(QR)</span>
                 )}
               </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-300 text-xs font-bold text-amber-900 shadow-xs hover:bg-amber-100 transition-colors cursor-pointer"
+                title="Escolher mesa onde está sentado"
+              >
+                <UtensilsCrossed className="w-3 h-3 text-amber-600" />
+                <span>Mesa?</span>
+              </button>
             )}
 
             <button
@@ -46,7 +72,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
               aria-label="Abrir pedido"
             >
               <ShoppingBag className="w-4 h-4 text-[#141619]" />
-              {itemCount > 0 && (
+              {hasMounted && itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#15803D] text-white text-[10px] font-bold flex items-center justify-center">
                   {itemCount}
                 </span>

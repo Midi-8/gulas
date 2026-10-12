@@ -103,20 +103,33 @@ export const CartDrawer: React.FC = () => {
         ) : (
           <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#FAF8F5]">
             {/* Table Selection */}
-            <div className="p-3 rounded-xl bg-white border border-zinc-200/80 space-y-1.5">
+            <div className={`p-3 rounded-xl bg-white border space-y-1.5 transition-all ${
+              !selectedTableNumber
+                ? 'border-amber-400 bg-amber-50/20 ring-2 ring-amber-200/60'
+                : 'border-zinc-200/80'
+            }`}>
               <label htmlFor="cart-table-select" className="text-xs font-bold text-[#141619] flex items-center justify-between">
                 <span>Mesa de Entrega:</span>
-                {isTableLocked && (
+                {isTableLocked ? (
                   <span className="text-[10px] text-[#15803D] font-bold">Bloqueada por QR</span>
-                )}
+                ) : !selectedTableNumber ? (
+                  <span className="text-[10px] text-amber-700 font-bold">Obrigatório</span>
+                ) : null}
               </label>
               <select
                 id="cart-table-select"
                 disabled={isTableLocked}
-                value={selectedTableNumber || ''}
-                onChange={(e) => setSelectedTableNumber(Number(e.target.value))}
-                className="w-full px-3 py-1.5 rounded-lg bg-zinc-50 border border-zinc-200 text-xs font-semibold text-[#141619] focus:outline-none focus:border-[#15803D] disabled:opacity-75 cursor-pointer"
+                value={selectedTableNumber ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value ? Number(e.target.value) : null;
+                  setSelectedTableNumber(val);
+                  if (val) setErrorMessage(null);
+                }}
+                className={`w-full px-3 py-1.5 rounded-lg border text-xs font-semibold text-[#141619] focus:outline-none focus:border-[#15803D] disabled:opacity-75 cursor-pointer ${
+                  !selectedTableNumber ? 'bg-amber-50/50 border-amber-300' : 'bg-zinc-50 border-zinc-200'
+                }`}
               >
+                <option value="">-- Escolhe a tua mesa --</option>
                 {mockTables.map((t) => (
                   <option key={t.id} value={t.number}>
                     {t.name}

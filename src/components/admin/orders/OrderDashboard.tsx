@@ -10,6 +10,7 @@ import React, {
 import {
   ManagedOrder,
   getActiveOrders,
+  reopenCompletedOrder,
   updateOrderStatus,
 } from '@/actions/order-management';
 import { ValidNextStatus } from '@/lib/validations/order-management';
@@ -31,7 +32,9 @@ import {
   Loader2,
   Radio,
   RotateCcw,
+  Undo2,
   UtensilsCrossed,
+  X,
 } from 'lucide-react';
 
 interface OrderDashboardProps {
@@ -101,16 +104,34 @@ export function OrderDashboard({
     triggerNewOrderAlert,
   } = useKdsAlerts();
 
+  interface UndoOrderState {
+    orderId: string;
+    orderNumber: number;
+    tableNumber: number;
+    updatedAt: string;
+  }
+
+  const [undoOrder, setUndoOrder] = useState<UndoOrderState | null>(null);
+  const [isUndoing, setIsUndoing] = useState(false);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    setLastRefreshedAt(new Date());
+    const mountTimer = setTimeout(() => {
+      setLastRefreshedAt(new Date());
+    }, 0);
 
     return () => {
+      clearTimeout(mountTimer);
       if (highlightTimerRef.current) {
         clearTimeout(highlightTimerRef.current);
       }
 
       if (announcementTimerRef.current) {
         clearTimeout(announcementTimerRef.current);
+      }
+
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
       }
     };
   }, []);
@@ -252,6 +273,21 @@ export function OrderDashboard({
           previous.filter((order) => order.id !== orderId)
         );
         previousOrderIdsRef.current.delete(orderId);
+
+        if (nextStatus === 'completed') {
+          if (undoTimerRef.current) {
+            clearTimeout(undoTimerRef.current);
+          }
+          setUndoOrder({
+            orderId: currentOrder.id,
+            orderNumber: currentOrder.orderNumber,
+            tableNumber: currentOrder.tableNumber,
+            updatedAt: result.data.updatedAt,
+          });
+          undoTimerRef.current = setTimeout(() => {
+            setUndoOrder(null);
+          }, 6000);
+        }
       } else {
         setOrders((previous) =>
           previous.map((order) =>
@@ -269,6 +305,44 @@ export function OrderDashboard({
       }));
     } finally {
       setUpdatingMap((previous) => ({ ...previous, [orderId]: false }));
+    }
+  };
+
+  const handleUndo = async () => {
+    if (!undoOrder || isUndoing) return;
+
+    setIsUndoing(true);
+    try {
+      const result = await reopenCompletedOrder({
+        orderId: undoOrder.orderId,
+        expectedUpdatedAt: undoOrder.updatedAt,
+      });
+
+      if (!result.success) {
+        if (result.error.code === 'OPTIMISTIC_CONFLICT') {
+          await fetchOrders();
+        }
+        setDashboardError(result.error.message);
+        return;
+      }
+
+      setOrders((previous) => [
+        result.data,
+        ...previous.filter((order) => order.id !== result.data.id),
+      ]);
+      previousOrderIdsRef.current.add(result.data.id);
+      setA11yAnnouncement(
+        `Pedido #${result.data.orderNumber} reaberto com sucesso.`
+      );
+
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+      }
+      setUndoOrder(null);
+    } catch {
+      setDashboardError('Não foi possível reverter a conclusão do pedido.');
+    } finally {
+      setIsUndoing(false);
     }
   };
 
@@ -561,6 +635,50 @@ export function OrderDashboard({
             />
           ))}
         </div>
+      )}
+
+      {/* Undo Toast for completed orders */}
+      {undoOrder && (
+        <aside
+          role="status"
+          aria-label="Aviso de pedido concluído com opção de desfazer"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl bg-zinc-950 px-4 py-3 text-white shadow-2xl ring-1 ring-white/10 animate-in slide-in-from-bottom-5 fade-in duration-200"
+        >
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="font-semibold text-zinc-200">
+              Pedido <strong className="text-white">#{undoOrder.orderNumber}</strong> (Mesa {undoOrder.tableNumber}) concluído.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 border-l border-zinc-800 pl-2">
+            <button
+              type="button"
+              disabled={isUndoing}
+              onClick={handleUndo}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-zinc-950 transition-all hover:bg-zinc-200 active:scale-95 disabled:opacity-50"
+            >
+              {isUndoing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Undo2 className="h-3.5 w-3.5 text-zinc-900" />
+              )}
+              <span>Desfazer</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+                setUndoOrder(null);
+              }}
+              className="cursor-pointer rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+              aria-label="Fechar aviso"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </aside>
       )}
     </div>
   );
