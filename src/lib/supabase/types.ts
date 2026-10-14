@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -344,7 +344,13 @@ export interface Database {
         };
         Returns: number;
       };
-      create_order_atomic: {
+      get_public_order_status: {
+          Args: {
+            p_order_id: string;
+          };
+          Returns: Json;
+        };
+        create_order_atomic: {
         Args: {
           p_restaurant_slug: string;
           p_table_number: number;
@@ -369,3 +375,4 @@ export interface Database {
     };
   };
 }
+

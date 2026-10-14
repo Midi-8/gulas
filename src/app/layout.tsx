@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
@@ -12,9 +12,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'GULAS — Pizza, Burger & Coffee (Vila das Aves)',
+  title: 'GULAS \u2014 Pizza, Burger & Coffee (Vila das Aves)',
   description:
-    'Menu digital do Gulas em Vila das Aves: Caracóizzz, Burgers artesanais, Pizzas de longa fermentação, Panuozzos e Pregos no Caco.',
+    'Menu digital do Gulas em Vila das Aves: Carac\u00f3izzz, Burgers artesanais, Pizzas de longa fermenta\u00e7\u00e3o, Panuozzos e Pregos no Caco.',
+  icons: {
+    icon: '/icons/icon.svg',
+    apple: '/icons/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({

@@ -133,8 +133,7 @@ export const mockProducts: Product[] = [
     description: "Bolo do caco artesanal tostado com manteiga de alho e ervas finas.",
     price: 3.8,
     cost: 1.1,
-    imageUrl:
-      'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&w=700&q=80',
+    imageUrl: '',
     available: true,
     position: 1,
     badges: ['vegetariano'],

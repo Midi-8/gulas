@@ -69,7 +69,7 @@ function mapProductFromRow(row: ProductRow): Product {
     name: row.name,
     description: row.description || '',
     price: Number(row.price),
-    cost: row.cost !== null ? Number(row.cost) : undefined,
+    cost: undefined, // Proteção de segurança: omite custo interno no menu público
     imageUrl: row.image_url || '',
     available: row.is_available,
     position: row.display_order,
@@ -92,7 +92,9 @@ function mapTableFromRow(row: TableRow): Table {
   };
 }
 
-export async function getRestaurantBySlug(slug: string): Promise<Restaurant | null> {
+export async function getRestaurantBySlug(
+  slug: string
+): Promise<Restaurant | null> {
   if (!isSupabaseConfigured()) {
     if (slug === mockRestaurant.slug || slug === 'casa-do-norte') {
       return mockRestaurant;
@@ -111,7 +113,10 @@ export async function getRestaurantBySlug(slug: string): Promise<Restaurant | nu
     .maybeSingle();
 
   if (error) {
-    console.error(`[restaurantService] Error fetching restaurant by slug "${slug}":`, error);
+    console.error(
+      `[restaurantService] Error fetching restaurant by slug "${slug}":`,
+      error
+    );
     throw new Error(`Falha ao carregar restaurante: ${error.message}`);
   }
 
@@ -150,13 +155,23 @@ export async function getRestaurantMenu(
   ]);
 
   if (categoriesRes.error) {
-    console.error(`[restaurantService] Error fetching categories:`, categoriesRes.error);
-    throw new Error(`Falha ao carregar categorias: ${categoriesRes.error.message}`);
+    console.error(
+      `[restaurantService] Error fetching categories:`,
+      categoriesRes.error
+    );
+    throw new Error(
+      `Falha ao carregar categorias: ${categoriesRes.error.message}`
+    );
   }
 
   if (productsRes.error) {
-    console.error(`[restaurantService] Error fetching products:`, productsRes.error);
-    throw new Error(`Falha ao carregar produtos: ${productsRes.error.message}`);
+    console.error(
+      `[restaurantService] Error fetching products:`,
+      productsRes.error
+    );
+    throw new Error(
+      `Falha ao carregar produtos: ${productsRes.error.message}`
+    );
   }
 
   return {
@@ -167,7 +182,11 @@ export async function getRestaurantMenu(
 
 export async function getRestaurantBySlugWithMenu(
   slug: string
-): Promise<{ restaurant: Restaurant; categories: Category[]; products: Product[] } | null> {
+): Promise<{
+  restaurant: Restaurant;
+  categories: Category[];
+  products: Product[];
+} | null> {
   const restaurant = await getRestaurantBySlug(slug);
   if (!restaurant) return null;
 
@@ -184,7 +203,9 @@ export async function getTableByNumber(
   tableNumber: number
 ): Promise<Table | null> {
   if (!isSupabaseConfigured()) {
-    const table = mockTables.find((t) => t.number === tableNumber && t.active);
+    const table = mockTables.find(
+      (t) => t.number === tableNumber && t.active
+    );
     return table || null;
   }
 

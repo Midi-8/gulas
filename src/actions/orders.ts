@@ -327,6 +327,54 @@ export async function getOrderPublicStatus(
   }
 
   try {
+    // 1. Tentar consulta via RPC segura (Zero-Trust / Sem expor SELECT público indiscriminado)
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_public_order_status', {
+      p_order_id: orderId.trim(),
+    });
+
+    if (!rpcError && rpcData) {
+      const order = rpcData as {
+        id: string;
+        order_number: number;
+        table_number: number;
+        status: string;
+        subtotal: number;
+        total: number;
+        created_at: string;
+        updated_at: string;
+        items: Array<{
+          id: string;
+          product_name: string;
+          quantity: number;
+          unit_price: number;
+          notes: string | null;
+        }>;
+      };
+
+      return {
+        success: true,
+        data: {
+          id: order.id,
+          orderNumber: order.order_number,
+          tableNumber: order.table_number,
+          tableName: `Mesa ${order.table_number}`,
+          status: order.status,
+          subtotal: Number(order.subtotal),
+          total: Number(order.total),
+          createdAt: order.created_at,
+          updatedAt: order.updated_at,
+          items: (order.items || []).map((item) => ({
+            id: item.id,
+            productName: item.product_name,
+            quantity: item.quantity,
+            unitPrice: Number(item.unit_price),
+            notes: item.notes,
+          })),
+        },
+      };
+    }
+
+    // 2. Fallback resiliente para query direta caso a RPC não tenha sido aplicada ainda
     const { data, error } = await supabase
       .from('orders')
       .select(`
