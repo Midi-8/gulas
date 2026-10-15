@@ -305,11 +305,12 @@ export type GetOrderPublicStatusResult =
     };
 
 /**
- * Server Action para consulta pública resiliente do estado de um pedido ativo.
+ * Server Action para consulta pÃºblica resiliente do estado de um pedido ativo.
  * Permite ao cliente acompanhar o progresso em tempo real mesmo se a ligação WebSocket falhar.
  */
 export async function getOrderPublicStatus(
-  orderId: string
+  orderId: string,
+  trackingToken?: string | null
 ): Promise<GetOrderPublicStatusResult> {
   if (!orderId || typeof orderId !== 'string' || orderId.trim() === '') {
     return {
@@ -317,6 +318,8 @@ export async function getOrderPublicStatus(
       error: 'Identificador do pedido inválido.',
     };
   }
+
+  const cleanToken = typeof trackingToken === 'string' ? trackingToken.trim() : null;
 
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
@@ -327,91 +330,32 @@ export async function getOrderPublicStatus(
   }
 
   try {
-    // 1. Tentar consulta via RPC segura (Zero-Trust / Sem expor SELECT público indiscriminado)
-    const { data: rpcData, error: rpcError } = await supabase.rpc('get_public_order_status', {
-      p_order_id: orderId.trim(),
-    });
+    // Consulta exclusivamente via RPC com validação do tracking_token criptográfico
+    // NENHUM fallback para SELECT direto na tabela orders é permitido.
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      'get_public_order_status',
+      {
+        p_order_id: orderId.trim(),
+        p_tracking_token: cleanToken,
+      }
+    );
 
-    if (!rpcError && rpcData) {
-      const order = rpcData as {
-        id: string;
-        order_number: number;
-        table_number: number;
-        status: string;
-        subtotal: number;
-        total: number;
-        created_at: string;
-        updated_at: string;
-        items: Array<{
-          id: string;
-          product_name: string;
-          quantity: number;
-          unit_price: number;
-          notes: string | null;
-        }>;
-      };
-
-      return {
-        success: true,
-        data: {
-          id: order.id,
-          orderNumber: order.order_number,
-          tableNumber: order.table_number,
-          tableName: `Mesa ${order.table_number}`,
-          status: order.status,
-          subtotal: Number(order.subtotal),
-          total: Number(order.total),
-          createdAt: order.created_at,
-          updatedAt: order.updated_at,
-          items: (order.items || []).map((item) => ({
-            id: item.id,
-            productName: item.product_name,
-            quantity: item.quantity,
-            unitPrice: Number(item.unit_price),
-            notes: item.notes,
-          })),
-        },
-      };
-    }
-
-    // 2. Fallback resiliente para query direta caso a RPC não tenha sido aplicada ainda
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        id,
-        order_number,
-        table_number,
-        status,
-        subtotal,
-        total,
-        created_at,
-        updated_at,
-        order_items (
-          id,
-          product_name,
-          quantity,
-          unit_price,
-          notes
-        )
-      `)
-      .eq('id', orderId.trim())
-      .maybeSingle();
-
-    if (error) {
+    if (rpcError) {
+      console.error('[getOrderPublicStatus] Erro na RPC get_public_order_status:', rpcError.message);
       return {
         success: false,
-        error: error.message,
+        error: rpcError.message,
       };
     }
 
-    if (!data) {
+    if (!rpcData) {
       return {
         success: false,
-        error: 'Pedido não encontrado.',
+        error: 'Pedido não encontrado ou credencial de acompanhamento inválida.',
       };
     }
 
-    const rawOrder = data as unknown as {
+    const order = rpcData as {
       id: string;
       order_number: number;
       table_number: number;
@@ -420,7 +364,7 @@ export async function getOrderPublicStatus(
       total: number;
       created_at: string;
       updated_at: string;
-      order_items: Array<{
+      items: Array<{
         id: string;
         product_name: string;
         quantity: number;
@@ -432,16 +376,16 @@ export async function getOrderPublicStatus(
     return {
       success: true,
       data: {
-        id: rawOrder.id,
-        orderNumber: rawOrder.order_number,
-        tableNumber: rawOrder.table_number,
-        tableName: `Mesa ${rawOrder.table_number}`,
-        status: rawOrder.status,
-        subtotal: Number(rawOrder.subtotal),
-        total: Number(rawOrder.total),
-        createdAt: rawOrder.created_at,
-        updatedAt: rawOrder.updated_at,
-        items: (rawOrder.order_items || []).map((item) => ({
+        id: order.id,
+        orderNumber: order.order_number,
+        tableNumber: order.table_number,
+        tableName: `Mesa ${order.table_number}`,
+        status: order.status,
+        subtotal: Number(order.subtotal),
+        total: Number(order.total),
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
+        items: (order.items || []).map((item) => ({
           id: item.id,
           productName: item.product_name,
           quantity: item.quantity,
@@ -475,15 +419,21 @@ export type GetMultipleOrdersPublicStatusResult =
       error: string;
     };
 
+export type OrderQueryItem =
+  | string
+  | {
+      orderId: string;
+      trackingToken?: string | null;
+    };
+
 /**
  * Server Action para validação em lote e sincronização de pedidos ativos.
- * Permite identificar de imediato pedidos órfãos (eliminados da base de dados)
- * e purgar referências mortas no cliente.
+ * Exige identificador e token de acompanhamento para cada pedido.
  */
 export async function getMultipleOrdersPublicStatus(
-  orderIds: string[]
+  orderQueries: OrderQueryItem[]
 ): Promise<GetMultipleOrdersPublicStatusResult> {
-  if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+  if (!orderQueries || !Array.isArray(orderQueries) || orderQueries.length === 0) {
     return {
       success: true,
       data: {
@@ -494,113 +444,56 @@ export async function getMultipleOrdersPublicStatus(
     };
   }
 
-  const cleanIds = Array.from(
-    new Set(orderIds.map((id) => (typeof id === 'string' ? id.trim() : '')).filter(Boolean))
+  // Normalizar itens recebidos
+  const normalized: Array<{ orderId: string; trackingToken: string | null }> = [];
+  orderQueries.forEach((item) => {
+    if (typeof item === 'string') {
+      const trimmed = item.trim();
+      if (trimmed) normalized.push({ orderId: trimmed, trackingToken: null });
+    } else if (item && typeof item.orderId === 'string') {
+      const trimmedId = item.orderId.trim();
+      const trimmedToken =
+        typeof item.trackingToken === 'string' ? item.trackingToken.trim() : null;
+      if (trimmedId) normalized.push({ orderId: trimmedId, trackingToken: trimmedToken });
+    }
+  });
+
+  const uniqueById = new Map<string, string | null>();
+  normalized.forEach(({ orderId, trackingToken }) => {
+    if (!uniqueById.has(orderId)) {
+      uniqueById.set(orderId, trackingToken);
+    }
+  });
+
+  const orders: PublicOrderStatusResult[] = [];
+  const foundIds: string[] = [];
+  const missingIds: string[] = [];
+
+  // Consulta individual resiliente via RPC protegida
+  await Promise.all(
+    Array.from(uniqueById.entries()).map(async ([orderId, trackingToken]) => {
+      // Se não tiver tracking token, rejeita de imediato (Zero-Trust)
+      if (!trackingToken) {
+        missingIds.push(orderId);
+        return;
+      }
+
+      const res = await getOrderPublicStatus(orderId, trackingToken);
+      if (res.success && res.data) {
+        orders.push(res.data);
+        foundIds.push(orderId);
+      } else {
+        missingIds.push(orderId);
+      }
+    })
   );
 
-  if (cleanIds.length === 0) {
-    return {
-      success: true,
-      data: {
-        orders: [],
-        foundIds: [],
-        missingIds: [],
-      },
-    };
-  }
-
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) {
-    return {
-      success: false,
-      error: 'Serviço de base de dados indisponível.',
-    };
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        id,
-        order_number,
-        table_number,
-        status,
-        subtotal,
-        total,
-        created_at,
-        updated_at,
-        order_items (
-          id,
-          product_name,
-          quantity,
-          unit_price,
-          notes
-        )
-      `)
-      .in('id', cleanIds);
-
-    if (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-
-    const rawList = (data || []) as unknown as Array<{
-      id: string;
-      order_number: number;
-      table_number: number;
-      status: string;
-      subtotal: number;
-      total: number;
-      created_at: string;
-      updated_at: string;
-      order_items: Array<{
-        id: string;
-        product_name: string;
-        quantity: number;
-        unit_price: number;
-        notes: string | null;
-      }>;
-    }>;
-
-    const formattedOrders: PublicOrderStatusResult[] = rawList.map((rawOrder) => ({
-      id: rawOrder.id,
-      orderNumber: rawOrder.order_number,
-      tableNumber: rawOrder.table_number,
-      tableName: `Mesa ${rawOrder.table_number}`,
-      status: rawOrder.status,
-      subtotal: Number(rawOrder.subtotal),
-      total: Number(rawOrder.total),
-      createdAt: rawOrder.created_at,
-      updatedAt: rawOrder.updated_at,
-      items: (rawOrder.order_items || []).map((item) => ({
-        id: item.id,
-        productName: item.product_name,
-        quantity: item.quantity,
-        unitPrice: Number(item.unit_price),
-        notes: item.notes,
-      })),
-    }));
-
-    const foundIds = formattedOrders.map((o) => o.id);
-    const missingIds = cleanIds.filter((id) => !foundIds.includes(id));
-
-    return {
-      success: true,
-      data: {
-        orders: formattedOrders,
-        foundIds,
-        missingIds,
-      },
-    };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Erro ao consultar pedidos.';
-    return {
-      success: false,
-      error: message,
-    };
-  }
+  return {
+    success: true,
+    data: {
+      orders,
+      foundIds,
+      missingIds,
+    },
+  };
 }
-
-
