@@ -1,21 +1,22 @@
 'use client';
 
 import React, { useTransition } from 'react';
+import { useRouter, usePathname } from '@/i18n/routing';
 import { useLocale } from 'next-intl';
-import { usePathname, useRouter, Locale } from '@/i18n/routing';
 import { Globe } from 'lucide-react';
 import { clsx } from 'clsx';
 
-export const LanguageSwitcher: React.FC = () => {
-  const locale = useLocale();
+export default function LanguageSwitcher() {
   const router = useRouter();
-  const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const pathname = usePathname();
+  const locale = useLocale();
 
-  const handleSelectLocale = (nextLocale: Locale) => {
+  const handleLanguageChange = (nextLocale: 'pt' | 'en') => {
     if (nextLocale === locale) return;
     startTransition(() => {
-      router.replace(pathname, { locale: nextLocale });
+      // Passa a mesma rota atual, mas instrui o next-intl a trocar o locale
+      router.replace(pathname || '/', { locale: nextLocale });
     });
   };
 
@@ -33,7 +34,8 @@ export const LanguageSwitcher: React.FC = () => {
       </div>
       <button
         type="button"
-        onClick={() => handleSelectLocale('pt')}
+        disabled={isPending}
+        onClick={() => handleLanguageChange('pt')}
         aria-pressed={locale === 'pt'}
         aria-label="Português"
         className={clsx(
@@ -47,7 +49,8 @@ export const LanguageSwitcher: React.FC = () => {
       </button>
       <button
         type="button"
-        onClick={() => handleSelectLocale('en')}
+        disabled={isPending}
+        onClick={() => handleLanguageChange('en')}
         aria-pressed={locale === 'en'}
         aria-label="English"
         className={clsx(
@@ -61,4 +64,6 @@ export const LanguageSwitcher: React.FC = () => {
       </button>
     </div>
   );
-};
+}
+
+export { LanguageSwitcher };
