@@ -24,8 +24,6 @@ import { Utensils } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/types';
 
-import { useTranslations } from 'next-intl';
-
 interface RestaurantMenuViewProps {
   restaurant: Restaurant;
   categories: Category[];
@@ -41,7 +39,6 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
   initialTableNumber,
   lockTable = false,
 }) => {
-  const t = useTranslations('Menu');
   const { setSelectedTableNumber, setIsTableLocked, setRestaurantSlug } = useCart();
   const [menuProducts, setMenuProducts] = useState<Product[]>(products);
   const [prevProducts, setPrevProducts] = useState<Product[]>(products);
@@ -214,11 +211,11 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
             <div className="w-12 h-12 rounded-full bg-[#EAE5DF] flex items-center justify-center mx-auto text-[#4C453F]">
               <Utensils className="w-5 h-5 text-[#A89F95]" />
             </div>
-            <h3 className="text-sm font-bold text-[#35271F]">{t('noItemsFound')}</h3>
+            <h3 className="text-sm font-bold text-[#35271F]">Nenhum artigo encontrado</h3>
             <p className="text-xs text-[#4C453F] max-w-xs mx-auto">
               {activeDietaryFilters.length > 0
-                ? t('noItemsMatchDietary')
-                : t('noItemsMatchSearch')}
+                ? 'Nenhum prato cumpre todas as restrições alimentares selecionadas.'
+                : 'Tenta alterar os termos da tua pesquisa ou remover o filtro selecionado.'}
             </p>
             {activeDietaryFilters.length > 0 && (
               <button
@@ -226,7 +223,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                 onClick={handleClearDietaryFilters}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#5E4939] text-[#F5F4F1] text-xs font-bold hover:bg-[#453426] transition-colors cursor-pointer shadow-xs active:scale-95"
               >
-                {t('clearRestrictions')} ({activeDietaryFilters.length})
+                Limpar filtros de restrição ({activeDietaryFilters.length})
               </button>
             )}
           </div>
@@ -264,7 +261,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                 {/* Products Grid: 1 col on mobile, 2 cols on desktop */}
                 {items.length === 0 ? (
                   <p className="text-xs text-zinc-400 py-2 italic">
-                    {t('noItemsInCategory')}
+                    Sem artigos disponíveis nesta categoria com o filtro atual.
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">

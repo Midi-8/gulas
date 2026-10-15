@@ -4,21 +4,20 @@ import React, { useRef } from 'react';
 import { clsx } from 'clsx';
 import { Check, X } from 'lucide-react';
 import { Product } from '@/types/restaurant';
-import { useTranslations } from 'next-intl';
 
 export type DietaryFilterId = 'vegan' | 'vegetarian' | 'gluten_free' | 'dairy_free';
 
 export interface DietaryFilterOption {
   id: DietaryFilterId;
-  labelKey: 'vegan' | 'vegetarian' | 'glutenFree' | 'dairyFree';
+  label: string;
   emoji: string;
 }
 
 export const DIETARY_FILTERS: DietaryFilterOption[] = [
-  { id: 'vegan', labelKey: 'vegan', emoji: '🌿' },
-  { id: 'vegetarian', labelKey: 'vegetarian', emoji: '🥦' },
-  { id: 'gluten_free', labelKey: 'glutenFree', emoji: '🌾' },
-  { id: 'dairy_free', labelKey: 'dairyFree', emoji: '🥛' },
+  { id: 'vegan', label: 'Vegan', emoji: '🌿' },
+  { id: 'vegetarian', label: 'Vegetariano', emoji: '🥦' },
+  { id: 'gluten_free', label: 'Sem Glúten', emoji: '🌾' },
+  { id: 'dairy_free', label: 'Sem Lactose', emoji: '🥛' },
 ];
 
 /**
@@ -185,14 +184,13 @@ export const DietaryFilters: React.FC<DietaryFiltersProps> = ({
   onClearFilters,
   filteredCount,
 }) => {
-  const t = useTranslations('Menu');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasActiveFilters = activeFilters.length > 0;
 
   return (
     <div
       role="region"
-      aria-label={t('all')}
+      aria-label="Filtros de restrições alimentares"
       className="bg-[#F5F4F1] border-b border-[#E5DED6] py-2 transition-all"
     >
       <div className="max-w-4xl mx-auto px-4">
@@ -202,7 +200,6 @@ export const DietaryFilters: React.FC<DietaryFiltersProps> = ({
         >
           {DIETARY_FILTERS.map((filter) => {
             const isActive = activeFilters.includes(filter.id);
-            const labelText = t(filter.labelKey);
 
             return (
               <button
@@ -210,7 +207,7 @@ export const DietaryFilters: React.FC<DietaryFiltersProps> = ({
                 type="button"
                 role="checkbox"
                 aria-checked={isActive}
-                aria-label={labelText}
+                aria-label={`Filtrar por ${filter.label}`}
                 onClick={() => onToggleFilter(filter.id)}
                 className={clsx(
                   'whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer active:scale-95 flex items-center gap-1.5 border select-none',
@@ -222,7 +219,7 @@ export const DietaryFilters: React.FC<DietaryFiltersProps> = ({
                 <span className="text-sm leading-none" aria-hidden="true">
                   {filter.emoji}
                 </span>
-                <span>{labelText}</span>
+                <span>{filter.label}</span>
                 {isActive && (
                   <Check className="w-3.5 h-3.5 stroke-[2.5] text-[#C09573] animate-in zoom-in-50 duration-150" />
                 )}
@@ -235,20 +232,18 @@ export const DietaryFilters: React.FC<DietaryFiltersProps> = ({
             <button
               type="button"
               onClick={onClearFilters}
-              aria-label={t('clear')}
+              aria-label="Limpar todos os filtros alimentares"
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-[#A89F95] hover:text-[#35271F] hover:bg-[#EAE5DF] transition-colors shrink-0 cursor-pointer active:scale-95"
             >
               <X className="w-3.5 h-3.5 stroke-[2]" />
-              <span>
-                {t('clear')} ({activeFilters.length})
-              </span>
+              <span>Limpar ({activeFilters.length})</span>
             </button>
           )}
 
           {/* Indicador de resultados filtrados quando ativo */}
           {hasActiveFilters && typeof filteredCount === 'number' && (
             <span className="text-[11px] font-semibold text-[#A89F95] shrink-0 ml-auto hidden sm:inline-block">
-              {filteredCount} {filteredCount === 1 ? t('dishAvailable') : t('dishesAvailable')}
+              {filteredCount} {filteredCount === 1 ? 'prato disponível' : 'pratos disponíveis'}
             </span>
           )}
         </div>
@@ -256,4 +251,3 @@ export const DietaryFilters: React.FC<DietaryFiltersProps> = ({
     </div>
   );
 };
-

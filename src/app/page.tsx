@@ -1,30 +1,13 @@
 import React from 'react';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 import {
   QrCode,
   Utensils,
   ChevronRight,
   ArrowRight,
 } from 'lucide-react';
-import { setRequestLocale } from 'next-intl/server';
-import { routing, Locale } from '@/i18n/routing';
-import { notFound } from 'next/navigation';
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
-
-interface HomePageProps {
-  params: Promise<{ locale: string }>;
-}
-
-export default async function HomePage({ params }: HomePageProps) {
-  const { locale } = await params;
-  if (!routing.locales.includes(locale as Locale)) {
-    notFound();
-  }
-  setRequestLocale(locale);
-
+export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#F5F4F1] text-[#35271F] flex flex-col selection:bg-[#5E4939] selection:text-[#F5F4F1]">
       {/* Navigation */}

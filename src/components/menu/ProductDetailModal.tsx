@@ -7,7 +7,6 @@ import { formatCurrency } from '@/data/mockRestaurant';
 import { useCart } from '@/context/CartContext';
 import { X, Plus, Minus, AlertCircle, Info, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-import { useTranslations } from 'next-intl';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -20,7 +19,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const t = useTranslations('Menu');
   const { addItem, items } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
@@ -129,7 +127,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-200 flex items-start gap-2 text-xs text-zinc-600">
               <AlertCircle className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-zinc-800">{t('allergens')}: </span>
+                <span className="font-semibold text-zinc-800">Alergénios: </span>
                 <span>{product.allergens.join(', ')}</span>
               </div>
             </div>
@@ -138,14 +136,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           {/* Special instructions */}
           <div className="space-y-1 pt-1">
             <label htmlFor="product-notes" className="text-xs font-bold text-[#141619] block">
-              {t('notes')}
+              Observações (opcional)
             </label>
             <textarea
               id="product-notes"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={t('notesPlaceholder')}
+              placeholder="Ex: sem cebola, sem molho picante, bem passado..."
               className="w-full px-3 py-2 rounded-xl bg-[#F5F4F1] border border-[#E5DED6] text-xs sm:text-sm text-[#35271F] placeholder-[#A89F95] focus:outline-none focus:border-[#C09573] focus:bg-white transition-colors resize-none"
             />
           </div>
@@ -181,7 +179,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             disabled={!product.available}
             className="flex-1 py-2.5 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] disabled:bg-[#EAE5DF] text-[#F5F4F1] disabled:text-[#A89F95] font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-xs active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
           >
-            <span>{product.available ? t('addToOrder') : t('tempSoldOut')}</span>
+            <span>{product.available ? 'Adicionar ao pedido' : 'Temporariamente Esgotado'}</span>
             {product.available && <span>{formatCurrency(totalPrice)}</span>}
           </button>
         </div>

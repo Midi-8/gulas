@@ -8,7 +8,6 @@ import { useCart } from '@/context/CartContext';
 import { Plus, Minus, UtensilsCrossed } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { clsx } from 'clsx';
-import { useTranslations } from 'next-intl';
 
 interface ProductCardProps {
   product: Product;
@@ -16,7 +15,6 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails }) => {
-  const t = useTranslations('Menu');
   const { items, addItem, updateQuantity } = useCart();
 
   const cartItem = items.find((item) => item.product.id === product.id);
@@ -95,7 +93,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           <div className="flex flex-wrap items-center gap-1.5">
             {!product.available && (
               <span className="text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full bg-[#35271F]/90 text-[#F5F4F1] border border-[#E5DED6]/40 backdrop-blur-xs shadow-xs">
-                {t('tempSoldOut')}
+                Temporariamente Esgotado
               </span>
             )}
             {product.badges?.map((badgeKey) => (
@@ -167,14 +165,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
                 type="button"
                 onClick={handleQuickAdd}
                 className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
-                aria-label={`${t('addToCart')} ${product.name}`}
+                aria-label={`Adicionar ${product.name}`}
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
               </button>
             )
           ) : (
             <span className="px-2.5 py-1 rounded-full bg-[#EAE5DF] text-[#78716C] text-[11px] font-bold border border-[#E5DED6] select-none">
-              {t('soldOut')}
+              Esgotado
             </span>
           )}
         </div>
