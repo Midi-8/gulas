@@ -139,6 +139,7 @@ export const mockProducts: Product[] = [
     position: 1,
     badges: ['vegetariano'],
     allergens: ['Glúten', 'Laticínios'],
+    dietary_tags: ['vegetarian'],
   },
   {
     id: 'prod_calamares_agridoce',
@@ -200,6 +201,7 @@ export const mockProducts: Product[] = [
     position: 5,
     badges: ['popular'],
     allergens: ['Ovos', 'Sulfitos'],
+    dietary_tags: ['gluten_free', 'dairy_free'],
   },
   {
     id: 'prod_batata_rustica',
@@ -214,6 +216,7 @@ export const mockProducts: Product[] = [
     available: true,
     position: 6,
     badges: ['vegetariano'],
+    dietary_tags: ['vegan', 'vegetarian', 'gluten_free', 'dairy_free'],
   },
   {
     id: 'prod_batata_frita_palito',
@@ -228,6 +231,7 @@ export const mockProducts: Product[] = [
     available: true,
     position: 7,
     badges: ['vegetariano'],
+    dietary_tags: ['vegan', 'vegetarian', 'gluten_free', 'dairy_free'],
   },
   {
     id: 'prod_chips_batata_doce',
@@ -242,6 +246,7 @@ export const mockProducts: Product[] = [
     available: true,
     position: 8,
     badges: ['vegetariano'],
+    dietary_tags: ['vegan', 'vegetarian', 'gluten_free', 'dairy_free'],
   },
 
   // ==========================================
@@ -312,6 +317,7 @@ export const mockProducts: Product[] = [
     position: 4,
     badges: ['vegan'],
     allergens: ['Glúten'],
+    dietary_tags: ['vegan', 'vegetarian', 'dairy_free'],
   },
   {
     id: 'prod_caracoizz_mexicanos',
@@ -555,6 +561,7 @@ export const mockProducts: Product[] = [
     position: 6,
     badges: ['vegetariano'],
     allergens: ['Glúten', 'Mostarda'],
+    dietary_tags: ['vegetarian', 'dairy_free'],
   },
   {
     id: 'prod_cheeseburger',
@@ -736,6 +743,7 @@ export const mockProducts: Product[] = [
     position: 7,
     badges: ['vegetariano'],
     allergens: ['Glúten', 'Laticínios'],
+    dietary_tags: ['vegetarian'],
   },
   {
     id: 'prod_pizza_kebab',

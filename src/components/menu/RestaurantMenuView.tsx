@@ -5,6 +5,11 @@ import { Restaurant, Category, Product } from '@/types/restaurant';
 import { RestaurantHeader } from '@/components/menu/RestaurantHeader';
 import { CategoryNav } from '@/components/menu/CategoryNav';
 import { SearchBar, MenuFilterType } from '@/components/menu/SearchBar';
+import {
+  DietaryFilters,
+  DietaryFilterId,
+  matchesAllDietaryFilters,
+} from '@/components/menu/DietaryFilters';
 import { ProductCard } from '@/components/menu/ProductCard';
 import { ProductDetailModal } from '@/components/menu/ProductDetailModal';
 import { CartDrawer } from '@/components/menu/CartDrawer';
@@ -40,6 +45,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
   const [activeCategoryId, setActiveCategoryId] = useState<string>(categories[0]?.id || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<MenuFilterType>('all');
+  const [activeDietaryFilters, setActiveDietaryFilters] = useState<DietaryFilterId[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
@@ -107,7 +113,20 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
     setIsDetailModalOpen(true);
   };
 
-  // Filter products by search and badge filters
+  // Handle dietary restrictions toggle
+  const handleToggleDietaryFilter = (filterId: DietaryFilterId) => {
+    setActiveDietaryFilters((prev) =>
+      prev.includes(filterId)
+        ? prev.filter((id) => id !== filterId)
+        : [...prev, filterId]
+    );
+  };
+
+  const handleClearDietaryFilters = () => {
+    setActiveDietaryFilters([]);
+  };
+
+  // Filter products by search, badge filters, and dietary restrictions
   const filteredProducts = useMemo(() => {
     return menuProducts.filter((p) => {
       // Search matching
@@ -130,9 +149,15 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
         matchesPill = !!p.badges?.some((b) => b === 'vegetariano' || b === 'vegan');
       }
 
-      return matchesSearch && matchesPill;
+      // Dietary restriction matching (All active dietary filters must be satisfied - AND)
+      const matchesDietary = matchesAllDietaryFilters(p, activeDietaryFilters);
+
+      return matchesSearch && matchesPill && matchesDietary;
     });
-  }, [menuProducts, searchQuery, activeFilter]);
+  }, [menuProducts, searchQuery, activeFilter, activeDietaryFilters]);
+
+  const hasAnyFilterActive =
+    searchQuery.trim() !== '' || activeFilter !== 'all' || activeDietaryFilters.length > 0;
 
   // Group filtered products by category
   const productsByCategory = useMemo(() => {
@@ -141,12 +166,12 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       const catProducts = filteredProducts
         .filter((p) => p.categoryId === category.id)
         .sort((a, b) => a.position - b.position);
-      if (catProducts.length > 0 || searchQuery === '') {
+      if (catProducts.length > 0 || !hasAnyFilterActive) {
         map.set(category.id, catProducts);
       }
     }
     return map;
-  }, [categories, filteredProducts, searchQuery]);
+  }, [categories, filteredProducts, hasAnyFilterActive]);
 
   return (
     <div className="min-h-screen bg-[#F5F4F1] text-[#35271F] pb-24">
@@ -171,22 +196,41 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
         onSelectCategory={setActiveCategoryId}
       />
 
+      {/* Dietary & Allergen Restriction Filters (Pílulas Gulas) */}
+      <DietaryFilters
+        activeFilters={activeDietaryFilters}
+        onToggleFilter={handleToggleDietaryFilter}
+        onClearFilters={handleClearDietaryFilters}
+        filteredCount={filteredProducts.length}
+      />
+
       {/* Menu Content */}
       <main className="max-w-4xl mx-auto px-4 py-5 space-y-8">
         {filteredProducts.length === 0 ? (
-          <div className="py-14 text-center space-y-2">
+          <div className="py-14 text-center space-y-3">
             <div className="w-12 h-12 rounded-full bg-[#EAE5DF] flex items-center justify-center mx-auto text-[#4C453F]">
               <Utensils className="w-5 h-5 text-[#A89F95]" />
             </div>
             <h3 className="text-sm font-bold text-[#35271F]">Nenhum artigo encontrado</h3>
             <p className="text-xs text-[#4C453F] max-w-xs mx-auto">
-              Tenta alterar os termos da tua pesquisa ou remover o filtro selecionado.
+              {activeDietaryFilters.length > 0
+                ? 'Nenhum prato cumpre todas as restrições alimentares selecionadas.'
+                : 'Tenta alterar os termos da tua pesquisa ou remover o filtro selecionado.'}
             </p>
+            {activeDietaryFilters.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearDietaryFilters}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#5E4939] text-[#F5F4F1] text-xs font-bold hover:bg-[#453426] transition-colors cursor-pointer shadow-xs active:scale-95"
+              >
+                Limpar filtros de restrição ({activeDietaryFilters.length})
+              </button>
+            )}
           </div>
         ) : (
           categories.map((category) => {
             const items = productsByCategory.get(category.id) || [];
-            if (items.length === 0 && (searchQuery !== '' || activeFilter !== 'all')) {
+            if (items.length === 0 && hasAnyFilterActive) {
               return null;
             }
 

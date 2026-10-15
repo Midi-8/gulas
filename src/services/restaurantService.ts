@@ -79,6 +79,7 @@ function mapProductFromRow(row: ProductRow): Product {
     customizationNote: row.customization_note || undefined,
     allergens: row.allergens || [],
     prepTimeMinutes: row.prep_time_minutes || undefined,
+    dietary_tags: ((row as Record<string, unknown>).dietary_tags as string[]) || undefined,
   };
 }
 

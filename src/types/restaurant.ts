@@ -64,6 +64,7 @@ export interface Product {
   customizationNote?: string; // e.g. "Opção queijo mozzarella sem custo adicional"
   allergens?: string[];
   prepTimeMinutes?: number;
+  dietary_tags?: string[];
 }
 
 export interface Table {
