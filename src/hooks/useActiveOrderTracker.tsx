@@ -15,10 +15,12 @@ import {
 } from '@/actions/orders';
 import { Order, OrderStatus } from '@/types/restaurant';
 
+
 export const ACTIVE_ORDER_IDS_KEY = 'gulas_active_order_ids';
 export const ACTIVE_ORDERS_DATA_KEY = 'gulas_active_orders_data';
 export const ACTIVE_ORDER_ID_KEY = 'gulas_active_order_id';
 export const ACTIVE_ORDER_DATA_KEY = 'gulas_active_order_data';
+
 
 export interface TrackerOrderItem {
   id: string;
@@ -27,6 +29,7 @@ export interface TrackerOrderItem {
   unitPrice: number;
   notes?: string | null;
 }
+
 
 export interface ActiveTrackerOrder {
   id: string;
@@ -44,6 +47,7 @@ export interface ActiveTrackerOrder {
   updatedAt?: string;
   items: TrackerOrderItem[];
 }
+
 
 export interface ActiveOrderTrackerContextValue {
   activeOrderIds: string[];
@@ -68,8 +72,10 @@ export interface ActiveOrderTrackerContextValue {
   refreshOrder: () => Promise<void>;
 }
 
+
 const ActiveOrderTrackerContext =
   createContext<ActiveOrderTrackerContextValue | null>(null);
+
 
 function isRecentOrder(createdAt?: string): boolean {
   if (!createdAt) return false;
@@ -80,6 +86,7 @@ function isRecentOrder(createdAt?: string): boolean {
     return false;
   }
 }
+
 
 function getInitialActiveOrderIds(): string[] {
   if (typeof window === 'undefined') return [];
@@ -103,6 +110,7 @@ function getInitialActiveOrderIds(): string[] {
   return [];
 }
 
+
 function getInitialActiveOrders(ids: string[]): ActiveTrackerOrder[] {
   if (typeof window === 'undefined' || ids.length === 0) return [];
   try {
@@ -114,11 +122,11 @@ function getInitialActiveOrders(ids: string[]): ActiveTrackerOrder[] {
           (o): o is ActiveTrackerOrder =>
             Boolean(
               o &&
-                typeof o.id === 'string' &&
-                ids.includes(o.id) &&
-                o.status !== 'completed' &&
-                o.status !== 'cancelled' &&
-                isRecentOrder(o.createdAt)
+              typeof o.id === 'string' &&
+              ids.includes(o.id) &&
+              o.status !== 'completed' &&
+              o.status !== 'cancelled' &&
+              isRecentOrder(o.createdAt)
             )
         );
       }
@@ -143,6 +151,7 @@ function getInitialActiveOrders(ids: string[]): ActiveTrackerOrder[] {
   return [];
 }
 
+
 export const ActiveOrderTrackerProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
@@ -150,24 +159,29 @@ export const ActiveOrderTrackerProvider: React.FC<{
     getInitialActiveOrderIds
   );
 
+
   const [activeOrders, setActiveOrders] = useState<ActiveTrackerOrder[]>(() =>
     getInitialActiveOrders(getInitialActiveOrderIds())
   );
+
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [completionNotice, setCompletionNotice] = useState<string | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
 
+
   const activeOrderIdsRef = useRef<string[]>(activeOrderIds);
   useEffect(() => {
     activeOrderIdsRef.current = activeOrderIds;
   }, [activeOrderIds]);
 
+
   const activeOrdersRef = useRef<ActiveTrackerOrder[]>(activeOrders);
   useEffect(() => {
     activeOrdersRef.current = activeOrders;
   }, [activeOrders]);
+
 
   const persistOrders = useCallback(
     (ids: string[], orders: ActiveTrackerOrder[]) => {
@@ -196,12 +210,14 @@ export const ActiveOrderTrackerProvider: React.FC<{
     []
   );
 
+
   const clearActiveOrder = useCallback(() => {
     setActiveOrderIdsState([]);
     setActiveOrders([]);
     setSelectedOrderId(null);
     setCompletionNotice(null);
     setIsDetailModalOpen(false);
+
 
     try {
       localStorage.removeItem(ACTIVE_ORDER_IDS_KEY);
@@ -213,6 +229,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
     }
   }, []);
 
+
   const purgeOrphanOrders = useCallback(
     (orphanIds?: string[]) => {
       setActiveOrderIdsState((prevIds) => {
@@ -221,21 +238,25 @@ export const ActiveOrderTrackerProvider: React.FC<{
             ? prevIds.filter((id) => !orphanIds.includes(id))
             : [];
 
+
         setActiveOrders((prevOrders) => {
           const nextOrders =
             orphanIds && orphanIds.length > 0
               ? prevOrders.filter((o) => !orphanIds.includes(o.id))
               : [];
 
+
           persistOrders(nextIds, nextOrders);
           return nextOrders;
         });
+
 
         setSelectedOrderId((current) =>
           current && (!orphanIds || orphanIds.includes(current))
             ? nextIds[nextIds.length - 1] || null
             : current
         );
+
 
         if (nextIds.length === 0) {
           try {
@@ -255,11 +276,13 @@ export const ActiveOrderTrackerProvider: React.FC<{
           window.dispatchEvent(new Event('gulas_order_status_update'));
         }
 
+
         return nextIds;
       });
     },
     [persistOrders]
   );
+
 
   const removeActiveOrder = useCallback(
     (orderIdToRemove: string) => {
@@ -271,11 +294,13 @@ export const ActiveOrderTrackerProvider: React.FC<{
           return nextOrders;
         });
 
+
         setSelectedOrderId((current) =>
           current === orderIdToRemove
             ? nextIds[nextIds.length - 1] || null
             : current
         );
+
 
         if (nextIds.length === 0) {
           try {
@@ -295,11 +320,13 @@ export const ActiveOrderTrackerProvider: React.FC<{
           window.dispatchEvent(new Event('gulas_order_status_update'));
         }
 
+
         return nextIds;
       });
     },
     [persistOrders]
   );
+
 
   const handleStatusTransition = useCallback(
     (targetOrderId: string, newStatus: OrderStatus) => {
@@ -307,11 +334,13 @@ export const ActiveOrderTrackerProvider: React.FC<{
         const target = prevOrders.find((o) => o.id === targetOrderId);
         if (!target || target.status === newStatus) return prevOrders;
 
+
         const updated = prevOrders.map((o) =>
           o.id === targetOrderId
             ? { ...o, status: newStatus, updatedAt: new Date().toISOString() }
             : o
         );
+
 
         // Se o pedido for concluído ou cancelado:
         if (newStatus === 'completed' || newStatus === 'cancelled') {
@@ -321,7 +350,9 @@ export const ActiveOrderTrackerProvider: React.FC<{
               ? `Pedido ${orderNum} concluído com sucesso. Bom apetite!`
               : `Pedido ${orderNum} cancelado.`;
 
+
           setCompletionNotice(notice);
+
 
           // Remove apenas este ID após 8 segundos para dar tempo ao aviso
           setTimeout(() => {
@@ -334,11 +365,13 @@ export const ActiveOrderTrackerProvider: React.FC<{
           persistOrders(activeOrderIdsRef.current, updated);
         }
 
+
         return updated;
       });
     },
     [persistOrders, removeActiveOrder]
   );
+
 
   const setActiveOrderId = useCallback(
     (
@@ -349,13 +382,16 @@ export const ActiveOrderTrackerProvider: React.FC<{
       const cleanId = orderId.trim();
       if (!cleanId) return;
 
+
       setCompletionNotice(null);
+
 
       let formatted: ActiveTrackerOrder | null = null;
       if (initialData) {
         const rawItems = (initialData.items || []) as Array<
           TrackerOrderItem | { product: { id: string; name: string; price: number }; quantity: number; notes?: string }
         >;
+
 
         const formattedItems: TrackerOrderItem[] = rawItems.map((item, idx) => {
           if ('product' in item) {
@@ -375,6 +411,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
             notes: item.notes,
           };
         });
+
 
         formatted = {
           id: cleanId,
@@ -399,6 +436,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
           items: formattedItems,
         };
       }
+
 
       setActiveOrderIdsState((prev) => {
         const nextIds = prev.includes(cleanId) ? prev : [...prev, cleanId];
@@ -431,20 +469,24 @@ export const ActiveOrderTrackerProvider: React.FC<{
         return nextIds;
       });
 
+
       setSelectedOrderId(cleanId);
     },
     [persistOrders]
   );
 
+
   const fetchLatestStatus = useCallback(
     async (orderIdToFetch: string) => {
       if (!orderIdToFetch) return;
+
 
       try {
         const result = await getOrderPublicStatus(orderIdToFetch);
         if (result.success && result.data) {
           const fetched = result.data;
           const currentStatus = fetched.status as OrderStatus;
+
 
           setActiveOrders((prev) => {
             const exists = prev.some((o) => o.id === fetched.id);
@@ -464,15 +506,18 @@ export const ActiveOrderTrackerProvider: React.FC<{
                   : prev.find((o) => o.id === fetched.id)?.items || [],
             };
 
+
             const next = exists
               ? prev.map((o) =>
-                  o.id === fetched.id ? { ...o, ...updatedItem } : o
-                )
+                o.id === fetched.id ? { ...o, ...updatedItem } : o
+              )
               : [...prev, updatedItem];
+
 
             persistOrders(activeOrderIdsRef.current, next);
             return next;
           });
+
 
           if (
             currentStatus === 'completed' ||
@@ -481,35 +526,53 @@ export const ActiveOrderTrackerProvider: React.FC<{
             handleStatusTransition(fetched.id, currentStatus);
           }
         } else if (!result.success) {
-          // O pedido não foi encontrado na base de dados: purga imediata
-          removeActiveOrder(orderIdToFetch);
+          // Não remover automaticamente: uma falha de consulta pode ser
+          // temporária, de rede, RLS ou autenticação. Manter o pedido local
+          // evita perder o acompanhamento sem confirmação do servidor.
+          console.warn(
+            "[ActiveOrderTracker] Consulta de estado falhou; pedido mantido localmente:",
+            orderIdToFetch
+          );
         }
       } catch {
         // Falha tolerada em modo offline
       }
     },
-    [handleStatusTransition, persistOrders, removeActiveOrder]
+    [handleStatusTransition, persistOrders]
   );
+
 
   const fetchAllActiveStatuses = useCallback(async () => {
     const ids = activeOrderIdsRef.current;
     if (ids.length === 0) return;
+
 
     try {
       const res = await getMultipleOrdersPublicStatus(ids);
       if (res.success) {
         const { orders, missingIds } = res.data;
 
-        // Se a base de dados não devolver nenhum pedido existente (tabela limpa / DB reset):
+
+        // Não limpar automaticamente quando a consulta não devolve pedidos:
+        // pode tratar-se de uma falha temporária de rede, RLS ou autenticação.
         if (orders.length === 0) {
-          purgeOrphanOrders();
+          console.warn(
+            "[ActiveOrderTracker] Consulta em lote não devolveu pedidos; acompanhamento mantido localmente:",
+            ids
+          );
           return;
         }
 
-        // Se existirem IDs órfãos parciais:
+
+        // Não remover IDs em falta automaticamente: a ausência pode ser
+        // temporária ou causada por permissões/consulta parcial.
         if (missingIds.length > 0) {
-          purgeOrphanOrders(missingIds);
+          console.warn(
+            "[ActiveOrderTracker] IDs não confirmados pela consulta em lote; mantidos localmente:",
+            missingIds
+          );
         }
+
 
         // Filtrar pedidos ainda em confeção/entrega
         const stillActive = orders.filter(
@@ -519,21 +582,22 @@ export const ActiveOrderTrackerProvider: React.FC<{
           (o) => o.status === 'completed' || o.status === 'cancelled'
         );
 
+
         if (stillActive.length === 0) {
           if (finishedOrders.length > 0) {
             const last = finishedOrders[finishedOrders.length - 1];
             handleStatusTransition(last.id, last.status as OrderStatus);
-          } else {
-            purgeOrphanOrders();
           }
           return;
         }
+
 
         // Atualizar pedidos ativos confirmados
         setActiveOrders((prev) => {
           const map = new Map<string, ActiveTrackerOrder>(
             prev.map((o) => [o.id, o])
           );
+
 
           stillActive.forEach((fetched) => {
             const currentStatus = fetched.status as OrderStatus;
@@ -551,34 +615,41 @@ export const ActiveOrderTrackerProvider: React.FC<{
             });
           });
 
-          // Remover os missing e os terminados
-          missingIds.forEach((id) => map.delete(id));
+
+          // Remover apenas pedidos confirmados como terminados.
           finishedOrders.forEach((o) => map.delete(o.id));
+
 
           const nextList = Array.from(map.values()).filter(
             (o) => o.status !== 'completed' && o.status !== 'cancelled'
           );
+
 
           const nextIds = nextList.map((o) => o.id);
           persistOrders(nextIds, nextList);
           return nextList;
         });
 
+
+        // Manter os IDs locais, incluindo os ainda não confirmados pela consulta.
+        // Apenas os pedidos confirmados como terminados deixam de ser ativos.
         setActiveOrderIdsState((prev) => {
-          const validSet = new Set(stillActive.map((o) => o.id));
-          return prev.filter((id) => validSet.has(id));
+          const finishedSet = new Set(finishedOrders.map((o) => o.id));
+          return prev.filter((id) => !finishedSet.has(id));
         });
       }
     } catch {
       // Falha tolerada em modo offline momentâneo
     }
-  }, [handleStatusTransition, persistOrders, purgeOrphanOrders]);
+  }, [handleStatusTransition, persistOrders]);
+
 
   const refreshOrder = useCallback(async () => {
     setIsLoading(true);
     await fetchAllActiveStatuses();
     setIsLoading(false);
   }, [fetchAllActiveStatuses]);
+
 
   // 1. Reconciliação e Health Check inicial com o backend se houver pedidos ativos
   useEffect(() => {
@@ -590,17 +661,21 @@ export const ActiveOrderTrackerProvider: React.FC<{
     }
   }, [activeOrderIds, fetchAllActiveStatuses]);
 
+
   // 2. Subscrição Supabase Realtime para a tabela orders com múltiplos filtros
   useEffect(() => {
     if (activeOrderIds.length === 0) return;
 
+
     const supabase = createClient();
     if (!supabase) return;
+
 
     const channelName = `customer-orders-${activeOrderIds
       .slice(0, 3)
       .join('-')}-${activeOrderIds.length}`;
     const channel = supabase.channel(channelName);
+
 
     activeOrderIds.forEach((orderId) => {
       channel.on(
@@ -617,6 +692,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
             status?: OrderStatus;
           };
 
+
           if (rec?.id && rec?.status) {
             handleStatusTransition(rec.id, rec.status);
             void fetchLatestStatus(rec.id);
@@ -624,6 +700,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
         }
       );
     });
+
 
     channel.on(
       'broadcast',
@@ -641,12 +718,15 @@ export const ActiveOrderTrackerProvider: React.FC<{
       }
     );
 
+
     channel.subscribe();
+
 
     return () => {
       void supabase.removeChannel(channel);
     };
   }, [activeOrderIds, handleStatusTransition, fetchLatestStatus]);
+
 
   // 3. Reconciliação em mudanças de visibilidade ou reconexão Wi-Fi
   useEffect(() => {
@@ -656,8 +736,10 @@ export const ActiveOrderTrackerProvider: React.FC<{
       }
     };
 
+
     document.addEventListener('visibilitychange', handleRecheck);
     window.addEventListener('online', handleRecheck);
+
 
     return () => {
       document.removeEventListener('visibilitychange', handleRecheck);
@@ -665,16 +747,20 @@ export const ActiveOrderTrackerProvider: React.FC<{
     };
   }, [fetchAllActiveStatuses]);
 
+
   // 4. Polling ultra-leve de reconciliação (cada 4s) enquanto houver pedidos em curso
   useEffect(() => {
     if (activeOrderIds.length === 0) return;
+
 
     const interval = setInterval(() => {
       void fetchAllActiveStatuses();
     }, 4000);
 
+
     return () => clearInterval(interval);
   }, [activeOrderIds, fetchAllActiveStatuses]);
+
 
   // 5. Ouvinte de eventos customizados e storage para sincronização instantânea
   useEffect(() => {
@@ -686,7 +772,9 @@ export const ActiveOrderTrackerProvider: React.FC<{
       }>;
       if (!evt.detail?.orderId) return;
 
+
       const incomingOrderId = evt.detail.orderId;
+
 
       if (!activeOrderIdsRef.current.includes(incomingOrderId)) {
         setActiveOrderId(incomingOrderId, evt.detail.order);
@@ -694,6 +782,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
         handleStatusTransition(incomingOrderId, evt.detail.status);
       }
     };
+
 
     const handleActiveOrderCreated = (e: Event) => {
       const evt = e as CustomEvent<{
@@ -704,6 +793,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
         setActiveOrderId(evt.detail.orderId, evt.detail.order);
       }
     };
+
 
     const handleStorageChange = (e: StorageEvent) => {
       if (
@@ -718,6 +808,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
       }
     };
 
+
     window.addEventListener(
       'gulas_order_status_update',
       handleCustomStatusUpdate
@@ -727,6 +818,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
       handleActiveOrderCreated
     );
     window.addEventListener('storage', handleStorageChange);
+
 
     return () => {
       window.removeEventListener(
@@ -741,6 +833,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
     };
   }, [handleStatusTransition, setActiveOrderId]);
 
+
   const openDetailModal = useCallback((orderId?: string) => {
     if (orderId) {
       setSelectedOrderId(orderId);
@@ -748,7 +841,9 @@ export const ActiveOrderTrackerProvider: React.FC<{
     setIsDetailModalOpen(true);
   }, []);
 
+
   const closeDetailModal = useCallback(() => setIsDetailModalOpen(false), []);
+
 
   // Determinar activeOrder principal (o selecionado ou o mais recente da lista)
   const activeOrder =
@@ -756,12 +851,15 @@ export const ActiveOrderTrackerProvider: React.FC<{
     activeOrders[activeOrders.length - 1] ||
     null;
 
+
   const activeOrderId =
     activeOrder?.id ||
     activeOrderIds[activeOrderIds.length - 1] ||
     null;
 
+
   const status = activeOrder?.status || null;
+
 
   const value: ActiveOrderTrackerContextValue = {
     activeOrderIds,
@@ -783,12 +881,14 @@ export const ActiveOrderTrackerProvider: React.FC<{
     refreshOrder,
   };
 
+
   return (
     <ActiveOrderTrackerContext.Provider value={value}>
       {children}
     </ActiveOrderTrackerContext.Provider>
   );
 };
+
 
 export const useActiveOrderTracker = (): ActiveOrderTrackerContextValue => {
   const context = useContext(ActiveOrderTrackerContext);
