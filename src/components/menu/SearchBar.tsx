@@ -3,6 +3,7 @@
 import React from 'react';
 import { Search, X, Sparkles, Leaf, Zap, Flame } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useTranslations } from 'next-intl';
 
 export type MenuFilterType = 'all' | 'especialidade' | 'novidade' | 'picante' | 'vegetariano';
 
@@ -19,6 +20,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   activeFilter,
   onFilterChange,
 }) => {
+  const t = useTranslations('Menu');
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-2 space-y-2">
       {/* Search Input */}
@@ -28,7 +31,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Procurar no menu..."
+          placeholder={t('searchPlaceholder')}
           className="w-full pl-10 pr-8 py-2 bg-[#FFFFFF] border border-[#E5DED6] rounded-xl text-xs sm:text-sm text-[#35271F] placeholder-[#A89F95] focus:outline-none focus:border-[#C09573] focus:ring-1 focus:ring-[#C09573]/20 transition-all shadow-xs"
         />
         {searchQuery && (
@@ -52,7 +55,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               : 'text-[#4C453F] bg-[#FFFFFF] border-[#E5DED6] hover:bg-[#EAE5DF]'
           )}
         >
-          Todos
+          {t('all')}
         </button>
 
         <button
@@ -65,7 +68,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           )}
         >
           <Sparkles className="w-3 h-3 text-[#C09573]" />
-          Especialidades
+          {t('specials')}
         </button>
 
         <button
@@ -78,7 +81,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           )}
         >
           <Zap className="w-3 h-3 text-[#C09573]" />
-          Novidades
+          {t('news')}
         </button>
 
         <button
@@ -91,7 +94,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           )}
         >
           <Flame className="w-3 h-3 text-[#C09573]" />
-          Picantes
+          {t('spicy')}
         </button>
 
         <button
@@ -104,7 +107,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           )}
         >
           <Leaf className="w-3 h-3 text-[#C09573]" />
-          Vegetarianos
+          {t('vegetarian')}
         </button>
       </div>
     </div>

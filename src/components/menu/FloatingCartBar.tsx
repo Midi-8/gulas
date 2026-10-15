@@ -4,8 +4,10 @@ import React from 'react';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/data/mockRestaurant';
 import { ShoppingBag } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export const FloatingCartBar: React.FC = () => {
+  const t = useTranslations('Menu');
   const { itemCount, total, setIsCartOpen } = useCart();
 
   if (itemCount === 0) return null;
@@ -20,7 +22,7 @@ export const FloatingCartBar: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <ShoppingBag className="w-4 h-4 text-[#C09573]" />
             <span className="text-xs sm:text-sm font-bold">
-              {itemCount} {itemCount === 1 ? 'artigo' : 'artigos'}
+              {itemCount} {itemCount === 1 ? t('item') : t('items')}
             </span>
           </div>
 
@@ -29,7 +31,7 @@ export const FloatingCartBar: React.FC = () => {
               {formatCurrency(total)}
             </span>
             <span className="text-xs opacity-90 underline underline-offset-2">
-              Ver pedido
+              {t('viewOrder')}
             </span>
           </div>
         </button>

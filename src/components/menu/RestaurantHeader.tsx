@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { Restaurant } from '@/types/restaurant';
 import { useCart } from '@/context/CartContext';
 import { ShoppingBag, UtensilsCrossed, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher } from '@/components/menu/LanguageSwitcher';
 
 interface RestaurantHeaderProps {
   restaurant: Restaurant;
@@ -52,6 +54,7 @@ const GulasLogo: React.FC = () => {
 };
 
 export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }) => {
+  const t = useTranslations('Menu');
   const { selectedTableNumber, isTableLocked, itemCount, setIsCartOpen } = useCart();
   const hasMounted = useSyncExternalStore(
     emptySubscribe,
@@ -69,8 +72,11 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
             <GulasLogo />
           </div>
 
-          {/* Ações Rápidas: Indicador de Mesa e Carrinho */}
+          {/* Ações Rápidas: Seletor de Idioma, Indicador de Mesa e Carrinho */}
           <div className="flex items-center gap-2">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {!hasMounted ? (
               <div
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EAE5DF] border border-[#E5DED6] text-xs font-bold text-transparent select-none animate-pulse"
@@ -82,7 +88,9 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
             ) : selectedTableNumber ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shadow-xs">
                 <UtensilsCrossed className="w-3.5 h-3.5 text-[#C09573]" />
-                <span>Mesa {selectedTableNumber}</span>
+                <span>
+                  {t('table')} {selectedTableNumber}
+                </span>
                 {isTableLocked && (
                   <span className="text-[10px] text-[#C09573] font-bold">(QR)</span>
                 )}
@@ -92,10 +100,10 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                 type="button"
                 onClick={() => setIsCartOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#C09573]/50 text-xs font-bold text-[#35271F] shadow-xs hover:border-[#C09573] hover:bg-[#EAE5DF] transition-all cursor-pointer"
-                title="Escolher mesa onde está sentado"
+                title={t('chooseTable')}
               >
                 <UtensilsCrossed className="w-3.5 h-3.5 text-[#C09573]" />
-                <span>Mesa?</span>
+                <span>{t('tableQuestion')}</span>
               </button>
             )}
 
@@ -133,20 +141,20 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#35271F]/60 backdrop-blur-xs border border-[#C09573]/40 text-[10px] uppercase tracking-wider font-extrabold text-[#C09573] mb-1">
                   <Sparkles className="w-2.5 h-2.5 text-[#C09573]" />
-                  <span>Vila das Aves</span>
+                  <span>{t('heroLocation')}</span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-xs">
-                  Escolhe o que te apetece.
+                  {t('heroTitle')}
                 </h1>
                 <p className="text-xs text-[#EAE5DF] font-medium hidden sm:block mt-0.5">
-                  Pizzas de fermentação lenta, caracóizzz artesanais &amp; burgers
+                  {t('heroSubtitle')}
                 </p>
               </div>
 
               {/* Selo Minimalista "Aberto" */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shrink-0 shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#C09573] animate-pulse" />
-                <span>Aberto</span>
+                <span>{t('open')}</span>
               </div>
             </div>
           </div>
