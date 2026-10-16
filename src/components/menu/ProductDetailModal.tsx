@@ -41,15 +41,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const totalPrice = product.price * quantity;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#35271F]/40 animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-250 border border-zinc-200/80"
+        className="relative w-full max-w-lg bg-[#FFFFFF] rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-250 border border-[#E5DED6] text-[#35271F]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md text-zinc-700 hover:text-black border border-zinc-200 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
+          className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF] border border-[#E5DED6] flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
           aria-label="Fechar"
         >
           <X className="w-4 h-4" />
@@ -57,7 +57,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         {/* Hero Image (if available) */}
         {product.imageUrl && (
-          <div className="relative h-48 sm:h-56 w-full bg-zinc-100 shrink-0">
+          <div className="relative h-48 sm:h-56 w-full bg-[#EAE5DF] shrink-0 border-b border-[#E5DED6]">
             <Image
               src={product.imageUrl}
               alt={product.name}
@@ -144,29 +144,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: sem cebola, sem molho picante, bem passado..."
-              className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm text-[#141619] placeholder-zinc-400 focus:outline-none focus:border-[#15803D] focus:bg-white transition-colors resize-none"
+              className="w-full px-3 py-2 rounded-xl bg-[#F5F4F1] border border-[#E5DED6] text-xs sm:text-sm text-[#35271F] placeholder-[#A89F95] focus:outline-none focus:border-[#C09573] focus:bg-white transition-colors resize-none"
             />
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-zinc-50 border-t border-zinc-200/80 flex items-center justify-between gap-3">
+        <div className="p-4 bg-[#F5F4F1] border-t border-[#E5DED6] flex items-center justify-between gap-3">
           {/* Quantity Controls */}
-          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-xl p-1 shrink-0 shadow-2xs">
+          <div className="flex items-center gap-2 bg-[#FFFFFF] border border-[#E5DED6] rounded-xl p-1 shrink-0 shadow-2xs">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               disabled={quantity <= 1}
-              className="w-7 h-7 rounded-lg bg-zinc-100 hover:bg-zinc-200 disabled:opacity-40 text-zinc-800 flex items-center justify-center transition-colors active:scale-90 cursor-pointer"
+              className="w-7 h-7 rounded-lg bg-[#EAE5DF] hover:bg-[#E5DED6] disabled:opacity-40 text-[#35271F] flex items-center justify-center transition-colors active:scale-90 cursor-pointer"
               aria-label="Diminuir"
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
-            <span className="text-xs sm:text-sm font-bold text-[#141619] w-5 text-center">
+            <span className="text-xs sm:text-sm font-bold text-[#35271F] w-5 text-center">
               {quantity}
             </span>
             <button
               onClick={() => setQuantity((q) => q + 1)}
-              className="w-7 h-7 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 flex items-center justify-center transition-colors active:scale-90 cursor-pointer"
+              className="w-7 h-7 rounded-lg bg-[#EAE5DF] hover:bg-[#E5DED6] text-[#35271F] flex items-center justify-center transition-colors active:scale-90 cursor-pointer"
               aria-label="Aumentar"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -177,10 +177,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <button
             onClick={handleAddToCart}
             disabled={!product.available}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-[#15803D] hover:bg-[#166534] disabled:bg-zinc-200 text-white disabled:text-zinc-400 font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-xs active:scale-[0.99] cursor-pointer"
+            className="flex-1 py-2.5 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] disabled:bg-[#EAE5DF] text-[#F5F4F1] disabled:text-[#A89F95] font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-xs active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
           >
-            <span>Adicionar ao pedido</span>
-            <span>{formatCurrency(totalPrice)}</span>
+            <span>{product.available ? 'Adicionar ao pedido' : 'Temporariamente Esgotado'}</span>
+            {product.available && <span>{formatCurrency(totalPrice)}</span>}
           </button>
         </div>
       </div>

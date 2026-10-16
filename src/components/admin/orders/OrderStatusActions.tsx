@@ -144,7 +144,7 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('completed')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gulas-dark hover:bg-black active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-zinc-800 focus-visible:outline-none cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] active:scale-[0.98] text-[#F5F4F1] text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[#5E4939] focus-visible:outline-none cursor-pointer"
               aria-label={`Concluir entrega do pedido número ${orderNumber}`}
             >
               {isUpdating && activeNextStatus === 'completed' ? (

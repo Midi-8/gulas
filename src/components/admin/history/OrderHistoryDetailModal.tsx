@@ -2,16 +2,18 @@ import React, { useEffect } from 'react';
 import { ManagedOrder } from '@/actions/order-management';
 import { OrderStatusBadge } from '../orders/OrderStatusBadge';
 import { OrderItemsList } from '../orders/OrderItemsList';
-import { X, Calendar, Clock, MessageSquare } from 'lucide-react';
+import { X, Calendar, Clock, MessageSquare, Undo2 } from 'lucide-react';
 
 interface OrderHistoryDetailModalProps {
   order: ManagedOrder | null;
   onClose: () => void;
+  onReopen?: (order: ManagedOrder) => void;
 }
 
 export function OrderHistoryDetailModal({
   order,
   onClose,
+  onReopen,
 }: OrderHistoryDetailModalProps) {
   useEffect(() => {
     if (!order) return;
@@ -54,24 +56,24 @@ export function OrderHistoryDetailModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="history-order-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#35271F]/40 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E5DED6] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-zinc-200/80 flex items-start justify-between bg-zinc-50/50">
+        <div className="p-5 border-b border-[#E5DED6] flex items-start justify-between bg-[#F5F4F1]">
           <div>
             <div className="flex items-center gap-2">
               <span
                 id="history-order-modal-title"
-                className="text-2xl font-black text-gulas-dark tracking-tight"
+                className="text-2xl font-black text-[#35271F] tracking-tight"
               >
                 #{order.orderNumber}
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-zinc-900 text-white text-xs font-bold uppercase">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#5E4939] text-[#F5F4F1] text-xs font-bold uppercase">
                 Mesa {order.tableNumber}
               </span>
               <OrderStatusBadge status={order.status} size="sm" />
@@ -131,7 +133,7 @@ export function OrderHistoryDetailModal({
         </div>
 
         {/* Footer Financials */}
-        <div className="p-5 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between">
+        <div className="p-5 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between gap-3">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-400 block">
               Subtotal: {formatPrice(order.subtotal)}
@@ -141,13 +143,26 @@ export function OrderHistoryDetailModal({
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-gulas-dark hover:bg-black text-white text-xs font-bold focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none transition-all cursor-pointer"
-          >
-            Fechar
-          </button>
+          <div className="flex items-center gap-2">
+            {order.status === 'completed' && onReopen && (
+              <button
+                type="button"
+                onClick={() => onReopen(order)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:outline-none transition-all cursor-pointer"
+                aria-label={`Desfazer conclusão do pedido ${order.orderNumber}`}
+              >
+                <Undo2 className="w-4 h-4" />
+                Desfazer conclusão
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl bg-gulas-dark hover:bg-black text-white text-xs font-bold focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none transition-all cursor-pointer"
+            >
+              Fechar
+            </button>
+          </div>
         </div>
       </div>
     </div>

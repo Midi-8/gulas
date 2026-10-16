@@ -1,84 +1,86 @@
-'use client';
-
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface UseOrdersRealtimeOptions {
   restaurantId: string;
   onOrdersChange: () => void | Promise<void>;
+  onNewOrder?: (orderId: string) => void;
   debounceMs?: number;
 }
 
 export function useOrdersRealtime({
   restaurantId,
   onOrdersChange,
+  onNewOrder,
   debounceMs = 300,
 }: UseOrdersRealtimeOptions) {
   const [isConnected, setIsConnected] = useState(false);
   const callbackRef = useRef(onOrdersChange);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const onNewOrderRef = useRef(onNewOrder);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Keep latest callback reference without re-triggering subscription effect
   useEffect(() => {
     callbackRef.current = onOrdersChange;
   }, [onOrdersChange]);
 
   useEffect(() => {
-    if (!restaurantId) return;
+    onNewOrderRef.current = onNewOrder;
+  }, [onNewOrder]);
+
+  useEffect(() => {
+    if (!restaurantId) {
+      return;
+    }
 
     const supabase = createClient();
-    if (!supabase) return;
+
+    if (!supabase) {
+      return;
+    }
 
     let isMounted = true;
     let channel: RealtimeChannel | null = null;
 
-    // Helper to debounce multiple events into a single server refresh
     const triggerDebouncedUpdate = (eventName: string) => {
       if (process.env.NODE_ENV !== 'production') {
         console.log(
-          `[Realtime KDS] Evento ${eventName} recebido para restaurant_id=${restaurantId}. A solicitar dados autorizados ao servidor...`
+          `[Realtime KDS] Evento ${eventName} recebido para restaurant_id=${restaurantId}.`
         );
       }
+
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+
       debounceTimerRef.current = setTimeout(() => {
-        callbackRef.current();
+        void callbackRef.current();
       }, debounceMs);
     };
 
     const setupSubscription = async () => {
-      // 1. Obter sessão atual autenticada
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
-      const session = sessionData?.session;
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError || !session) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn(
-            '[Realtime KDS] Nenhuma sessão ativa encontrada. Subscrição Realtime suspensa.'
-          );
+        if (isMounted) {
+          setIsConnected(false);
         }
-        if (isMounted) setIsConnected(false);
         return;
       }
 
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(
-          '[Realtime KDS] Sessão ativa encontrada. A configurar autenticação do WebSocket Realtime...'
-        );
-      }
-
-      // 2. Configurar o token JWT no cliente Realtime antes de subscrever
       if (session.access_token) {
         await supabase.realtime.setAuth(session.access_token);
       }
 
-      if (!isMounted) return;
+      if (!isMounted) {
+        return;
+      }
 
-      // 3. Criar canal único por restaurante
       const channelName = `kds-orders-${restaurantId}`;
+
       channel = supabase
         .channel(channelName)
         .on(
@@ -89,7 +91,16 @@ export function useOrdersRealtime({
             table: 'orders',
             filter: `restaurant_id=eq.${restaurantId}`,
           },
-          () => {
+          (payload) => {
+            if (onNewOrderRef.current && payload.new && typeof payload.new === 'object') {
+              const record = payload.new as Record<string, unknown>;
+              const orderId = typeof record.id === 'string' ? record.id : null;
+
+              if (orderId) {
+                onNewOrderRef.current(orderId);
+              }
+            }
+
             triggerDebouncedUpdate('INSERT');
           }
         )
@@ -118,15 +129,16 @@ export function useOrdersRealtime({
           }
         )
         .subscribe((status) => {
-          if (!isMounted) return;
-
-          if (process.env.NODE_ENV !== 'production') {
-            console.log(`[Realtime KDS] Subscription status: ${status}`);
+          if (!isMounted) {
+            return;
           }
 
           if (status === 'SUBSCRIBED') {
             setIsConnected(true);
-          } else if (
+            return;
+          }
+
+          if (
             status === 'CLOSED' ||
             status === 'CHANNEL_ERROR' ||
             status === 'TIMED_OUT'
@@ -136,35 +148,83 @@ export function useOrdersRealtime({
         });
     };
 
-    setupSubscription();
+    void setupSubscription();
 
-    // 4. Escutar alterações de autenticação (refresh de token, novo login)
+    const handleReconciliation = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(
+          `[Realtime KDS] Reconciliação ativada (ecrã ativo / rede online) para restaurant_id=${restaurantId}.`
+        );
+      }
+
+      // 1. Forçar sincronização imediata dos pedidos
+      void callbackRef.current();
+
+      // 2. Se o canal estiver desligado ou em erro, reestabelecer subscrição
+      if (channel && (channel.state === 'closed' || channel.state === 'errored')) {
+        void channel.subscribe();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        handleReconciliation();
+      }
+    };
+
+    const handleOnline = () => {
+      handleReconciliation();
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+    }
+
     const {
       data: { subscription: authListener },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[Realtime KDS] AuthStateChange: ${event}`);
-      }
       if (newSession?.access_token) {
         await supabase.realtime.setAuth(newSession.access_token);
-      } else if (event === 'SIGNED_OUT') {
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
         if (channel) {
-          supabase.removeChannel(channel);
+          void supabase.removeChannel(channel);
           channel = null;
         }
-        if (isMounted) setIsConnected(false);
+
+        if (isMounted) {
+          setIsConnected(false);
+        }
       }
     });
 
-    // Cleanup
     return () => {
       isMounted = false;
+
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+      }
+
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+
       authListener.unsubscribe();
+
       if (channel) {
-        supabase.removeChannel(channel);
+        void supabase.removeChannel(channel);
       }
     };
   }, [restaurantId, debounceMs]);
