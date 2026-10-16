@@ -1,4 +1,4 @@
-﻿# Gulas Platform â€” Digital Menu, Kitchen Display & Business Intelligence
+# Gulas Platform â€” Digital Menu, Kitchen Display & Business Intelligence
 
 Plataforma digital para restauraÃ§Ã£o e pedidos de mesa, concebida de raiz com arquitetura multi-tenant, zero-trust frontend, transaÃ§Ãµes atÃ³micas em base de dados, monitor de cozinha KDS em tempo real, acompanhamento de pedidos ao vivo no cliente (Live Order Tracking) e centro de comando analÃ­tico executivo (Business Intelligence).
 
@@ -325,53 +325,70 @@ npm run build
 ## 12. PolÃ­ticas de SeguranÃ§a e Boas PrÃ¡ticas
 
 1. **PrincÃ­pio do Menor PrivilÃ©gio:** A chave privilegiada `service_role` nunca Ã© exposta no cliente nem em Server Actions com execuÃ§Ã£o de utilizador.
-2. **Isolamento de Restaurante no Servidor:** Todas as consultas e mutaÃ§Ãµes administrativas filtram estritamente por `restaurant_id` resolvido via `getAuthenticatedStaff()`.
+2. **Isolamento de Restaurante no Servidor:** Todas as consultas e mutações administrativas filtram estritamente por `restaurant_id` resolvido via `getAuthenticatedStaff()`.
 3. **ResiliÃªncia a DesconexÃµes:** Os hooks de subscriÃ§Ã£o em tempo real detetam automaticamente eventos de suspensÃ£o de ecrÃ£ (`visibilitychange`) e retoma de ligaÃ§Ã£o de rede (`online`), efetuando reconciliaÃ§Ãµes forÃ§adas com a base de dados.
 4. **ResoluÃ§Ãµes Seguras de Custos:** Caso o custo de um produto nÃ£o esteja configurado, o motor de BI aplica estimativas com base em margens padrÃ£o da restauraÃ§Ã£o (32%), evitando divisÃµes por zero ou falhas de processamento.
 5. **Estabilidade de Snapshot em SSR:** Todas as leituras locais de estado baseadas em `useSyncExternalStore` utilizam referÃªncias imutÃ¡veis de mÃ³dulo, prevenindo loops de re-renderizaÃ§Ã£o infinitos entre o servidor e o cliente.
 
 ---
 
-## 13. Procedimento Seguro de Limpeza de Pedidos de Teste
+## 13. Procedimento de Limpeza de Pedidos de Teste (Procedimento Manual)
 
-Para repor o estado limpo da base de dados antes da entrada em operaç\u00e3o real, foi desenvolvido um procedimento transacional com c\u00f3pia de salvaguarda em supabase/migrations/20261015_clean_test_orders.sql.
+Para repor o estado limpo da base de dados antes do arranque operacional, foi preparado o script manual em:
+supabase/manual_procedures/clean_test_orders.sql
 
 > [!WARNING]
-> A instruç\u00e3o DELETE FROM public.order_items; DELETE FROM public.orders; elimina **todos** os registos existentes nestas tabelas e n\u00e3o apenas pedidos de teste da Mesa 4. Os contadores de pedidos (estaurant_counters) e o cat\u00e1logo s\u00e3o preservados intactos.
+> **Aviso Crítico de Risco Operacional:**
+> - O comando DELETE FROM public.order_items; DELETE FROM public.orders; elimina **todos** os registos destas duas tabelas (não apenas a Mesa 4).
+> - **Isolamento de Migrações:** O script foi expressamente colocado fora de supabase/migrations para prevenir que ferramentas de CI/CD ou supabase db push apaguem pedidos acidentalmente durante deploys.
+> - **Risco de Reexecução:** Se este procedimento for corrido com o restaurante em laboração real, haverá perda de vendas ativas. Só deve ser executado no momento da transição pré-produção.
+> - **Estado:** **PROCEDIMENTO MANUAL PREPARADO (NÃO EXECUTADO)**. Não foi executado nem aplicado à base de dados.
 
-### Protocolo de Execuç\u00e3o Segura:
-1. **C\u00f3pia Recuper\u00e1vel Transit\u00f3ria:** Antes de qualquer remoç\u00e3o, o script arquiva automaticamente os registos em _backup_orders_20261015 e _backup_order_items_20261015.
-2. **Verificaç\u00e3o de Contagens (Pr\u00e9 e P\u00f3s):** O bloco PL/pgSQL valida e imprime as contagens antes do DELETE e confirma se o total remanescente \u00e9 rigorosamente 0.
-3. **Transacionalidade At\u00f3mica:** Todo o processo ocorre dentro de BEGIN ... COMMIT. Se ocorrer qualquer erro, \u00e9 executado ROLLBACK autom\u00e1tico.
-4. **Estado Atual:** **PREPARADO LOCALMENTE (N\u00c3O EXECUTADO)**. Aguarda autorizaç\u00e3o e execuç\u00e3o manual via Supabase SQL Editor.
+### Protocolo de Proteção e Salvaguarda:
+1. **Schema de Arquivo Restrito (_backup_archive):** O backup não é colocado no schema public. Cria o schema _backup_archive e revoga todos os privilégios a PUBLIC, non e uthenticated, concedendo acesso exclusivo a postgres e service_role.
+2. **Snapshots com Carimbo Temporal Único:** Gera tabelas carimbadas dinamicamente (orders_snapshot_YYYYMMDD_HH24MISS), eliminando o risco do CREATE TABLE IF NOT EXISTS reutilizar backups antigos sem salvar os dados atuais.
+3. **Rollback e Retenção:** O script documenta o comando de restauração a partir do snapshot carimbado e fixa uma retenção recomendada de 15 a 30 dias antes de DROP SCHEMA _backup_archive CASCADE.
 
 ---
 
-## 14. Seguran\u00e7a Supabase, RLS & Isolamento Multi-Tenant
+## 14. Auditoria de Segurança Supabase, RLS & Autorização de Pedidos
 
-Auditoria e refor\u00e7o de seguran\u00e7a formalizados na migraç\u00e3o supabase/migrations/20261015_security_audit_and_rls_hardening.sql:
+Migração proposta e especificada em:
+supabase/migrations/20261015_security_audit_and_rls_hardening.sql
 
-### Matriz de Controlo de Acessos
-| Tabela / Recurso | Utilizador An\u00f3nimo (Cliente) | Staff Autenticado (Pr\u00f3prio Restaurante) | Staff (Outro Restaurante) |
+> [!IMPORTANT]
+> **Estado de Implementação:** **ESPECIFICADO LOCALMENTE (NÃO APLICADO REMOTAMENTE)**. As alterações de RLS, grants e RPC requerem revisão e execução controlada no Supabase SQL Editor. Não foram aplicadas na base de dados remota.
+
+### Matriz de Controlo de Acessos Proposta
+| Tabela / Recurso | Utilizador Anónimo (Cliente) | Staff Autenticado (Próprio Restaurante) | Staff (Outro Restaurante) |
 | :--- | :--- | :--- | :--- |
 | estaurants | SELECT (Apenas se is_active = true) | SELECT / UPDATE (id = profile.restaurant_id) | Bloqueado |
 | categories | SELECT (is_active = true de rest. ativo) | ALL (estaurant_id = profile.restaurant_id) | Bloqueado |
-| products | SELECT (Colunas p\u00fablicas; **cost revogado**) | ALL (estaurant_id = profile.restaurant_id) | Bloqueado |
+| products | SELECT (Colunas públicas; **cost revogado**) | ALL (estaurant_id = profile.restaurant_id) | Bloqueado (cost não acessível) |
 | 	ables | SELECT (is_active = true de rest. ativo) | ALL (estaurant_id = profile.restaurant_id) | Bloqueado |
-| orders | Bloqueado para SELECT direto (Acesso via RPC get_public_order_status por UUID) | ALL (estaurant_id = profile.restaurant_id) | Bloqueado |
-| order_items | Bloqueado para SELECT direto | ALL (order_id pertencente ao restaurante do staff) | Bloqueado |
+| orders | Bloqueado para SELECT direto | ALL (estaurant_id = profile.restaurant_id) | Bloqueado |
+| order_items | Bloqueado para SELECT direto | ALL (order_id do restaurante do staff) | Bloqueado |
 | estaurant_counters | Bloqueado | SELECT (estaurant_id = profile.restaurant_id) | Bloqueado |
 
-### Pontos Chave de Seguran\u00e7a Implementados:
-* **Revogaç\u00e3o de Public Read Orders:** Eliminada a pol\u00edtica aberta USING (true) que expunha todos os pedidos a qualquer utilizador com a chave p\u00fablica.
-* **RPC Segura de Estado de Pedido (get_public_order_status):** Clientes an\u00f3nimos s\u00f3 conseguem consultar o estado do seu pr\u00f3prio pedido se fornecerem o UUID exato retornado aquando da criaç\u00e3o, sem expor margens ou custos internos.
-* **Proteç\u00e3o Column-Level de Custos:** A coluna cost de products foi omitida da projeç\u00e3o do menu p\u00fablico e o seu grant revogado para non.
+### Vetores de Segurança Auditados e Corrigidos no Código:
+1. **Revogação de Public Read Orders:** Elimina a migração 20261012_public_read_orders.sql que concedia USING (true), expondo todos os pedidos a qualquer utilizador com a chave anon.
+2. **Autorização Real do Cliente via 	racking_token:**
+   - O UUID do pedido por si só **não é prova de propriedade**.
+   - A arquitetura prevê a introdução de 	racking_token VARCHAR(64) gerado na criação do pedido, retornado unicamente ao cliente que submeteu o carrinho e persistido localmente.
+   - A RPC get_public_order_status(p_order_id, p_tracking_token) valida o par exato (id, tracking_token), rejeitando consultas não autorizadas.
+3. **Proteção Anti-Escalação em profiles:**
+   - Criação de trigger protect_profile_privileges para impedir que utilizadores autenticados alterem o seu estaurant_id (troca de tenant) ou promovam o seu ole para owner via cliente.
+4. **Isolamento de Custos (products.cost):**
+   - O serviço do menu público (estaurantService.ts) projeta apenas campos públicos, omitindo cost.
+   - Na base de dados, revoga-se SELECT (cost) a non e utilizadores uthenticated que não sejam o staff autorizado do restaurante.
+5. **Realtime e RLS:**
+   - Ao revogar o SELECT aberto em orders, subscrições genéricas de postgres_changes por clientes anónimos não recebem eventos. A arquitetura suporta sincronização via canais de roadcast do Supabase e reconciliação sob demanda via Server Action.
 
 ---
 
-## 15. Configuraç\u00e3o de Vari\u00e1veis de Ambiente & Produç\u00e3o
+## 15. Configuração de Variáveis de Ambiente & Produção
 
-### Ficheiro Local (.env.local \u2014 Ignorado pelo Git):
+### Setup Local (.env.local — Ignorado pelo Git):
 `env
 NEXT_PUBLIC_SUPABASE_URL=https://emjhabwmuvmjwshbkgvt.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u
@@ -380,53 +397,59 @@ NEXT_PUBLIC_DEFAULT_RESTAURANT_SLUG=gulas
 `
 
 > [!NOTE]
-> O c\u00f3digo suporta tanto NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY como NEXT_PUBLIC_SUPABASE_ANON_KEY. Ambas est\u00e3o alinhadas para a chave p\u00fablica v\u00e1lida. Chaves privilegiadas (service_role) n\u00e3o se encontram expostas nem s\u00e3o necess\u00e1rias no cliente.
+> O código suporta tanto NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY como NEXT_PUBLIC_SUPABASE_ANON_KEY. Ambas estão alinhadas localmente para evitar sobreposições. As chaves privilegiadas (service_role) permanecem restritas ao servidor e não estão configuradas no cliente.
 
-### Requisitos para Produç\u00e3o (Vercel / Hosting Remoto):
-Configurar nas vari\u00e1veis de ambiente do projeto (ambientes **Production** e **Preview**):
-* NEXT_PUBLIC_SUPABASE_URL
-* NEXT_PUBLIC_SUPABASE_ANON_KEY
-* NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-* NEXT_PUBLIC_DEFAULT_RESTAURANT_SLUG
+### Requisitos de Produção (Vercel / Hosting Remoto):
+* **Estado:** **PREPARADA LOCALMENTE (PENDENTE DE CONFIGURAÇÃO NO HOSTING)**.
+* **Ações Necessárias no Painel do Alojamento (Ambientes Production e Preview):**
+  * NEXT_PUBLIC_SUPABASE_URL
+  * NEXT_PUBLIC_SUPABASE_ANON_KEY
+  * NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  * NEXT_PUBLIC_DEFAULT_RESTAURANT_SLUG
 
 ---
 
 ## 16. Tablet da Cozinha: PWA Manifest & Screen Wake Lock
 
 ### 1. Web App Manifest (src/app/manifest.ts)
-* **Nome:** Gulas KDS \u2014 Monitor de Cozinha (short_name: Gulas KDS)
-* **Rota Inicial:** /admin/orders (preserva autenticaç\u00e3o e redireciona para /admin/login se n\u00e3o autenticado)
-* **Modo de Exibiç\u00e3o:** standalone em orientaç\u00e3o landscape (horizontal de bancada)
-* **\u00cdcones Produzidos:** 
-  * public/icons/icon-192x192.png (PNG v\u00e1lido 192x192)
-  * public/icons/icon-512x512.png (PNG v\u00e1lido 512x512)
-  * public/icons/apple-touch-icon.png (180x180 para iPadOS)
-  * public/icons/icon.svg (Vetor SVG de alta definiç\u00e3o)
+* **Nome:** Gulas KDS — Monitor de Cozinha (short_name: Gulas KDS)
+* **Rota Inicial:** /admin/orders (preserva autenticação e redireciona para /admin/login se a sessão expirar).
+* **Display:** standalone com orientação landscape para bancada.
+* **Ícones Produzidos (Respeitando a identidade oficial em public/images/logo.svg):**
+  * public/icons/icon-192x192.png (PNG válido 192x192)
+  * public/icons/icon-512x512.png (PNG válido 512x512)
+  * public/icons/apple-touch-icon.png (PNG 180x180 para iPadOS)
+  * public/icons/icon.svg (Vetor SVG centrado no emblema original da marca)
 
 ### 2. Screen Wake Lock (src/hooks/useScreenWakeLock.ts)
-Integrado no componente OrderDashboard.tsx:
-* Solicita o bloqueio de suspens\u00e3o de ecr\u00e3 (screen) de forma segura.
-* Monitoriza mudan\u00e7as de visibilidade (isibilitychange) e recupera o lock automaticamente ao regressar \u00e0 p\u00e1gina.
-* Trata o evento elease do sistema operativo sem quebrar a aplicaç\u00e3o.
-* Compatibilidade com React Strict Mode (limpeza correta de listeners e sentinelas ass\u00edncronas na desmontagem).
-* Indicador visual discreto e acess\u00edvel no topo do KDS com bot\u00e3o de comutaç\u00e3o / tentativa manual.
+Implementado no componente OrderDashboard.tsx:
+* **Consistência SSR / Hidratação:** Renderização inicial neutra que previne hydration mismatch entre o servidor Next.js e o cliente.
+* **Identificador de Geração (generationRef):** Protege contra *stale promises*. Se o utilizador desativar o lock ou o componente desmontar enquanto o browser ainda está a processar a solicitação, o sentinel obtido é descartado de imediato e o lock não é reativado.
+* **Isolamento de Sentinelas:** Listeners antigos não afetam novos locks.
+* **Recuperação de Foco:** Reativação automática ao regressar à página (isibilitychange).
+* **Design e Acessibilidade:** Indicador visual discreto e acessível (Sun/SunDim) integrado no cabeçalho operacional do KDS, com botão para manter ecrã ativo ou tentar novamente sem bloquear pedidos.
 
-> [!IMPORTANT]
-> **Limites T\u00e9cnicos do Wake Lock:**
+> [!WARNING]
+> **Limitações Técnicas Reais do Wake Lock:**
 > - Exige contexto seguro (HTTPS ou localhost).
-> - N\u00e3o impede todas as formas de suspens\u00e3o geridas pelo sistema operativo (bateria cr\u00edtica, bot\u00e3o f\u00edsico de energia).
-> - N\u00e3o bloqueia o tablet numa \u00fanica aplicaç\u00e3o. Para um Kiosk Mode completo na cozinha, deve ativar-se o modo "Fixar Aplicaç\u00e3o" (Android Pinning) ou "Acesso Guiado" (iPadOS Guided Access) nas definiç\u00f5es f\u00edsicas do tablet.
+> - Depende do suporte do browser e da política de energia do dispositivo (bateria fraca ou botão físico de energia do tablet desligam o ecrã).
+> - Não impede a saída da aplicação. Para ambiente de quiosque industrial na cozinha, deve configurar-se o tablet com "Fixar Aplicação" (Android) ou "Acesso Guiado" (iPadOS).
 
 ---
 
-## 17. Registo de Testes e Validaç\u00e3o
+## 17. Registo Rigoroso de Testes e Validação
 
-* **Compilaç\u00e3o TypeScript (
-px tsc --noEmit):** 0 erros.
-* **An\u00e1lise Est\u00e1tica (
-pm run lint):** 0 erros e 0 avisos.
-* **Build de Produç\u00e3o (
-pm run build):** Sucesso integral, incluindo rotas din\u00e2micas e rota est\u00e1tica /manifest.webmanifest.
-* **Projeç\u00e3o de Dados:** Confirmada aus\u00eancia de exposiç\u00e3o de cost no menu digital p\u00fablico.
-* **Testes em Dispositivo F\u00edsico:** Pendentes de validaç\u00e3o em tablet real de bancada na cozinha do restaurante.
-* **Registo de Horas:** O controlo de horas do projeto deve ser atualizado com tempos reais ap\u00f3s validaç\u00e3o operacional.
+De forma a manter rigor técnico e transparência:
+
+| Tipologia de Verificação | Estado | Evidência / Resultado |
+| :--- | :--- | :--- |
+| **Verificação Estática (ESLint)** | **Executado & Aprovado** | 
+pm run lint passou com 0 erros e 0 avisos. |
+| **Verificação de Tipos (TypeScript)** | **Executado & Aprovado** | 
+px tsc --noEmit passou com 0 erros de compilação. |
+| **Compilação de Produção (Next.js Build)** | **Executado & Aprovado** | 
+pm run build gerou com sucesso 11 rotas e /manifest.webmanifest. |
+| **Teste em Navegador Local** | **Executado** | Dev server ativo em localhost:3000, testados ciclos de renderização e rotas. |
+| **Teste de Integração Supabase** | **Pendente de Aplicação Remota** | SQL preparado e validado sintaticamente; execução e testes em base de dados remota pendentes de autorização. |
+| **Teste Físico em Tablet de Cozinha** | **Pendente** | Requer teste prático de bancada num tablet físico na cozinha do restaurante. |
+| **Registo de Horas** | **Pendente de Atualização** | O controlo de horas do projeto deve ser atualizado com tempos reais pelo operador. |
