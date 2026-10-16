@@ -347,6 +347,7 @@ export interface Database {
       get_public_order_status: {
           Args: {
             p_order_id: string;
+            p_tracking_token?: string | null;
           };
           Returns: Json;
         };
@@ -375,4 +376,5 @@ export interface Database {
     };
   };
 }
+
 
