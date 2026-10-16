@@ -1,26 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  /* Gulas Brand Colors */
-  --gulas-green: #15803d;         /* Vibrant gastronomic forest green */
-  --gulas-green-hover: #166534;   /* Darker shade for active/hover */
-  --gulas-green-subtle: #f0fdf4;  /* Light green tint for badges & subtle highlights */
-  --gulas-green-border: #bbf7d0;  /* Subtle green border */
+  /* Gulas Brand Colors (Nova Identidade Visual Oficial) */
+  --gulas-bg-main: #F5F4F1;        /* Fundo Principal (Branco Quente) */
+  --gulas-bg-alt: #EAE5DF;         /* Fundo Alternativo / Superfícies Suaves */
+  --gulas-card: #FFFFFF;           /* Superfícies de Cartões / Containers */
+  --gulas-border: #E5DED6;         /* Bordas e Divisórias Suaves */
+  --gulas-charcoal: #0C0F14;       /* Preto Carvão (Contraste / Topbar / Rodapé) */
+  
+  --gulas-primary: #5E4939;        /* Identidade Principal (Castanho Escuro) */
+  --gulas-primary-deep: #4C392D;   /* Identidade Profunda (Castanho Profundo) */
+  --gulas-primary-hover: #453426;  /* Hover do Botão Principal */
+  
+  --gulas-title: #35271F;          /* Texto Principal (Títulos) */
+  --gulas-body: #4C453F;           /* Texto Corrido / Corpo */
+  --gulas-text-on-dark: #F5F4F1;   /* Texto em Fundos Escuros */
+  
+  --gulas-caramel: #C09573;        /* Cor de Destaque / Acento (Caramelo) */
+  --gulas-caramel-hover: #A77B59;  /* Hover de Destaque (Caramelo Escuro) */
 
-  --gulas-dark: #141619;          /* Deep rich charcoal for typography & accents */
-  --gulas-dark-secondary: #272a30;/* Secondary dark tone */
+  /* Mapeamento retrocompatível para transição suave de classes legadas */
+  --gulas-cream: var(--gulas-bg-main);
+  --gulas-white: var(--gulas-card);
+  --gulas-dark: var(--gulas-title);
+  --gulas-dark-secondary: var(--gulas-body);
 
-  --gulas-cream: #faf8f5;         /* Warm appetizing off-white background */
-  --gulas-white: #ffffff;         /* Pure white for product cards & modals */
+  --gulas-green: var(--gulas-primary);
+  --gulas-green-hover: var(--gulas-primary-hover);
+  --gulas-green-subtle: #F9F6F0;
+  --gulas-green-border: var(--gulas-border);
 
-  /* Neutral palette */
-  --gulas-gray-100: #f4f4f5;
-  --gulas-gray-200: #e4e4e7;
-  --gulas-gray-300: #d4d4d8;
-  --gulas-gray-400: #a1a1aa;
-  --gulas-gray-500: #71717a;
-  --gulas-gray-700: #3f3f46;
-  --gulas-gray-900: #18181b;
+  --gulas-gray-100: var(--gulas-bg-alt);
+  --gulas-gray-200: var(--gulas-border);
+  --gulas-gray-300: #DDD5CB;
+  --gulas-gray-400: #A89F95;
+  --gulas-gray-500: var(--gulas-body);
+  --gulas-gray-600: var(--gulas-body);
+  --gulas-gray-700: var(--gulas-primary-deep);
+  --gulas-gray-900: var(--gulas-title);
 
   /* Border Radii */
   --radius-sm: 8px;
@@ -30,11 +47,28 @@
   --radius-pill: 9999px;
 
   /* Baseline */
-  --background: var(--gulas-cream);
-  --foreground: var(--gulas-dark);
+  --background: var(--gulas-bg-main);
+  --foreground: var(--gulas-title);
 }
 
 @theme inline {
+  --color-gulas-bg-main: var(--gulas-bg-main);
+  --color-gulas-bg-alt: var(--gulas-bg-alt);
+  --color-gulas-card: var(--gulas-card);
+  --color-gulas-border: var(--gulas-border);
+  --color-gulas-charcoal: var(--gulas-charcoal);
+
+  --color-gulas-primary: var(--gulas-primary);
+  --color-gulas-primary-deep: var(--gulas-primary-deep);
+  --color-gulas-primary-hover: var(--gulas-primary-hover);
+
+  --color-gulas-title: var(--gulas-title);
+  --color-gulas-body: var(--gulas-body);
+  --color-gulas-text-on-dark: var(--gulas-text-on-dark);
+
+  --color-gulas-caramel: var(--gulas-caramel);
+  --color-gulas-caramel-hover: var(--gulas-caramel-hover);
+
   --color-gulas-green: var(--gulas-green);
   --color-gulas-green-hover: var(--gulas-green-hover);
   --color-gulas-green-subtle: var(--gulas-green-subtle);
@@ -71,8 +105,8 @@ html {
 }
 
 body {
-  background-color: var(--gulas-cream);
-  color: var(--gulas-dark);
+  background-color: var(--gulas-bg-main);
+  color: var(--gulas-title);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";

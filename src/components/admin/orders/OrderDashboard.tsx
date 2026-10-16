@@ -10,6 +10,7 @@ import React, {
 import {
   ManagedOrder,
   getActiveOrders,
+  reopenCompletedOrder,
   updateOrderStatus,
 } from '@/actions/order-management';
 import { ValidNextStatus } from '@/lib/validations/order-management';
@@ -22,6 +23,7 @@ import {
   Bell,
   BellOff,
   BellRing,
+  Boxes,
   Clock,
   Coffee,
   CookingPot,
@@ -31,8 +33,12 @@ import {
   Loader2,
   Radio,
   RotateCcw,
+  Undo2,
   UtensilsCrossed,
+  X,
 } from 'lucide-react';
+import { QuickStockDrawer } from '@/components/admin/stock/QuickStockDrawer';
+import { getRestaurantStockList } from '@/actions/product-stock';
 
 interface OrderDashboardProps {
   restaurantId: string;
@@ -93,6 +99,27 @@ export function OrderDashboard({
   );
 
   const [isRefreshing, startRefreshTransition] = useTransition();
+  const [isStockDrawerOpen, setIsStockDrawerOpen] = useState(false);
+  const [outOfStockCount, setOutOfStockCount] = useState(0);
+
+  const refreshStockCount = useCallback(async () => {
+    try {
+      const res = await getRestaurantStockList();
+      if (res.success) {
+        const outCount = res.data.filter((p) => !p.isAvailable).length;
+        setOutOfStockCount(outCount);
+      }
+    } catch {
+      // Ignorar erros de rede silenciosamente
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void refreshStockCount();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [refreshStockCount]);
 
   const {
     alertsState,
@@ -101,16 +128,34 @@ export function OrderDashboard({
     triggerNewOrderAlert,
   } = useKdsAlerts();
 
+  interface UndoOrderState {
+    orderId: string;
+    orderNumber: number;
+    tableNumber: number;
+    updatedAt: string;
+  }
+
+  const [undoOrder, setUndoOrder] = useState<UndoOrderState | null>(null);
+  const [isUndoing, setIsUndoing] = useState(false);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    setLastRefreshedAt(new Date());
+    const mountTimer = setTimeout(() => {
+      setLastRefreshedAt(new Date());
+    }, 0);
 
     return () => {
+      clearTimeout(mountTimer);
       if (highlightTimerRef.current) {
         clearTimeout(highlightTimerRef.current);
       }
 
       if (announcementTimerRef.current) {
         clearTimeout(announcementTimerRef.current);
+      }
+
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
       }
     };
   }, []);
@@ -252,6 +297,21 @@ export function OrderDashboard({
           previous.filter((order) => order.id !== orderId)
         );
         previousOrderIdsRef.current.delete(orderId);
+
+        if (nextStatus === 'completed') {
+          if (undoTimerRef.current) {
+            clearTimeout(undoTimerRef.current);
+          }
+          setUndoOrder({
+            orderId: currentOrder.id,
+            orderNumber: currentOrder.orderNumber,
+            tableNumber: currentOrder.tableNumber,
+            updatedAt: result.data.updatedAt,
+          });
+          undoTimerRef.current = setTimeout(() => {
+            setUndoOrder(null);
+          }, 6000);
+        }
       } else {
         setOrders((previous) =>
           previous.map((order) =>
@@ -269,6 +329,44 @@ export function OrderDashboard({
       }));
     } finally {
       setUpdatingMap((previous) => ({ ...previous, [orderId]: false }));
+    }
+  };
+
+  const handleUndo = async () => {
+    if (!undoOrder || isUndoing) return;
+
+    setIsUndoing(true);
+    try {
+      const result = await reopenCompletedOrder({
+        orderId: undoOrder.orderId,
+        expectedUpdatedAt: undoOrder.updatedAt,
+      });
+
+      if (!result.success) {
+        if (result.error.code === 'OPTIMISTIC_CONFLICT') {
+          await fetchOrders();
+        }
+        setDashboardError(result.error.message);
+        return;
+      }
+
+      setOrders((previous) => [
+        result.data,
+        ...previous.filter((order) => order.id !== result.data.id),
+      ]);
+      previousOrderIdsRef.current.add(result.data.id);
+      setA11yAnnouncement(
+        `Pedido #${result.data.orderNumber} reaberto com sucesso.`
+      );
+
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+      }
+      setUndoOrder(null);
+    } catch {
+      setDashboardError('Não foi possível reverter a conclusão do pedido.');
+    } finally {
+      setIsUndoing(false);
     }
   };
 
@@ -350,6 +448,22 @@ export function OrderDashboard({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+          {/* Quick Stock Management Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setIsStockDrawerOpen(true)}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#E5DED6] bg-[#FFFFFF] px-3.5 py-2 text-xs font-bold text-[#35271F] shadow-xs transition-all hover:bg-[#EAE5DF] hover:border-[#C09573]/50 sm:text-sm"
+            aria-label="Gerir stock e artigos esgotados"
+          >
+            <Boxes className="h-4 w-4 text-[#C09573]" />
+            <span>Gerir Stock / Esgotados</span>
+            {outOfStockCount > 0 && (
+              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-amber-900 border border-amber-300">
+                {outOfStockCount} esgotados
+              </span>
+            )}
+          </button>
+
           {lastRefreshedAt && (
             <span className="hidden text-xs text-gulas-gray-400 sm:inline-block">
               Última atualização:{' '}
@@ -366,7 +480,7 @@ export function OrderDashboard({
               type="button"
               id="kds-alerts-activate-btn"
               onClick={activateAlerts}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 sm:text-sm"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#5E4939] px-4 py-2.5 text-xs font-bold text-[#F5F4F1] shadow-xs transition-all hover:bg-[#453426] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] sm:text-sm"
               aria-label="Ativar alertas sonoros e de vibração para pedidos novos"
             >
               <Bell className="h-4 w-4" />
@@ -377,11 +491,11 @@ export function OrderDashboard({
               type="button"
               id="kds-alerts-deactivate-btn"
               onClick={deactivateAlerts}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-800 sm:text-sm"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#EAE5DF] border border-[#C09573] px-4 py-2.5 text-xs font-bold text-[#5E4939] shadow-xs transition-all hover:bg-[#E5DED6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C09573] sm:text-sm"
               aria-label="Alertas ativos. Clique para desativar"
               aria-pressed
             >
-              <BellOff className="h-4 w-4" />
+              <BellOff className="h-4 w-4 text-[#C09573]" />
               <span>Alertas ativos</span>
             </button>
           )}
@@ -390,12 +504,13 @@ export function OrderDashboard({
             type="button"
             disabled={isLoading || isRefreshing}
             onClick={handleManualRefresh}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-gulas-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gulas-dark shadow-xs transition-all hover:bg-gulas-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#E5DED6] bg-[#FFFFFF] px-4 py-2.5 text-xs font-bold text-[#35271F] shadow-xs transition-all hover:bg-[#EAE5DF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
             aria-label="Atualizar lista de pedidos"
           >
             <RotateCcw
-              className={`h-4 w-4 text-gulas-gray-600 ${isLoading || isRefreshing ? 'animate-spin' : ''
-                }`}
+              className={`h-4 w-4 text-[#78716C] ${
+                isLoading || isRefreshing ? 'animate-spin' : ''
+              }`}
             />
             <span>Atualizar</span>
           </button>
@@ -403,69 +518,69 @@ export function OrderDashboard({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <div className="flex items-center justify-between rounded-2xl border border-gulas-gray-200 bg-white p-4 shadow-xs sm:p-5">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               Total Ativos
             </span>
-            <p className="mt-0.5 text-2xl font-black text-gulas-dark sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
               {totalActiveCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
             <UtensilsCrossed className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-amber-200/80 bg-white p-4 shadow-xs sm:p-5">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               A Aguardar
             </span>
-            <p className="mt-0.5 text-2xl font-black text-amber-900 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
               {pendingCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#C09573]">
             <Clock className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-orange-200 bg-white p-4 shadow-xs sm:p-5">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-orange-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               Em Preparação
             </span>
-            <p className="mt-0.5 text-2xl font-black text-orange-900 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
               {preparingCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-            <Flame className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
+            <Flame className="h-5 w-5 text-[#C09573]" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-white p-4 shadow-xs sm:p-5">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               Prontos p/ Entrega
             </span>
-            <p className="mt-0.5 text-2xl font-black text-emerald-900 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black text-[#5E4939] sm:text-3xl">
               {readyCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-            <BellRing className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
+            <BellRing className="h-5 w-5 text-[#C09573]" />
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-xs font-bold uppercase tracking-wider text-gulas-gray-500">
+        <span className="mr-1 text-xs font-bold uppercase tracking-wider text-[#78716C]">
           Secção:
         </span>
 
@@ -474,10 +589,11 @@ export function OrderDashboard({
             key={key}
             type="button"
             onClick={() => setSectionFilter(key)}
-            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 sm:text-sm ${sectionFilter === key
-                ? 'border-zinc-900 bg-zinc-900 text-white'
-                : 'border-gulas-gray-200 bg-white text-gulas-dark hover:bg-gulas-gray-100'
-              }`}
+            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] sm:text-sm ${
+              sectionFilter === key
+                ? 'border-[#5E4939] bg-[#5E4939] text-[#F5F4F1] shadow-xs'
+                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+            }`}
           >
             {icon}
             <span>{label}</span>
@@ -562,6 +678,60 @@ export function OrderDashboard({
           ))}
         </div>
       )}
+
+      {/* Undo Toast for completed orders */}
+      {undoOrder && (
+        <aside
+          role="status"
+          aria-label="Aviso de pedido concluído com opção de desfazer"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl bg-[#35271F] px-4 py-3 text-[#F5F4F1] shadow-xl border border-[#E5DED6]/30 animate-in slide-in-from-bottom-5 fade-in duration-200"
+        >
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <span className="h-2 w-2 rounded-full bg-[#C09573]" />
+            <span className="font-semibold text-[#EAE5DF]">
+              Pedido <strong className="text-white">#{undoOrder.orderNumber}</strong> (Mesa {undoOrder.tableNumber}) concluído.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 border-l border-[#E5DED6]/30 pl-2">
+            <button
+              type="button"
+              disabled={isUndoing}
+              onClick={handleUndo}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#FFFFFF] px-3 py-1.5 text-xs font-bold text-[#35271F] transition-all hover:bg-[#EAE5DF] active:scale-95 disabled:opacity-50 shadow-2xs"
+            >
+              {isUndoing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#35271F]" />
+              ) : (
+                <Undo2 className="h-3.5 w-3.5 text-[#5E4939]" />
+              )}
+              <span>Desfazer</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+                setUndoOrder(null);
+              }}
+              className="cursor-pointer rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+              aria-label="Fechar aviso"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* Quick Stock Management Drawer */}
+      <QuickStockDrawer
+        isOpen={isStockDrawerOpen}
+        onClose={() => setIsStockDrawerOpen(false)}
+        restaurantId={restaurantId}
+        onStockChanged={() => {
+          refreshStockCount();
+        }}
+      />
     </div>
   );
 }

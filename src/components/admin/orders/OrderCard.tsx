@@ -19,19 +19,19 @@ interface OrderCardProps {
 function getTimerStyles(minutes: number) {
   if (minutes < 10) {
     return {
-      badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      ring: 'border-emerald-300',
+      badge: 'bg-[#EAE5DF] text-[#35271F] border-[#E5DED6]',
+      ring: 'border-[#E5DED6]',
     };
   }
   if (minutes < 20) {
     return {
-      badge: 'bg-amber-100 text-amber-800 border-amber-200',
-      ring: 'border-amber-300',
+      badge: 'bg-amber-50 text-amber-900 border-amber-200/80',
+      ring: 'border-amber-200',
     };
   }
   return {
-    badge: 'bg-rose-100 text-rose-800 border-rose-200',
-    ring: 'border-rose-300',
+    badge: 'bg-rose-50 text-rose-900 border-rose-200/80',
+    ring: 'border-rose-200',
   };
 }
 
@@ -69,16 +69,15 @@ export function OrderCard({
   return (
     <article
       aria-labelledby={`order-card-title-${order.id}`}
-      className={`bg-white rounded-2xl border transition-all flex flex-col justify-between shadow-xs hover:shadow-md ${isNew
-          ? 'border-emerald-400 ring-2 ring-emerald-200/90 shadow-md animate-in fade-in zoom-in-98 duration-300'
+      className={`bg-[#FFFFFF] rounded-2xl border transition-all flex flex-col justify-between shadow-xs ${
+        isNew
+          ? 'border-[#C09573] ring-2 ring-[#C09573]/40 shadow-xs animate-in fade-in zoom-in-98 duration-300'
           : order.status === 'pending'
-            ? 'border-amber-300 ring-2 ring-amber-100'
-            : order.status === 'preparing'
-              ? 'border-orange-200'
-              : order.status === 'ready'
-                ? 'border-emerald-300 ring-2 ring-emerald-100 bg-emerald-50/20'
-                : 'border-gulas-gray-200'
-        }`}
+          ? 'border-[#C09573]/50'
+          : order.status === 'ready'
+          ? 'border-[#5E4939]/40'
+          : 'border-[#E5DED6]'
+      }`}
     >
       {/* Top Card Header */}
       <div className="p-4 sm:p-5 pb-3">
@@ -87,16 +86,16 @@ export function OrderCard({
             <div className="flex items-center gap-2">
               <span
                 id={`order-card-title-${order.id}`}
-                className="text-xl sm:text-2xl font-black text-gulas-dark tracking-tight leading-none"
+                className="text-xl sm:text-2xl font-black text-[#35271F] tracking-tight leading-none"
               >
                 #{order.orderNumber}
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-zinc-900 text-white text-xs font-bold uppercase tracking-wide">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#5E4939] text-[#F5F4F1] text-xs font-bold uppercase tracking-wide">
                 Mesa {order.tableNumber}
               </span>
               {isNew && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-black animate-pulse">
-                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#EAE5DF] text-[#5E4939] text-xs font-black border border-[#E5DED6]">
+                  <Sparkles className="w-3 h-3 text-[#C09573]" />
                   NOVO
                 </span>
               )}
@@ -163,12 +162,12 @@ export function OrderCard({
       </div>
 
       {/* Bottom Footer: Total & Actions */}
-      <div className="p-4 sm:p-5 pt-3 bg-zinc-50/60 rounded-b-2xl border-t border-gulas-gray-200 space-y-3">
+      <div className="p-4 sm:p-5 pt-3 bg-[#F5F4F1] rounded-b-2xl border-t border-[#E5DED6] space-y-3">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-500">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
             Total do Pedido
           </span>
-          <span className="text-lg sm:text-xl font-black text-gulas-dark tracking-tight">
+          <span className="text-lg sm:text-xl font-black text-[#35271F] tracking-tight">
             {formatPrice(order.total)}
           </span>
         </div>

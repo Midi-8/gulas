@@ -36,20 +36,20 @@ export default function ConsolidatedItems({ orders }: ConsolidatedItemsProps) {
 
     return (
         <section
-            className="rounded-2xl border border-gulas-gray-200 bg-white p-4 shadow-xs"
+            className="rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs"
             aria-label="Artigos agrupados dos pedidos ativos"
         >
             <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                    <h2 className="text-sm font-black text-gulas-dark">
+                    <h2 className="text-sm font-black text-[#35271F]">
                         Artigos em preparação
                     </h2>
-                    <p className="text-xs text-gulas-gray-500">
+                    <p className="text-xs text-[#78716C]">
                         Quantidade total dos pedidos atualmente visíveis
                     </p>
                 </div>
 
-                <span className="rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-bold text-zinc-700">
+                <span className="rounded-lg bg-[#EAE5DF] border border-[#E5DED6] px-2.5 py-1 text-xs font-bold text-[#35271F]">
                     {consolidated.length}{' '}
                     {consolidated.length === 1 ? 'artigo' : 'artigos'}
                 </span>
@@ -59,9 +59,9 @@ export default function ConsolidatedItems({ orders }: ConsolidatedItemsProps) {
                 {consolidated.map(({ name, quantity }) => (
                     <span
                         key={name}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-bold text-white sm:text-sm"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F4F1] border border-[#E5DED6] px-3 py-1 text-xs font-bold text-[#35271F] sm:text-sm"
                     >
-                        <span className="rounded-full bg-white/15 px-1.5 py-0.5">
+                        <span className="rounded-full bg-[#FFFFFF] border border-[#E5DED6] text-[#5E4939] px-2 py-0.5 text-xs font-mono font-black">
                             {quantity}×
                         </span>
                         <span>{name}</span>

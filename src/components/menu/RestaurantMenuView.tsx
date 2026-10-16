@@ -10,9 +10,14 @@ import { ProductDetailModal } from '@/components/menu/ProductDetailModal';
 import { CartDrawer } from '@/components/menu/CartDrawer';
 import { FloatingCartBar } from '@/components/menu/FloatingCartBar';
 import { OrderConfirmationModal } from '@/components/menu/OrderConfirmationModal';
+import { ActiveOrderBanner } from '@/components/menu/ActiveOrderBanner';
+import { ActiveOrderDetailModal } from '@/components/menu/ActiveOrderDetailModal';
 import { Toast } from '@/components/ui/Toast';
 import { useCart } from '@/context/CartContext';
 import { Utensils } from 'lucide-react';
+
+import { createClient } from '@/lib/supabase/client';
+import { Database } from '@/lib/supabase/types';
 
 interface RestaurantMenuViewProps {
   restaurant: Restaurant;
@@ -30,11 +35,59 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
   lockTable = false,
 }) => {
   const { setSelectedTableNumber, setIsTableLocked, setRestaurantSlug } = useCart();
+  const [menuProducts, setMenuProducts] = useState<Product[]>(products);
+  const [prevProducts, setPrevProducts] = useState<Product[]>(products);
   const [activeCategoryId, setActiveCategoryId] = useState<string>(categories[0]?.id || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<MenuFilterType>('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  if (products !== prevProducts) {
+    setPrevProducts(products);
+    setMenuProducts(products);
+  }
+
+  // Realtime subscription for instant stock / price updates
+  useEffect(() => {
+    if (!restaurant.id) return;
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel(`customer-menu-products-${restaurant.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'products',
+          filter: `restaurant_id=eq.${restaurant.id}`,
+        },
+        (payload: { new: Database['public']['Tables']['products']['Row'] }) => {
+          const updatedRow = payload.new;
+          if (!updatedRow?.id) return;
+
+          setMenuProducts((prev) =>
+            prev.map((item) =>
+              item.id === updatedRow.id
+                ? {
+                    ...item,
+                    available: Boolean(updatedRow.is_available),
+                    price: Number(updatedRow.price),
+                    name: updatedRow.name,
+                  }
+                : item
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurant.id]);
 
   useEffect(() => {
     if (restaurant.slug) {
@@ -56,7 +109,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
 
   // Filter products by search and badge filters
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    return menuProducts.filter((p) => {
       // Search matching
       const matchesSearch =
         searchQuery.trim() === '' ||
@@ -79,7 +132,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
 
       return matchesSearch && matchesPill;
     });
-  }, [products, searchQuery, activeFilter]);
+  }, [menuProducts, searchQuery, activeFilter]);
 
   // Group filtered products by category
   const productsByCategory = useMemo(() => {
@@ -96,7 +149,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
   }, [categories, filteredProducts, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#141619] pb-24">
+    <div className="min-h-screen bg-[#F5F4F1] text-[#35271F] pb-24">
       {/* Toast Feedback */}
       <Toast />
 
@@ -122,11 +175,11 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       <main className="max-w-4xl mx-auto px-4 py-5 space-y-8">
         {filteredProducts.length === 0 ? (
           <div className="py-14 text-center space-y-2">
-            <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mx-auto text-zinc-400">
-              <Utensils className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-full bg-[#EAE5DF] flex items-center justify-center mx-auto text-[#4C453F]">
+              <Utensils className="w-5 h-5 text-[#A89F95]" />
             </div>
-            <h3 className="text-sm font-bold text-[#141619]">Nenhum artigo encontrado</h3>
-            <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+            <h3 className="text-sm font-bold text-[#35271F]">Nenhum artigo encontrado</h3>
+            <p className="text-xs text-[#4C453F] max-w-xs mx-auto">
               Tenta alterar os termos da tua pesquisa ou remover o filtro selecionado.
             </p>
           </div>
@@ -144,18 +197,18 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                 className="scroll-mt-20 space-y-3"
               >
                 {/* Category Header */}
-                <div className="pb-1.5 flex flex-col sm:flex-row sm:items-baseline justify-between gap-0.5 border-b border-zinc-200/80">
+                <div className="pb-1.5 flex flex-col sm:flex-row sm:items-baseline justify-between gap-0.5 border-b border-[#E5DED6]">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base sm:text-lg font-black text-[#141619] tracking-tight uppercase">
+                    <h2 className="text-base sm:text-lg font-black text-[#35271F] tracking-tight uppercase">
                       {category.name}
                     </h2>
-                    <span className="text-xs font-semibold text-zinc-400">
+                    <span className="text-xs font-semibold text-[#A89F95]">
                       ({items.length})
                     </span>
                   </div>
 
                   {category.subtitle && (
-                    <span className="text-[11px] font-semibold text-[#15803D] sm:text-right">
+                    <span className="text-[11px] font-bold text-[#C09573] sm:text-right">
                       {category.subtitle}
                     </span>
                   )}
@@ -167,7 +220,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                     Sem artigos disponíveis nesta categoria com o filtro atual.
                   </p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {items.map((product) => (
                       <ProductCard
                         key={product.id}
@@ -198,6 +251,12 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
 
       {/* Order Confirmation & Status Tracker Modal */}
       <OrderConfirmationModal />
+
+      {/* Live Order Detail & Stepper Modal */}
+      <ActiveOrderDetailModal />
+
+      {/* Live Order Tracking Banner (Pílula Flutuante) montado no topo visual (z-[60]) */}
+      <ActiveOrderBanner />
     </div>
   );
 };

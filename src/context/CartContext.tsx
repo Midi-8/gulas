@@ -63,19 +63,19 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
 
   const [selectedTableNumber, setSelectedTableNumber] = useState<number | null>(() => {
-    if (typeof window === 'undefined') return 4;
+    if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (typeof parsed.selectedTableNumber === 'number') {
+        if (typeof parsed.selectedTableNumber === 'number' && parsed.selectedTableNumber > 0) {
           return parsed.selectedTableNumber;
         }
       }
     } catch {
       // ignore
     }
-    return 4;
+    return null;
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -174,6 +174,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('O carrinho está vazio');
     }
     if (!selectedTableNumber) {
+      setIsCartOpen(true);
       throw new Error('Por favor selecione o número da mesa');
     }
     if (!restaurantSlug) {
@@ -225,6 +226,81 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // 5. Atualizar estado e limpar carrinho em sucesso
       setActiveOrder(newOrder);
+
+      // Persistir no localStorage para o Live Order Tracking e emitir evento reativo
+      try {
+        let existingIds: string[] = [];
+        try {
+          const rawIds = localStorage.getItem('gulas_active_order_ids');
+          if (rawIds) {
+            const parsed = JSON.parse(rawIds);
+            if (Array.isArray(parsed)) existingIds = parsed;
+          }
+        } catch {
+          // ignore
+        }
+        if (!existingIds.includes(newOrder.id)) {
+          existingIds.push(newOrder.id);
+        }
+
+        const serializedNewOrder = {
+          id: newOrder.id,
+          orderNumber: newOrder.orderNumber,
+          tableNumber: newOrder.tableNumber,
+          tableName: newOrder.tableName,
+          restaurantId: newOrder.restaurantId,
+          restaurantSlug: newOrder.restaurantSlug,
+          restaurantName: newOrder.restaurantName,
+          status: newOrder.status,
+          subtotal: newOrder.subtotal,
+          total: newOrder.total,
+          customerNotes: newOrder.customerNotes,
+          createdAt: newOrder.createdAt,
+          items: newOrder.items.map((i) => ({
+            id: i.product.id,
+            productName: i.product.name,
+            quantity: i.quantity,
+            unitPrice: i.product.price,
+            notes: i.notes,
+          })),
+        };
+
+        let existingOrders: typeof serializedNewOrder[] = [];
+        try {
+          const rawOrders = localStorage.getItem('gulas_active_orders_data');
+          if (rawOrders) {
+            const parsed = JSON.parse(rawOrders);
+            if (Array.isArray(parsed)) existingOrders = parsed;
+          }
+        } catch {
+          // ignore
+        }
+        if (!existingOrders.some((o) => o.id === newOrder.id)) {
+          existingOrders.push(serializedNewOrder);
+        }
+
+        localStorage.setItem('gulas_active_order_ids', JSON.stringify(existingIds));
+        localStorage.setItem('gulas_active_orders_data', JSON.stringify(existingOrders));
+        localStorage.setItem('gulas_active_order_id', newOrder.id);
+        localStorage.setItem('gulas_active_order_data', JSON.stringify(serializedNewOrder));
+
+        window.dispatchEvent(
+          new CustomEvent('gulas_active_order_created', {
+            detail: {
+              orderId: newOrder.id,
+              order: newOrder,
+            },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent('gulas_order_status_update', {
+            detail: { orderId: newOrder.id, status: newOrder.status, order: newOrder },
+          })
+        );
+      } catch {
+        // ignore
+      }
+
       setIsOrderSuccessModalOpen(true);
       setIsCartOpen(false);
       clearCart();

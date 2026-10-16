@@ -9,15 +9,15 @@ import {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#141619] flex flex-col selection:bg-[#15803D] selection:text-white">
+    <div className="min-h-screen bg-[#F5F4F1] text-[#35271F] flex flex-col selection:bg-[#5E4939] selection:text-[#F5F4F1]">
       {/* Navigation */}
-      <header className="border-b border-zinc-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-30">
+      <header className="border-b border-[#E5DED6] bg-[#F5F4F1]/90 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="font-black text-xl tracking-tight text-[#141619] uppercase leading-none">
+            <span className="font-black text-xl tracking-tight text-[#35271F] uppercase leading-none">
               GULAS
             </span>
-            <span className="text-xs font-semibold text-[#15803D] hidden sm:inline-block">
+            <span className="text-xs font-bold text-[#C09573] hidden sm:inline-block">
               Pizza · Burger · Coffee
             </span>
           </div>
@@ -25,7 +25,7 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <Link
               href="/menu/gulas"
-              className="px-3.5 py-1.5 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs font-bold transition-all active:scale-95 flex items-center gap-1 cursor-pointer shadow-xs"
             >
               <span>Abrir Menu</span>
               <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -37,16 +37,16 @@ export default function HomePage() {
       {/* Hero Section */}
       <main className="flex-1 max-w-4xl mx-auto px-4 py-10 sm:py-16 flex flex-col items-center text-center">
         {/* Release Pill */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-[#15803D] text-xs font-bold mb-6">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAE5DF] border border-[#E5DED6] text-[#5E4939] text-xs font-bold mb-6">
           <span>Vila das Aves, Portugal</span>
         </div>
 
         {/* Hero Title */}
-        <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#141619] max-w-2xl leading-[1.12]">
-          Menu digital oficial do <span className="text-[#15803D]">Gulas</span>
+        <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#35271F] max-w-2xl leading-[1.12]">
+          Menu digital oficial do <span className="text-[#C09573]">Gulas</span>
         </h1>
 
-        <p className="mt-3 text-xs sm:text-sm text-zinc-600 max-w-md font-normal leading-relaxed">
+        <p className="mt-3 text-xs sm:text-sm text-[#4C453F] max-w-md font-normal leading-relaxed">
           Caracóizzz, burgers artesanais em pão brioche, panuozzos e pizzas em Vila das Aves.
         </p>
 
@@ -55,20 +55,20 @@ export default function HomePage() {
           {/* Menu Normal */}
           <Link
             href="/menu/gulas"
-            className="group p-4 rounded-xl bg-white border border-zinc-200/90 hover:border-[#15803D] transition-all duration-200 hover:shadow-md flex flex-col justify-between"
+            className="group p-4 rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] hover:border-[#C09573]/60 transition-all duration-200 shadow-xs flex flex-col justify-between"
           >
             <div>
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 text-[#15803D] flex items-center justify-center mb-2.5">
-                <Utensils className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-[#EAE5DF] text-[#5E4939] flex items-center justify-center mb-2.5 border border-[#E5DED6]">
+                <Utensils className="w-4 h-4 text-[#C09573]" />
               </div>
-              <h2 className="text-sm font-bold text-[#141619] group-hover:text-[#15803D] transition-colors">
+              <h2 className="text-sm font-bold text-[#35271F] group-hover:text-[#5E4939] transition-colors">
                 Menu Geral
               </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs text-[#4C453F] mt-0.5">
                 Consulta o menu e escolhe a tua mesa livremente.
               </p>
             </div>
-            <div className="mt-3 pt-2.5 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-[#15803D]">
+            <div className="mt-3 pt-2.5 border-t border-[#E5DED6] flex items-center justify-between text-xs font-bold text-[#5E4939]">
               <span>Ver Menu</span>
               <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
             </div>
@@ -77,20 +77,20 @@ export default function HomePage() {
           {/* QR Code Table Direct Access */}
           <Link
             href="/menu/gulas/table/4"
-            className="group p-4 rounded-xl bg-white border border-zinc-200/90 hover:border-[#15803D] transition-all duration-200 hover:shadow-md flex flex-col justify-between"
+            className="group p-4 rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] hover:border-[#C09573]/60 transition-all duration-200 shadow-xs flex flex-col justify-between"
           >
             <div>
-              <div className="w-9 h-9 rounded-lg bg-[#15803D] text-white flex items-center justify-center mb-2.5">
-                <QrCode className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-[#5E4939] text-[#F5F4F1] flex items-center justify-center mb-2.5">
+                <QrCode className="w-4 h-4 text-[#C09573]" />
               </div>
-              <h2 className="text-sm font-bold text-[#141619] group-hover:text-[#15803D] transition-colors">
+              <h2 className="text-sm font-bold text-[#35271F] group-hover:text-[#5E4939] transition-colors">
                 Simular QR Code — Mesa 4
               </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs text-[#4C453F] mt-0.5">
                 Experiência de cliente com mesa bloqueada por leitura de QR.
               </p>
             </div>
-            <div className="mt-3 pt-2.5 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-[#15803D]">
+            <div className="mt-3 pt-2.5 border-t border-[#E5DED6] flex items-center justify-between text-xs font-bold text-[#5E4939]">
               <span>Testar Mesa 4</span>
               <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
             </div>
@@ -99,7 +99,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-200/80 py-4 text-center text-xs text-zinc-500 bg-white">
+      <footer className="border-t border-[#E5DED6] py-4 text-center text-xs text-[#78716C] bg-[#FFFFFF]">
         <p>GULAS — Pizza, Burger & Coffee · Vila das Aves, Portugal</p>
       </footer>
     </div>

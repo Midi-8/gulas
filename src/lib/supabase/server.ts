@@ -9,6 +9,14 @@ export async function createServerSupabaseClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
+    console.error(
+      '[SUPABASE CONFIG ERROR]: Variáveis de ambiente Supabase ausentes no servidor:',
+      {
+        hasUrl: Boolean(supabaseUrl),
+        hasPublishableKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),
+        hasAnonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      }
+    );
     return null;
   }
 

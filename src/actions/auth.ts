@@ -26,9 +26,13 @@ export async function loginStaff(input: LoginInput): Promise<AuthActionResult> {
 
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
+    console.error(
+      '[AUTH CONFIG ERROR]: createServerSupabaseClient() retornou null. Verifique se o ficheiro .env.local contém NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY / NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+    );
     return {
       success: false,
-      error: 'Erro de configuração no servidor. Tente novamente mais tarde.',
+      error:
+        'Erro de configuração no servidor: credenciais do Supabase ausentes em .env.local. Reinicie o servidor após adicionar.',
     };
   }
 
@@ -39,6 +43,10 @@ export async function loginStaff(input: LoginInput): Promise<AuthActionResult> {
   });
 
   if (signInError) {
+    console.warn(
+      `[AUTH LOGIN]: Falha de autenticação para "${parsed.data.email}":`,
+      signInError.message
+    );
     return {
       success: false,
       error: 'Credenciais inválidas. Verifique o email e a palavra-passe.',
@@ -48,11 +56,43 @@ export async function loginStaff(input: LoginInput): Promise<AuthActionResult> {
   // 2. Validate that the authenticated user is an authorized staff member
   const staff = await getAuthenticatedStaff();
   if (!staff) {
+    const { data: authUserData } = await supabase.auth.getUser();
+    const userId = authUserData.user?.id;
+
+    let specificMessage =
+      'Conta sem permissões de staff/gerência: utilizador não registado na tabela de perfis.';
+
+    if (userId) {
+      const { data: profile, error: pError } = await supabase
+        .from('profiles')
+        .select('id, role, restaurant_id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      console.warn(
+        `[AUTH STAFF CHECK]: Utilizador ${userId} (${parsed.data.email}) autenticado com sucesso mas sem perfil de staff ativo:`,
+        {
+          profile,
+          profileError: pError?.message,
+        }
+      );
+
+      if (!profile) {
+        specificMessage =
+          'Conta sem permissões de staff/gerência: utilizador não registado na tabela de perfis.';
+      } else if (!profile.restaurant_id) {
+        specificMessage =
+          'Conta sem restaurante associado no perfil de staff.';
+      } else {
+        specificMessage = `Conta sem permissões suficientes (cargo: "${profile.role}"). Apenas staff e gerência têm acesso.`;
+      }
+    }
+
     // If not authorized as staff, sign out immediately to prevent dangling session
     await supabase.auth.signOut();
     return {
       success: false,
-      error: 'Acesso não autorizado. Esta conta não possui perfil de staff para aceder à administração.',
+      error: specificMessage,
     };
   }
 

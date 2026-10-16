@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -30,14 +30,12 @@ export function useOrdersRealtime({
 
   useEffect(() => {
     if (!restaurantId) {
-      setIsConnected(false);
       return;
     }
 
     const supabase = createClient();
 
     if (!supabase) {
-      setIsConnected(false);
       return;
     }
 
@@ -152,6 +150,43 @@ export function useOrdersRealtime({
 
     void setupSubscription();
 
+    const handleReconciliation = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(
+          `[Realtime KDS] Reconciliação ativada (ecrã ativo / rede online) para restaurant_id=${restaurantId}.`
+        );
+      }
+
+      // 1. Forçar sincronização imediata dos pedidos
+      void callbackRef.current();
+
+      // 2. Se o canal estiver desligado ou em erro, reestabelecer subscrição
+      if (channel && (channel.state === 'closed' || channel.state === 'errored')) {
+        void channel.subscribe();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        handleReconciliation();
+      }
+    };
+
+    const handleOnline = () => {
+      handleReconciliation();
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+    }
+
     const {
       data: { subscription: authListener },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
@@ -174,6 +209,13 @@ export function useOrdersRealtime({
 
     return () => {
       isMounted = false;
+
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+      }
 
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);

@@ -56,24 +56,24 @@ export function OrderHistoryDetailModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="history-order-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#35271F]/40 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E5DED6] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-zinc-200/80 flex items-start justify-between bg-zinc-50/50">
+        <div className="p-5 border-b border-[#E5DED6] flex items-start justify-between bg-[#F5F4F1]">
           <div>
             <div className="flex items-center gap-2">
               <span
                 id="history-order-modal-title"
-                className="text-2xl font-black text-gulas-dark tracking-tight"
+                className="text-2xl font-black text-[#35271F] tracking-tight"
               >
                 #{order.orderNumber}
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-zinc-900 text-white text-xs font-bold uppercase">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#5E4939] text-[#F5F4F1] text-xs font-bold uppercase">
                 Mesa {order.tableNumber}
               </span>
               <OrderStatusBadge status={order.status} size="sm" />
