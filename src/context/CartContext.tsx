@@ -7,6 +7,7 @@ import React, {
   useEffect,
   ReactNode,
   useMemo,
+  useRef,
 } from 'react';
 import { Product, CartItem, Order, OrderStatus } from '@/types/restaurant';
 import { createOrder } from '@/actions/orders';
@@ -42,51 +43,105 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'gulas_cart_state_v1';
+const ACTIVE_ORDER_IDS_KEY = 'gulas_active_order_ids';
+const ACTIVE_ORDERS_DATA_KEY = 'gulas_active_orders_data';
+const ACTIVE_ORDER_ID_KEY = 'gulas_active_order_id';
+const ACTIVE_ORDER_DATA_KEY = 'gulas_active_order_data';
+const ACTIVE_ORDER_TOKENS_KEY = 'gulas_active_order_tokens';
 
-export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed.items)) {
-          return parsed.items;
-        }
-      }
-    } catch {
-      // ignore
-    }
+function readStoredArray<T>(key: string): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
     return [];
-  });
+  }
+}
+
+function readStoredTokens(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(ACTIVE_ORDER_TOKENS_KEY);
+    if (!raw) return {};
+
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+
+    const tokens: Record<string, string> = {};
+
+    Object.entries(parsed).forEach(([id, token]) => {
+      if (
+        id.trim() !== '' &&
+        typeof token === 'string' &&
+        token.trim() !== ''
+      ) {
+        tokens[id] = token.trim();
+      }
+    });
+
+    return tokens;
+  } catch {
+    return {};
+  }
+}
+
+export const CartProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  // Os valores iniciais são iguais no servidor e no navegador.
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [selectedTableNumber, setSelectedTableNumber] =
+    useState<number | null>(null);
+  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
-
-  const [selectedTableNumber, setSelectedTableNumber] = useState<number | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (typeof parsed.selectedTableNumber === 'number' && parsed.selectedTableNumber > 0) {
-          return parsed.selectedTableNumber;
-        }
-      }
-    } catch {
-      // ignore
-    }
-    return null;
-  });
-
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isTableLocked, setIsTableLocked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
-  const [isOrderSuccessModalOpen, setIsOrderSuccessModalOpen] = useState(false);
+  const [isOrderSuccessModalOpen, setIsOrderSuccessModalOpen] =
+    useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Save changes to localStorage
+  const submittingRef = useRef(false);
+
+  // Recuperar o carrinho apenas depois da montagem no navegador.
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (saved) {
+        const parsed = JSON.parse(saved);
+
+        if (parsed && typeof parsed === 'object') {
+          if (Array.isArray(parsed.items)) {
+            setItems(parsed.items);
+          }
+
+          if (
+            typeof parsed.selectedTableNumber === 'number' &&
+            Number.isInteger(parsed.selectedTableNumber) &&
+            parsed.selectedTableNumber > 0
+          ) {
+            setSelectedTableNumber(parsed.selectedTableNumber);
+          }
+        }
+      }
+    } catch {
+      // Continuar com o carrinho vazio se os dados não forem legíveis.
+    } finally {
+      setIsStorageLoaded(true);
+    }
+  }, []);
+
+  // Não sobrescrever os dados antes de os recuperar.
+  useEffect(() => {
+    if (!isStorageLoaded) return;
+
     try {
       localStorage.setItem(
         STORAGE_KEY,
@@ -96,12 +151,13 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         })
       );
     } catch {
-      // ignore
+      // O carrinho continua disponível em memória.
     }
-  }, [items, selectedTableNumber]);
+  }, [items, selectedTableNumber, isStorageLoaded]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
+
     setTimeout(() => {
       setToastMessage((current) => (current === msg ? null : current));
     }, 2800);
@@ -114,26 +170,33 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     setItems((prev) => {
-      const existingIndex = prev.findIndex((item) => item.product.id === product.id);
+      const existingIndex = prev.findIndex(
+        (item) => item.product.id === product.id
+      );
+
       if (existingIndex > -1) {
         const updated = [...prev];
         const currentItem = updated[existingIndex];
+
         updated[existingIndex] = {
           ...currentItem,
           quantity: currentItem.quantity + quantity,
           notes: notes !== undefined ? notes : currentItem.notes,
         };
+
         return updated;
-      } else {
-        return [...prev, { product, quantity, notes }];
       }
+
+      return [...prev, { product, quantity, notes }];
     });
 
     showToast(`Adicionado: ${product.name}`);
   };
 
   const removeItem = (productId: string) => {
-    setItems((prev) => prev.filter((item) => item.product.id !== productId));
+    setItems((prev) =>
+      prev.filter((item) => item.product.id !== productId)
+    );
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -141,14 +204,19 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       removeItem(productId);
       return;
     }
+
     setItems((prev) =>
-      prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item))
+      prev.map((item) =>
+        item.product.id === productId ? { ...item, quantity } : item
+      )
     );
   };
 
   const updateNotes = (productId: string, notes: string) => {
     setItems((prev) =>
-      prev.map((item) => (item.product.id === productId ? { ...item, notes } : item))
+      prev.map((item) =>
+        item.product.id === productId ? { ...item, notes } : item
+      )
     );
   };
 
@@ -156,42 +224,54 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setItems([]);
   };
 
-  const itemCount = useMemo(() => {
-    return items.reduce((sum, item) => sum + item.quantity, 0);
-  }, [items]);
+  const itemCount = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity, 0),
+    [items]
+  );
 
-  const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  }, [items]);
+  const subtotal = useMemo(
+    () =>
+      items.reduce(
+        (sum, item) => sum + item.product.price * item.quantity,
+        0
+      ),
+    [items]
+  );
 
   const total = subtotal;
 
   const submitOrder = async (customerNotes?: string): Promise<Order> => {
-    if (isSubmitting) {
-      throw new Error('Já existe um pedido em processamento.');
-    }
-    if (items.length === 0) {
-      throw new Error('O carrinho está vazio');
-    }
-    if (!selectedTableNumber) {
-      setIsCartOpen(true);
-      throw new Error('Por favor selecione o número da mesa');
-    }
-    if (!restaurantSlug) {
-      throw new Error('Restaurante não identificado');
+    if (!isStorageLoaded) {
+      throw new Error('O carrinho está a carregar. Aguarda um momento.');
     }
 
+    if (submittingRef.current) {
+      throw new Error('Já existe um pedido em processamento.');
+    }
+
+    if (items.length === 0) {
+      throw new Error('O carrinho está vazio.');
+    }
+
+    if (!selectedTableNumber) {
+      setIsCartOpen(true);
+      throw new Error('Por favor selecione o número da mesa.');
+    }
+
+    if (!restaurantSlug) {
+      throw new Error('Restaurante não identificado.');
+    }
+
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
-      // 1. Converter CartItems para payload seguro (apenas productId, quantity, notes)
       const payloadItems = items.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
-        notes: item.notes ? item.notes.trim() : null,
+        notes: item.notes?.trim() || null,
       }));
 
-      // 2. Chamar a Server Action
       const result = await createOrder({
         restaurantSlug,
         tableNumber: selectedTableNumber,
@@ -199,15 +279,13 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         items: payloadItems,
       });
 
-      // 3. Tratar erro da Server Action
       if (!result.success) {
         throw new Error(result.error.message);
       }
 
       const orderData = result.data;
 
-      // 4. Mapear resultado real para o estado Order
-      const newOrder: Order = {
+      const newOrder: Order & { trackingToken: string } = {
         id: orderData.orderId,
         orderNumber: orderData.orderNumber,
         restaurantId: orderData.restaurantId,
@@ -222,95 +300,108 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         status: (orderData.status as OrderStatus) || 'pending',
         createdAt: orderData.createdAt,
         customerNotes: orderData.customerNotes || undefined,
+        trackingToken: orderData.trackingToken,
       };
 
-      // 5. Atualizar estado e limpar carrinho em sucesso
       setActiveOrder(newOrder);
 
-      // Persistir no localStorage para o Live Order Tracking e emitir evento reativo
+      const serializedNewOrder = {
+        id: newOrder.id,
+        orderNumber: newOrder.orderNumber,
+        tableNumber: newOrder.tableNumber,
+        tableName: newOrder.tableName,
+        restaurantId: newOrder.restaurantId,
+        restaurantSlug: newOrder.restaurantSlug,
+        restaurantName: newOrder.restaurantName,
+        status: newOrder.status,
+        subtotal: newOrder.subtotal,
+        total: newOrder.total,
+        customerNotes: newOrder.customerNotes,
+        createdAt: newOrder.createdAt,
+        items: orderData.items.map((item) => ({
+          id: item.id,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          notes: item.notes,
+        })),
+      };
+
       try {
-        let existingIds: string[] = [];
-        try {
-          const rawIds = localStorage.getItem('gulas_active_order_ids');
-          if (rawIds) {
-            const parsed = JSON.parse(rawIds);
-            if (Array.isArray(parsed)) existingIds = parsed;
-          }
-        } catch {
-          // ignore
-        }
-        if (!existingIds.includes(newOrder.id)) {
-          existingIds.push(newOrder.id);
-        }
+        const tokensMap = readStoredTokens();
+        tokensMap[newOrder.id] = newOrder.trackingToken;
 
-        const serializedNewOrder = {
-          id: newOrder.id,
-          orderNumber: newOrder.orderNumber,
-          tableNumber: newOrder.tableNumber,
-          tableName: newOrder.tableName,
-          restaurantId: newOrder.restaurantId,
-          restaurantSlug: newOrder.restaurantSlug,
-          restaurantName: newOrder.restaurantName,
-          status: newOrder.status,
-          subtotal: newOrder.subtotal,
-          total: newOrder.total,
-          customerNotes: newOrder.customerNotes,
-          createdAt: newOrder.createdAt,
-          items: newOrder.items.map((i) => ({
-            id: i.product.id,
-            productName: i.product.name,
-            quantity: i.quantity,
-            unitPrice: i.product.price,
-            notes: i.notes,
-          })),
-        };
+        // O token tem de estar guardado antes de emitir os eventos.
+        localStorage.setItem(
+          ACTIVE_ORDER_TOKENS_KEY,
+          JSON.stringify(tokensMap)
+        );
 
-        let existingOrders: typeof serializedNewOrder[] = [];
-        try {
-          const rawOrders = localStorage.getItem('gulas_active_orders_data');
-          if (rawOrders) {
-            const parsed = JSON.parse(rawOrders);
-            if (Array.isArray(parsed)) existingOrders = parsed;
-          }
-        } catch {
-          // ignore
-        }
-        if (!existingOrders.some((o) => o.id === newOrder.id)) {
-          existingOrders.push(serializedNewOrder);
-        }
+        const existingIds = readStoredArray<unknown>(
+          ACTIVE_ORDER_IDS_KEY
+        ).filter(
+          (id): id is string =>
+            typeof id === 'string' && id.trim() !== ''
+        );
 
-        localStorage.setItem('gulas_active_order_ids', JSON.stringify(existingIds));
-        localStorage.setItem('gulas_active_orders_data', JSON.stringify(existingOrders));
-        localStorage.setItem('gulas_active_order_id', newOrder.id);
-        localStorage.setItem('gulas_active_order_data', JSON.stringify(serializedNewOrder));
+        const nextIds = Array.from(
+          new Set([...existingIds, newOrder.id])
+        );
 
-        try {
-          let tokensMap: Record<string, string> = {};
-          const rawTokens = localStorage.getItem('gulas_active_order_tokens');
-          if (rawTokens) {
-            tokensMap = JSON.parse(rawTokens);
-          }
-          if (newOrder.trackingToken) {
-            tokensMap[newOrder.id] = newOrder.trackingToken;
-            localStorage.setItem('gulas_active_order_tokens', JSON.stringify(tokensMap));
-          }
-        } catch {}
+        const existingOrders =
+          readStoredArray<typeof serializedNewOrder>(
+            ACTIVE_ORDERS_DATA_KEY
+          ).filter(
+            (order) =>
+              order &&
+              typeof order.id === 'string' &&
+              order.id !== newOrder.id
+          );
+
+        const nextOrders = [...existingOrders, serializedNewOrder];
+
+        localStorage.setItem(
+          ACTIVE_ORDER_IDS_KEY,
+          JSON.stringify(nextIds)
+        );
+        localStorage.setItem(
+          ACTIVE_ORDERS_DATA_KEY,
+          JSON.stringify(nextOrders)
+        );
+        localStorage.setItem(ACTIVE_ORDER_ID_KEY, newOrder.id);
+        localStorage.setItem(
+          ACTIVE_ORDER_DATA_KEY,
+          JSON.stringify(serializedNewOrder)
+        );
 
         window.dispatchEvent(
           new CustomEvent('gulas_active_order_created', {
             detail: {
               orderId: newOrder.id,
-              order: newOrder,
+              order: serializedNewOrder,
             },
           })
         );
+
         window.dispatchEvent(
           new CustomEvent('gulas_order_status_update', {
-            detail: { orderId: newOrder.id, status: newOrder.status, order: newOrder },
+            detail: {
+              orderId: newOrder.id,
+              status: newOrder.status,
+              order: serializedNewOrder,
+            },
           })
         );
       } catch {
-        // ignore
+        console.warn(
+          '[CartContext] Pedido criado, mas não foi possível guardar ' +
+          'o acompanhamento neste navegador.'
+        );
+
+        showToast(
+          'Pedido criado, mas não foi possível guardar o acompanhamento ' +
+          'neste navegador. Não voltes a enviar o mesmo pedido.'
+        );
       }
 
       setIsOrderSuccessModalOpen(true);
@@ -319,6 +410,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       return newOrder;
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -360,8 +452,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useCart = (): CartContextType => {
   const context = useContext(CartContext);
+
   if (!context) {
     throw new Error('useCart must be used within a CartProvider');
   }
+
   return context;
 };
