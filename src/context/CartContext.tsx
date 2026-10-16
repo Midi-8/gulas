@@ -284,6 +284,18 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('gulas_active_order_id', newOrder.id);
         localStorage.setItem('gulas_active_order_data', JSON.stringify(serializedNewOrder));
 
+        try {
+          let tokensMap: Record<string, string> = {};
+          const rawTokens = localStorage.getItem('gulas_active_order_tokens');
+          if (rawTokens) {
+            tokensMap = JSON.parse(rawTokens);
+          }
+          if (newOrder.trackingToken) {
+            tokensMap[newOrder.id] = newOrder.trackingToken;
+            localStorage.setItem('gulas_active_order_tokens', JSON.stringify(tokensMap));
+          }
+        } catch {}
+
         window.dispatchEvent(
           new CustomEvent('gulas_active_order_created', {
             detail: {
