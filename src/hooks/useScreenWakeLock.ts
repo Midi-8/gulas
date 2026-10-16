@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export type WakeLockStatus = 'unsupported' | 'active' | 'released' | 'error';
+export type WakeLockStatus =
+  | 'idle'
+  | 'unsupported'
+  | 'active'
+  | 'released'
+  | 'error';
 
 export interface UseScreenWakeLockReturn {
   isSupported: boolean;
@@ -16,25 +21,25 @@ export interface UseScreenWakeLockReturn {
 export function useScreenWakeLock(
   autoRequest: boolean = true
 ): UseScreenWakeLockReturn {
-  const [isSupported] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && 'wakeLock' in navigator;
-  });
-
+  // 1. Estado inicial neutro e idêntico entre SSR (servidor) e primeiro render do cliente
+  // Garante que não ocorrem divergências de hidratação (hydration mismatch)
+  const [isSupported, setIsSupported] = useState<boolean>(false);
   const [isActive, setIsActive] = useState<boolean>(false);
-
-  const [status, setStatus] = useState<WakeLockStatus>(() => {
-    const supported = typeof window !== 'undefined' && 'wakeLock' in navigator;
-    return supported ? 'released' : 'unsupported';
-  });
-
+  const [status, setStatus] = useState<WakeLockStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // 2. Referências de controlo de ciclo de vida e concorrência
   const sentinelRef = useRef<WakeLockSentinel | null>(null);
-  const isAcquiringRef = useRef<boolean>(false);
-  const isMountedRef = useRef<boolean>(true);
+  const generationRef = useRef<number>(0);
   const enabledByUserRef = useRef<boolean>(autoRequest);
+  const isMountedRef = useRef<boolean>(true);
 
-  const releaseInternal = useCallback(async () => {
+  // 3. Libertar lock de ecrã existente de forma segura
+  const releaseWakeLock = useCallback(async () => {
+    // Ao desativar, qualquer pedido pendente anterior tem de ser invalidado
+    const currentGen = ++generationRef.current;
+    enabledByUserRef.current = false;
+
     const sentinel = sentinelRef.current;
     sentinelRef.current = null;
 
@@ -42,21 +47,27 @@ export function useScreenWakeLock(
       try {
         await sentinel.release();
       } catch {
-        // Ignora erros ao libertar sentinel j\u00e1 libertado
+        // Ignorar erros caso o sentinel já tenha sido libertado pelo SO
       }
     }
 
-    if (isMountedRef.current) {
+    if (isMountedRef.current && generationRef.current === currentGen) {
       setIsActive(false);
       setStatus('released');
     }
   }, []);
 
+  // 4. Solicitação assíncrona protegida contra stale promises e mudanças de ciclo
   const requestWakeLock = useCallback(async (): Promise<boolean> => {
     if (typeof window === 'undefined' || !('wakeLock' in navigator)) {
+      if (isMountedRef.current) {
+        setIsSupported(false);
+        setStatus('unsupported');
+      }
       return false;
     }
 
+    // Se já tivermos um sentinel ativo e válido, manter
     if (sentinelRef.current && !sentinelRef.current.released) {
       if (isMountedRef.current) {
         setIsActive(true);
@@ -65,33 +76,47 @@ export function useScreenWakeLock(
       return true;
     }
 
-    if (isAcquiringRef.current) {
-      return false;
-    }
-
+    // Só solicita se o documento estiver visível em primeiro plano
     if (document.visibilityState !== 'visible') {
       return false;
     }
 
-    isAcquiringRef.current = true;
+    // Identificador de geração para esta tentativa
+    const requestGen = ++generationRef.current;
+    enabledByUserRef.current = true;
 
     try {
       const sentinel = await navigator.wakeLock.request('screen');
 
-      if (!isMountedRef.current) {
+      // VALIDAÇÃO DE OBSOLESCÊNCIA:
+      // Se o componente desmontou, o utilizador desativou manualmente,
+      // ou um novo ciclo começou enquanto o browser processava o pedido:
+      if (
+        !isMountedRef.current ||
+        !enabledByUserRef.current ||
+        generationRef.current !== requestGen
+      ) {
+        // Liberta imediatamente o sentinel recém-obtido para não gerar locks órfãos
         await sentinel.release().catch(() => {});
         return false;
       }
 
+      // Se existia um sentinel anterior diferente deste, libertar
+      if (sentinelRef.current && sentinelRef.current !== sentinel) {
+        await sentinelRef.current.release().catch(() => {});
+      }
+
       sentinelRef.current = sentinel;
 
+      // Anexar listener 'release' estritamente associado a este sentinel
       const handleRelease = () => {
+        // Um sentinel antigo NÃO deve alterar o estado de um lock mais novo
         if (sentinelRef.current === sentinel) {
           sentinelRef.current = null;
-        }
-        if (isMountedRef.current) {
-          setIsActive(false);
-          setStatus('released');
+          if (isMountedRef.current && generationRef.current === requestGen) {
+            setIsActive(false);
+            setStatus('released');
+          }
         }
       };
 
@@ -100,10 +125,11 @@ export function useScreenWakeLock(
       setIsActive(true);
       setStatus('active');
       setErrorMessage(null);
-      enabledByUserRef.current = true;
       return true;
     } catch (err: unknown) {
-      if (!isMountedRef.current) return false;
+      if (!isMountedRef.current || generationRef.current !== requestGen) {
+        return false;
+      }
 
       const message =
         err instanceof Error ? err.message : 'Falha ao ativar Screen Wake Lock';
@@ -111,31 +137,33 @@ export function useScreenWakeLock(
       setStatus('error');
       setIsActive(false);
       return false;
-    } finally {
-      isAcquiringRef.current = false;
     }
   }, []);
 
-  const releaseWakeLock = useCallback(async () => {
-    enabledByUserRef.current = false;
-    await releaseInternal();
-  }, [releaseInternal]);
-
+  // 5. Inicialização pós-montagem e monitorização de visibilidade
   useEffect(() => {
     isMountedRef.current = true;
 
-    if (!isSupported) {
-      return;
-    }
+    // Detetar suporte após montagem evitando setState síncrono no primeiro render
+    const hasSupport = typeof window !== 'undefined' && 'wakeLock' in navigator;
 
-    let initialTimer: ReturnType<typeof setTimeout> | null = null;
-    if (autoRequest) {
-      enabledByUserRef.current = true;
-      initialTimer = setTimeout(() => {
+    let initTimer: ReturnType<typeof setTimeout> | null = null;
+
+    initTimer = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      setIsSupported(hasSupport);
+
+      if (!hasSupport) {
+        setStatus('unsupported');
+        return;
+      }
+
+      if (autoRequest && enabledByUserRef.current) {
         void requestWakeLock();
-      }, 0);
-    }
+      }
+    }, 0);
 
+    // Recuperação automática ao regressar à página/aba visível
     const handleVisibilityChange = () => {
       if (!isMountedRef.current) return;
 
@@ -152,13 +180,18 @@ export function useScreenWakeLock(
 
     return () => {
       isMountedRef.current = false;
-      if (initialTimer) {
-        clearTimeout(initialTimer);
+      if (initTimer) {
+        clearTimeout(initTimer);
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      void releaseInternal();
+
+      const activeSentinel = sentinelRef.current;
+      sentinelRef.current = null;
+      if (activeSentinel && !activeSentinel.released) {
+        void activeSentinel.release().catch(() => {});
+      }
     };
-  }, [autoRequest, isSupported, requestWakeLock, releaseInternal]);
+  }, [autoRequest, requestWakeLock]);
 
   return {
     isSupported,
@@ -169,3 +202,4 @@ export function useScreenWakeLock(
     releaseWakeLock,
   };
 }
+
