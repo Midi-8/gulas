@@ -1,12 +1,11 @@
-﻿import type { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Gulas KDS \u2014 Monitor de Cozinha',
+    name: 'Gulas KDS',
     short_name: 'Gulas KDS',
-    description:
-      'Painel de Controlo de Pedidos em Tempo Real (KDS) para Cozinha e Bar',
-    start_url: '/admin/orders',
+    description: 'Kitchen Display System do Gulas',
+    start_url: '/',
     scope: '/',
     display: 'standalone',
     orientation: 'landscape',

@@ -19,11 +19,31 @@ type CategoryRow = Database['public']['Tables']['categories']['Row'];
 type ProductRow = Database['public']['Tables']['products']['Row'];
 type TableRow = Database['public']['Tables']['tables']['Row'];
 
+type PublicProductRow = Pick<
+  ProductRow,
+  | 'id'
+  | 'restaurant_id'
+  | 'category_id'
+  | 'name'
+  | 'description'
+  | 'price'
+  | 'image_url'
+  | 'is_available'
+  | 'display_order'
+  | 'badges'
+  | 'unit_quantity'
+  | 'includes_notes'
+  | 'customization_note'
+  | 'allergens'
+  | 'prep_time_minutes'
+>;
+
 function isSupabaseConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   return Boolean(url && key && !url.includes('your-project'));
 }
 
@@ -61,7 +81,7 @@ function mapCategoryFromRow(row: CategoryRow): Category {
   };
 }
 
-function mapProductFromRow(row: ProductRow): Product {
+function mapProductFromRow(row: PublicProductRow): Product {
   return {
     id: row.id,
     restaurantId: row.restaurant_id,
@@ -69,7 +89,7 @@ function mapProductFromRow(row: ProductRow): Product {
     name: row.name,
     description: row.description || '',
     price: Number(row.price),
-    cost: undefined, // Proteção de segurança: omite custo interno no menu público
+    cost: undefined,
     imageUrl: row.image_url || '',
     available: row.is_available,
     position: row.display_order,
@@ -99,6 +119,7 @@ export async function getRestaurantBySlug(
     if (slug === mockRestaurant.slug || slug === 'casa-do-norte') {
       return mockRestaurant;
     }
+
     return null;
   }
 
@@ -117,10 +138,12 @@ export async function getRestaurantBySlug(
       `[restaurantService] Error fetching restaurant by slug "${slug}":`,
       error
     );
+
     throw new Error(`Falha ao carregar restaurante: ${error.message}`);
   }
 
   if (!data) return null;
+
   return mapRestaurantFromRow(data);
 }
 
@@ -135,6 +158,7 @@ export async function getRestaurantMenu(
   }
 
   const supabase = await createServerSupabaseClient();
+
   if (!supabase) {
     return { categories: [], products: [] };
   }
@@ -146,9 +170,26 @@ export async function getRestaurantMenu(
       .eq('restaurant_id', restaurantId)
       .eq('is_active', true)
       .order('display_order', { ascending: true }),
+
     supabase
       .from('products')
-      .select('*')
+      .select(`
+        id,
+        restaurant_id,
+        category_id,
+        name,
+        description,
+        price,
+        image_url,
+        is_available,
+        display_order,
+        badges,
+        unit_quantity,
+        includes_notes,
+        customization_note,
+        allergens,
+        prep_time_minutes
+      `)
       .eq('restaurant_id', restaurantId)
       .eq('is_available', true)
       .order('display_order', { ascending: true }),
@@ -156,9 +197,10 @@ export async function getRestaurantMenu(
 
   if (categoriesRes.error) {
     console.error(
-      `[restaurantService] Error fetching categories:`,
+      '[restaurantService] Error fetching categories:',
       categoriesRes.error
     );
+
     throw new Error(
       `Falha ao carregar categorias: ${categoriesRes.error.message}`
     );
@@ -166,9 +208,10 @@ export async function getRestaurantMenu(
 
   if (productsRes.error) {
     console.error(
-      `[restaurantService] Error fetching products:`,
+      '[restaurantService] Error fetching products:',
       productsRes.error
     );
+
     throw new Error(
       `Falha ao carregar produtos: ${productsRes.error.message}`
     );
@@ -188,9 +231,11 @@ export async function getRestaurantBySlugWithMenu(
   products: Product[];
 } | null> {
   const restaurant = await getRestaurantBySlug(slug);
+
   if (!restaurant) return null;
 
   const menu = await getRestaurantMenu(restaurant.id);
+
   return {
     restaurant,
     categories: menu.categories,
@@ -206,6 +251,7 @@ export async function getTableByNumber(
     const table = mockTables.find(
       (t) => t.number === tableNumber && t.active
     );
+
     return table || null;
   }
 
@@ -225,9 +271,11 @@ export async function getTableByNumber(
       `[restaurantService] Error fetching table ${tableNumber} for restaurant ${restaurantId}:`,
       error
     );
+
     throw new Error(`Falha ao verificar mesa: ${error.message}`);
   }
 
   if (!data) return null;
+
   return mapTableFromRow(data);
 }
