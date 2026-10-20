@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import { Restaurant } from '@/types/restaurant';
 import { useCart } from '@/context/CartContext';
@@ -12,42 +12,15 @@ interface RestaurantHeaderProps {
 
 const emptySubscribe = () => () => {};
 
-/**
- * Componente de Logótipo Gastronómico com fallback elegante em SVG estilizado.
- */
 const GulasLogo: React.FC = () => {
-  const [imgError, setImgError] = useState(false);
-
-  if (imgError) {
-    return (
-      <div className="flex items-center gap-2.5 select-none" aria-label="Gulas — Pizza, Burger & Coffee">
-        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#5E4939] border border-[#C09573]/40 flex items-center justify-center shadow-xs">
-          <span className="text-lg sm:text-xl font-black text-[#F5F4F1] font-mono leading-none">
-            G
-          </span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-[#35271F] uppercase leading-none">
-            GULAS
-          </span>
-          <span className="text-[9px] sm:text-[10px] font-extrabold text-[#C09573] tracking-widest uppercase mt-0.5">
-            Pizza &bull; Burger &bull; Coffee
-          </span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex items-center h-10 sm:h-12">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/images/logo.svg"
-        alt="Gulas — Pizza, Burger & Coffee"
-        className="h-9 sm:h-11 w-auto object-contain transition-transform duration-200"
-        onError={() => setImgError(true)}
-      />
-    </div>
+    <Image
+      src="/images/logo.jpg"
+      alt="Gulas — Pizza, Burger & Coffee"
+      width={44}
+      height={44}
+      className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-contain bg-[#F3F3F3] border border-[#C09573]/40 shadow-xs"
+    />
   );
 };
 
@@ -118,8 +91,8 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
         <div className="mt-3 relative rounded-2xl overflow-hidden bg-[#FFFFFF] border border-[#E5DED6] shadow-xs">
           <div className="relative h-36 sm:h-44 w-full">
             <Image
-              src={restaurant.coverImageUrl}
-              alt="Gulas especialidades gastronómicas artesanais"
+              src="/images/cover.jpg"
+              alt="Pizza, burger e acompanhamentos Gulas"
               fill
               priority
               sizes="(max-width: 896px) 100vw, 896px"
@@ -136,10 +109,10 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                   <span>Vila das Aves</span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-xs">
-                  Escolhe o que te apetece.
+                  {restaurant.name}
                 </h1>
                 <p className="text-xs text-[#EAE5DF] font-medium hidden sm:block mt-0.5">
-                  Pizzas de fermentação lenta, caracóizzz artesanais &amp; burgers
+                  {restaurant.fullName}
                 </p>
               </div>
 

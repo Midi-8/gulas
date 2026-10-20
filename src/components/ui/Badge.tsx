@@ -20,7 +20,10 @@ interface BadgeProps {
     | 'vegan'
     | 'especialidade'
     | 'novidade'
-    | 'house_special';
+    | 'house_special'
+    | 'promocao'
+    | 'extra'
+    | 'acompanhamento';
   badgeType?: ProductBadge;
   className?: string;
   size?: 'sm' | 'md';
@@ -57,6 +60,12 @@ export const Badge: React.FC<BadgeProps> = ({
     house_special:
       'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/40 font-bold',
     popular:
+      'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6] font-medium',
+    promocao:
+      'bg-[#5E4939] text-[#F5F4F1] font-bold tracking-wide uppercase',
+    extra:
+      'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6] font-medium',
+    acompanhamento:
       'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6] font-medium',
     primary:
       'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/30',
@@ -98,6 +107,12 @@ export const Badge: React.FC<BadgeProps> = ({
         return 'Especial Gulas';
       case 'popular':
         return 'Popular';
+      case 'promocao':
+        return 'Promoção';
+      case 'extra':
+        return 'Extra';
+      case 'acompanhamento':
+        return 'Acompanhamento';
       default:
         return null;
     }

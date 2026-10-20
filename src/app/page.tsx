@@ -47,7 +47,7 @@ export default function HomePage() {
         </h1>
 
         <p className="mt-3 text-xs sm:text-sm text-[#4C453F] max-w-md font-normal leading-relaxed">
-          Caracóizzz, burgers artesanais em pão brioche, panuozzos e pizzas em Vila das Aves.
+          Gulas – Pizza, Burger & Coffee.
         </p>
 
         {/* Demo Action Cards */}

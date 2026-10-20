@@ -14,7 +14,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'GULAS — Pizza, Burger & Coffee (Vila das Aves)',
   description:
-    'Menu digital do Gulas em Vila das Aves: Caracóizzz, Burgers artesanais, Pizzas de longa fermentação, Panuozzos e Pregos no Caco.',
+    'Menu digital do Gulas – Pizza, Burger & Coffee, em Vila das Aves.',
+  icons: {
+    icon: [{ url: '/images/logo.jpg', type: 'image/jpeg' }],
+    shortcut: ['/images/logo.jpg'],
+    apple: [{ url: '/images/logo.jpg', type: 'image/jpeg' }],
+  },
 };
 
 export default function RootLayout({
