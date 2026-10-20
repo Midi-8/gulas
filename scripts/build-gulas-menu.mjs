@@ -3,7 +3,22 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const menu = JSON.parse(readFileSync(join(root, 'src/data/gulas-menu.json'), 'utf8'));
+const fotosPath = join(root, 'src/data/gulas_menu_com_fotos.json');
+const basePath = join(root, 'src/data/gulas-menu.json');
+let menu;
+try {
+  menu = JSON.parse(readFileSync(fotosPath, 'utf8'));
+} catch {
+  menu = JSON.parse(readFileSync(basePath, 'utf8'));
+}
+
+/** @type {Map<string, string>} */
+const imagemPorNome = new Map();
+for (const cat of menu.categorias || []) {
+  for (const item of cat.itens || []) {
+    if (item.imagem) imagemPorNome.set(item.nome, item.imagem);
+  }
+}
 
 const RID = 'e1a1a1a1-1111-4111-a111-111111111111';
 
@@ -137,6 +152,7 @@ for (const [index, cat] of menu.categorias.entries()) {
         unit: variant.unit,
         origin,
         restrictions,
+        imageUrl: item.imagem || imagemPorNome.get(item.nome) || '',
       });
     }
   }
@@ -175,7 +191,7 @@ function emitCatalog() {
     name: ${JSON.stringify(p.name)},
     description: ${JSON.stringify(p.description)},
     price: ${p.price.toFixed(2)},
-    imageUrl: '',
+    imageUrl: ${JSON.stringify(p.imageUrl || '')},
     available: true,
     position: ${p.position}${tail}
   }`;
@@ -212,7 +228,7 @@ function productValues() {
         sqlStr(p.description),
         p.price.toFixed(2),
         'NULL',
-        'NULL',
+        p.imageUrl ? sqlStr(p.imageUrl) : 'NULL',
         'true',
         p.position,
         sqlArr(p.badges),

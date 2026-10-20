@@ -1,0 +1,120 @@
+== ATRIBUÍDAS ==
+OK   panuozzo-iberico  ->  /images/produtos/panuozzo-iberico.webp
+OK   bolo-do-caco-com-manteiga-d-alho  ->  /images/produtos/bolo-do-caco-com-manteiga-d-alho.webp
+OK   lulas-romanas-com-molho-agridoce  ->  /images/produtos/lulas-romanas-com-molho-agridoce.webp
+OK   batata-rustica  ->  /images/produtos/batata-rustica.webp
+OK   caracoizz-cheddar-e-bacon  ->  /images/produtos/caracoizz-cheddar-e-bacon.webp
+OK   margarida  ->  /images/produtos/margarida.webp
+OK   pepe-do-bosque  ->  /images/produtos/pepe-do-bosque.webp
+OK   gulas-burger  ->  /images/produtos/gulas-burger.webp
+OK   cheese-burger  ->  /images/produtos/cheese-burger.webp
+OK   classic-burger  ->  /images/produtos/classic-burger.webp
+OK   sem-alcool-damm  ->  /images/produtos/sem-alcool-damm.webp
+OK   damm-inedit  ->  /images/produtos/damm-inedit.webp
+OK   coca-cola  ->  /images/produtos/coca-cola.webp
+OK   guarana  ->  /images/produtos/guarana.webp
+OK   agua  ->  /images/produtos/agua.webp
+
+== SEM FOTO ==
+SEM  menu-as-12-na-tojela
+SEM  oktoberfest-20
+SEM  la-rosa-ipa
+SEM  bolinho-de-bolacha-e-coco
+SEM  sorvete-em-frasco-artiframi
+SEM  sao-miguel-burger
+SEM  bruschetta-iberica
+SEM  pina-colada-fizz
+SEM  palitos-do-bosque
+SEM  panuozzo-caprese
+SEM  cheeseburger-bacon-edition
+SEM  burrata-bowl-salmao-fumado
+SEM  acompanha-o-teu-burger-palito-c-cheddar-e-cebola-frita
+SEM  gin-pablo
+SEM  limontejo-tonico
+SEM  pina-colada-fizz
+SEM  sangria-a-copo
+SEM  sangria-de-espumante-e-maracuja
+SEM  sangria-lambrusco-de-frutos-vermelhos-1lt
+SEM  bruschetta-iberica
+SEM  burrata-bowl-salmao-fumado
+SEM  palitos-do-bosque
+SEM  caco-o-it-v-i
+SEM  burrata-bowl
+SEM  sticks-de-frango
+SEM  bruschetta-classica
+SEM  chacon-fries
+SEM  ovos-rotos
+SEM  batata-frita-palito
+SEM  chips-batata-doce
+SEM  caracoizz-ao-alho
+SEM  caracoizz-classicos
+SEM  caracoizz-genovese
+SEM  caracoizz-vegan
+SEM  caracoizz-mexicanos
+SEM  caracoizz-populares
+SEM  caracoizz-turcos
+SEM  panuozzo-caprese
+SEM  gulas
+SEM  pepe
+SEM  aquela-com-tabasco
+SEM  pescador
+SEM  salamandra
+SEM  a-mais-formosa
+SEM  vegetariana
+SEM  kebab
+SEM  a-polemica
+SEM  classica
+SEM  mista
+SEM  romao
+SEM  iberica
+SEM  dos-camaroes
+SEM  calzone
+SEM  adiciona-burrata-nas-pizzas-especiais
+SEM  sao-miguel-burger
+SEM  cheeseburger-bacon-edition
+SEM  classic-2-0
+SEM  mostarda-s
+SEM  frango-burger
+SEM  spicy-chicken
+SEM  veg-burger
+SEM  malhao
+SEM  prego-no-caco
+SEM  prego-2-0
+SEM  wrap-frango
+SEM  wrap-atum
+SEM  wrap-vegan
+SEM  erdinger-helles
+SEM  la-rosa-ipa
+SEM  copo-de-cerveja-estrella-damm
+SEM  caneca-de-cerveja-estrella-damm
+SEM  bock-damm
+SEM  erdinger-weiss
+SEM  erdinger-pikantus
+SEM  vinha-do-conde-tinto
+SEM  adega-mayor-reserva-tinto
+SEM  verde-branco-pequenos-rebentos
+SEM  anel-doc-douro-branco
+SEM  sidra
+SEM  sumol-ice-tea-7up
+SEM  bi-maracuja
+SEM  schweppes-ginger-ale
+SEM  frize-sabores
+SEM  agua-tonica
+SEM  compal
+SEM  cafe-descafeinado-carioca
+SEM  pingo
+SEM  cafe-americano-abatanado-cafe-duplo
+SEM  cha
+SEM  bolinho-de-bolacha-e-coco
+SEM  sorvete-em-frasco-artiframi
+SEM  creme-catalao
+SEM  cheesecake
+SEM  gin-pablo
+SEM  limontejo
+SEM  limontejo-tonico
+SEM  jack-daniels
+SEM  tomatin
+SEM  cr-f
+SEM  licor-beirao
+SEM  amendoa-amarga
+SEM  vinho-do-porto

@@ -202,7 +202,7 @@ export const menuProducts: Product[] = [
     name: "Menú “Às 12 na Tojela”",
     description: "Entrada do dia + Pizza OU Burger do dia + Bebida (copo cerveja 20cl/água/refrigerante) + Café (Sobremesa do dia + 2€). Menu INDIVIDUAL. Disponível de QUI-SAB ao almoço apenas em sala. Não pode trocar/adicionar ingredientes. Não acumula com outras…",
     price: 11.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1,
     customizationNote: "só em sala · QUI-SAB almoço · sem alterações · não acumula"
@@ -214,7 +214,7 @@ export const menuProducts: Product[] = [
     name: "Oktoberfest -20%",
     description: "Desconto de 20% aplicável nas cervejas Erdinger, La Rosa IPA, Estrella Damm 50cl e Inedit 33cl. Desconto já aplicado no preço apresentado. Válido de 16/10 a 31/10.",
     price: 0.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1,
     badges: ["promocao","novidade"] as Product['badges'],
@@ -227,7 +227,7 @@ export const menuProducts: Product[] = [
     name: "LA ROSA IPA 33cl",
     description: "",
     price: 4.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2,
     badges: ["novidade"] as Product['badges']
@@ -239,7 +239,7 @@ export const menuProducts: Product[] = [
     name: "Bolinho de bolacha e côco",
     description: "",
     price: 4.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3,
     badges: ["novidade"] as Product['badges']
@@ -251,7 +251,7 @@ export const menuProducts: Product[] = [
     name: "SORVETE EM FRASCO ARTIFRAMI",
     description: "Morango / Tanjerina e manjericão",
     price: 3.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4,
     badges: ["novidade"] as Product['badges']
@@ -263,7 +263,7 @@ export const menuProducts: Product[] = [
     name: "SÃO MIGUEL BURGER",
     description: "",
     price: 9.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5,
     badges: ["novidade"] as Product['badges']
@@ -275,7 +275,7 @@ export const menuProducts: Product[] = [
     name: "Bruschetta Ibérica",
     description: "",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6,
     badges: ["novidade"] as Product['badges']
@@ -287,7 +287,7 @@ export const menuProducts: Product[] = [
     name: "PIÑA COLADA FIZZ",
     description: "",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 7,
     badges: ["novidade"] as Product['badges']
@@ -299,7 +299,7 @@ export const menuProducts: Product[] = [
     name: "PALITOS DO BOSQUE",
     description: "",
     price: 4.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 8,
     badges: ["novidade"] as Product['badges']
@@ -311,7 +311,7 @@ export const menuProducts: Product[] = [
     name: "PANUOZZO CAPRESE",
     description: "",
     price: 11.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 9,
     badges: ["novidade"] as Product['badges']
@@ -323,7 +323,7 @@ export const menuProducts: Product[] = [
     name: "CHEESEBURGER BACON EDITION",
     description: "",
     price: 9.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 10,
     badges: ["novidade"] as Product['badges']
@@ -335,7 +335,7 @@ export const menuProducts: Product[] = [
     name: "BURRATA BOWL SALMÃO FUMADO",
     description: "",
     price: 13.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 11,
     badges: ["novidade"] as Product['badges']
@@ -347,7 +347,7 @@ export const menuProducts: Product[] = [
     name: "PANUOZZO IBERICO",
     description: "",
     price: 12.00,
-    imageUrl: '',
+    imageUrl: "/images/produtos/panuozzo-iberico.webp",
     available: true,
     position: 12,
     badges: ["novidade"] as Product['badges']
@@ -359,7 +359,7 @@ export const menuProducts: Product[] = [
     name: "Acompanha o teu burger c/ batata palito c/ cheddar e cebola frita",
     description: "Batata palito com cheddar e cebola frita.",
     price: 4.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 13,
     badges: ["novidade","acompanhamento"] as Product['badges']
@@ -371,7 +371,7 @@ export const menuProducts: Product[] = [
     name: "GIN PABLO",
     description: "",
     price: 7.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -382,7 +382,7 @@ export const menuProducts: Product[] = [
     name: "LIMONTEJO TÓNICO",
     description: "",
     price: 7.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -393,7 +393,7 @@ export const menuProducts: Product[] = [
     name: "PIÑA COLADA FIZZ",
     description: "",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -404,7 +404,7 @@ export const menuProducts: Product[] = [
     name: "SANGRIA a copo",
     description: "Frutos vermelhos/maracujá",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -415,7 +415,7 @@ export const menuProducts: Product[] = [
     name: "SANGRIA de espumante e maracujá",
     description: "",
     price: 17.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -426,7 +426,7 @@ export const menuProducts: Product[] = [
     name: "SANGRIA Lambrusco de Frutos Vermelhos – 1LT",
     description: "",
     price: 17.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -437,7 +437,7 @@ export const menuProducts: Product[] = [
     name: "Bruschetta Ibérica",
     description: "Pão torrado em azeite, rúcula, tomate cherry, presunto, pesto e creme balsâmico.",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -448,7 +448,7 @@ export const menuProducts: Product[] = [
     name: "BURRATA BOWL SALMÃO FUMADO",
     description: "Bowl feita em massa de pizza, burrata de leite italiano, rúcula, mix de tomate cherry, salmão fumado, abacate, manjericão fresco, mel, nozes, parmesão, lima e molho pesto.",
     price: 13.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2,
     customizationNote: "sem alterações · indisponível take away"
@@ -460,7 +460,7 @@ export const menuProducts: Product[] = [
     name: "PALITOS DO BOSQUE",
     description: "Batata frita palito com maionese de trufa e queijo parmesão ralado.",
     price: 4.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -471,7 +471,7 @@ export const menuProducts: Product[] = [
     name: "Bolo do Caco com Manteiga d’ Alho",
     description: "",
     price: 3.00,
-    imageUrl: '',
+    imageUrl: "/images/produtos/bolo-do-caco-com-manteiga-d-alho.webp",
     available: true,
     position: 4
   },
@@ -482,7 +482,7 @@ export const menuProducts: Product[] = [
     name: "CACO OᗡITЯƎVͶI",
     description: "Bolo do Caco, a nossa manteiga d'alho, queijo mozzarella, bacon e oregãos.",
     price: 4.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5
   },
@@ -493,7 +493,7 @@ export const menuProducts: Product[] = [
     name: "BURRATA BOWL",
     description: "Bowl feita em massa de pizza, burrata de leite italiano, rúcula, mix de tomate cherry, pepino, ananás, manjericão fresco, mel, nozes, parmesão, molho pesto e vinagre balsâmico.",
     price: 10.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6,
     customizationNote: "sem alterações · indisponível take away"
@@ -505,7 +505,7 @@ export const menuProducts: Product[] = [
     name: "Lulas Romanas com Molho Agridoce",
     description: "(6un)",
     price: 4.30,
-    imageUrl: '',
+    imageUrl: "/images/produtos/lulas-romanas-com-molho-agridoce.webp",
     available: true,
     position: 7
   },
@@ -516,7 +516,7 @@ export const menuProducts: Product[] = [
     name: "Sticks de Frango",
     description: "(5un)",
     price: 5.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 8
   },
@@ -527,7 +527,7 @@ export const menuProducts: Product[] = [
     name: "Bruschetta Clássica",
     description: "Pão tostado em azeite, cogumelo shitake, tomate cherry, rúcula, lascas de parmesão, oregãos e um fio de azeite virgem.",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 9
   },
@@ -538,7 +538,7 @@ export const menuProducts: Product[] = [
     name: "Chacon Fries",
     description: "Batata frita, bacon, molho de cheddar, jalapeño e cebola frita.",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 10,
     badges: ["picante"] as Product['badges']
@@ -550,7 +550,7 @@ export const menuProducts: Product[] = [
     name: "Ovos Rotos",
     description: "Batata frita, presunto, 2 ovos, paprika fumada e salsa fresca picada.",
     price: 7.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 11
   },
@@ -561,7 +561,7 @@ export const menuProducts: Product[] = [
     name: "Batata Rústica",
     description: "Batata cortada em gomo, condimentada.",
     price: 3.00,
-    imageUrl: '',
+    imageUrl: "/images/produtos/batata-rustica.webp",
     available: true,
     position: 12
   },
@@ -572,7 +572,7 @@ export const menuProducts: Product[] = [
     name: "Batata frita palito",
     description: "",
     price: 2.70,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 13
   },
@@ -583,7 +583,7 @@ export const menuProducts: Product[] = [
     name: "CHIPS BATATA DOCE",
     description: "",
     price: 1.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 14
   },
@@ -594,7 +594,7 @@ export const menuProducts: Product[] = [
     name: "Caracóizz ao Alho",
     description: "Em massa de pizza, mozzarella e manteiga d'alho, fio de azeite virgem extra e oregãos (6un).",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -605,7 +605,7 @@ export const menuProducts: Product[] = [
     name: "Caracóizz Clássicos",
     description: "Em massa de pizza, molho de tomate, mozzarella, fiambre, fio de azeite virgem extra e oregãos (6un).",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -616,7 +616,7 @@ export const menuProducts: Product[] = [
     name: "Caracóizz Genovese",
     description: "Em massa de pizza, tomate cherry, molho pesto, parmesão, fio de azeite virgem extra e oregãos (6un).",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -627,7 +627,7 @@ export const menuProducts: Product[] = [
     name: "Caracóizz Vegan",
     description: "Em massa de pizza, molho de tomate, queijo vegan, cogumelo shitake, pimentos, cebola, fio de azeite virgem extra e manjericão seco. Opção queijo mozzarella s/custo (6un).",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4,
     badges: ["vegan"] as Product['badges']
@@ -639,7 +639,7 @@ export const menuProducts: Product[] = [
     name: "Caracóizz Mexicanos",
     description: "Em massa de pizza, molho de tomate, mozzarella e pimento-jalapeño, fio de azeite virgem extra e oregãos. Acompanha com molho de cheddar (6un).",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5,
     badges: ["picante"] as Product['badges']
@@ -651,7 +651,7 @@ export const menuProducts: Product[] = [
     name: "Caracóizz Cheddar e Bacon",
     description: "Em massa de pizza, molho de tomate, queijo cheddar e bacon, fio de azeite virgem extra e oregãos (6un). Acompanha com molho cheddar.",
     price: 6.50,
-    imageUrl: '',
+    imageUrl: "/images/produtos/caracoizz-cheddar-e-bacon.webp",
     available: true,
     position: 6
   },
@@ -662,7 +662,7 @@ export const menuProducts: Product[] = [
     name: "CARACÓIZZ POPULARES",
     description: "Em massa de pizza, molho de tomate, queijo flamengo, chourição e topping de cebola granulada, fio de azeite virgem extra e oregãos (6un).",
     price: 6.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 7
   },
@@ -673,7 +673,7 @@ export const menuProducts: Product[] = [
     name: "Caracóizz Turcos",
     description: "Em massa de pizza, molho de tomate, mozzarella, kebab e cebola frita, fio de azeite virgem extra e oregãos. Acompanha com molho de kebab (6un).",
     price: 6.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 8
   },
@@ -684,7 +684,7 @@ export const menuProducts: Product[] = [
     name: "PANUOZZO CAPRESE",
     description: "Em massa de pizza, burrata, manjericão, molho pesto, tomate, parmesão e um fio de azeite virgem extra.",
     price: 11.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1,
     customizationNote: "sem alterações"
@@ -696,7 +696,7 @@ export const menuProducts: Product[] = [
     name: "PANUOZZO IBERICO",
     description: "Em massa de pizza, burrata, rúcula, molho pesto, presunto, parmesão e um fio de azeite virgem extra.",
     price: 12.00,
-    imageUrl: '',
+    imageUrl: "/images/produtos/panuozzo-iberico.webp",
     available: true,
     position: 2,
     customizationNote: "sem alterações"
@@ -708,7 +708,7 @@ export const menuProducts: Product[] = [
     name: "Gulas",
     description: "Molho de tomate, mozzarella, frango grelhado, pimentos, azeitonas, cogumelos, cebola e oregãos.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1,
     unitQuantity: "Normal"
@@ -720,7 +720,7 @@ export const menuProducts: Product[] = [
     name: "Gulas",
     description: "Molho de tomate, mozzarella, frango grelhado, pimentos, azeitonas, cogumelos, cebola e oregãos.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2,
     unitQuantity: "Familiar"
@@ -732,7 +732,7 @@ export const menuProducts: Product[] = [
     name: "Pepe",
     description: "Molho de tomate, mozzarella, pepperoni e orégãos.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3,
     badges: ["picante"] as Product['badges'],
@@ -745,7 +745,7 @@ export const menuProducts: Product[] = [
     name: "Pepe",
     description: "Molho de tomate, mozzarella, pepperoni e orégãos.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4,
     badges: ["picante"] as Product['badges'],
@@ -758,7 +758,7 @@ export const menuProducts: Product[] = [
     name: "Aquela com Tabasco®",
     description: "Molho de tomate, mozzarella, fiambre, bacon, pimentos, cogumelos, orégãos e Tabasco®.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5,
     unitQuantity: "Normal"
@@ -770,7 +770,7 @@ export const menuProducts: Product[] = [
     name: "Aquela com Tabasco®",
     description: "Molho de tomate, mozzarella, fiambre, bacon, pimentos, cogumelos, orégãos e Tabasco®.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6,
     unitQuantity: "Familiar"
@@ -782,7 +782,7 @@ export const menuProducts: Product[] = [
     name: "Pescador",
     description: "Molho de tomate, mozzarella, atum, cebola roxa, ovo cozido e manjericão fresco.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 7,
     unitQuantity: "Normal"
@@ -794,7 +794,7 @@ export const menuProducts: Product[] = [
     name: "Pescador",
     description: "Molho de tomate, mozzarella, atum, cebola roxa, ovo cozido e manjericão fresco.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 8,
     unitQuantity: "Familiar"
@@ -806,7 +806,7 @@ export const menuProducts: Product[] = [
     name: "Salamandra",
     description: "Molho de tomate, mozzarella, ovo, bacon, cogumelos, cebola roxa e orégãos.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 9,
     unitQuantity: "Normal"
@@ -818,7 +818,7 @@ export const menuProducts: Product[] = [
     name: "Salamandra",
     description: "Molho de tomate, mozzarella, ovo, bacon, cogumelos, cebola roxa e orégãos.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 10,
     unitQuantity: "Familiar"
@@ -830,7 +830,7 @@ export const menuProducts: Product[] = [
     name: "A Mais Formosa",
     description: "Molho de tomate, mozzarella, fiambre, bacon, chourição, cogumelos e azeitonas.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 11,
     unitQuantity: "Normal"
@@ -842,7 +842,7 @@ export const menuProducts: Product[] = [
     name: "A Mais Formosa",
     description: "Molho de tomate, mozzarella, fiambre, bacon, chourição, cogumelos e azeitonas.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 12,
     unitQuantity: "Familiar"
@@ -854,7 +854,7 @@ export const menuProducts: Product[] = [
     name: "Vegetariana",
     description: "Molho de tomate, mozzarella, azeitonas, rúcula, mix cogumelos, pimentos, cebola e tomate cherry. Opção queijo vegan: consultar disponibilidade e mediante custo extra.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 13,
     badges: ["vegetariano"] as Product['badges'],
@@ -867,7 +867,7 @@ export const menuProducts: Product[] = [
     name: "Vegetariana",
     description: "Molho de tomate, mozzarella, azeitonas, rúcula, mix cogumelos, pimentos, cebola e tomate cherry. Opção queijo vegan: consultar disponibilidade e mediante custo extra.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 14,
     badges: ["vegetariano"] as Product['badges'],
@@ -880,7 +880,7 @@ export const menuProducts: Product[] = [
     name: "Kebab",
     description: "Molho de tomate, mozzarella, carne de kebab, cebola e molho kebab.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 15,
     unitQuantity: "Normal"
@@ -892,7 +892,7 @@ export const menuProducts: Product[] = [
     name: "Kebab",
     description: "Molho de tomate, mozzarella, carne de kebab, cebola e molho kebab.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 16,
     unitQuantity: "Familiar"
@@ -904,7 +904,7 @@ export const menuProducts: Product[] = [
     name: "A Polémica",
     description: "Molho de tomate, mozzarella, fiambre e ananás.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 17,
     unitQuantity: "Normal"
@@ -916,7 +916,7 @@ export const menuProducts: Product[] = [
     name: "A Polémica",
     description: "Molho de tomate, mozzarella, fiambre e ananás.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 18,
     unitQuantity: "Familiar"
@@ -928,7 +928,7 @@ export const menuProducts: Product[] = [
     name: "Clássica",
     description: "Molho de tomate, mozzarella, pimentos, fiambre, cogumelos, azeitonas e oregãos.",
     price: 12.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 19,
     unitQuantity: "Normal"
@@ -940,7 +940,7 @@ export const menuProducts: Product[] = [
     name: "Clássica",
     description: "Molho de tomate, mozzarella, pimentos, fiambre, cogumelos, azeitonas e oregãos.",
     price: 16.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 20,
     unitQuantity: "Familiar"
@@ -952,7 +952,7 @@ export const menuProducts: Product[] = [
     name: "Mista",
     description: "Molho de tomate, mozzarella, fiambre e oregãos.",
     price: 12.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 21,
     unitQuantity: "Normal"
@@ -964,7 +964,7 @@ export const menuProducts: Product[] = [
     name: "Mista",
     description: "Molho de tomate, mozzarella, fiambre e oregãos.",
     price: 16.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 22,
     unitQuantity: "Familiar"
@@ -976,7 +976,7 @@ export const menuProducts: Product[] = [
     name: "Margarida",
     description: "Molho tomate, mozzarella fior di latte, queijo parmesão, manjericão fresco e um fio de azeite.",
     price: 12.00,
-    imageUrl: '',
+    imageUrl: "/images/produtos/margarida.webp",
     available: true,
     position: 1
   },
@@ -987,7 +987,7 @@ export const menuProducts: Product[] = [
     name: "PEPE DO BOSQUE",
     description: "Molho tomate, mozzarella fior di latte, pepperoni, cogumelos, lascas de parmesão, manjericão, regada com fio de azeite trufado.",
     price: 14.50,
-    imageUrl: '',
+    imageUrl: "/images/produtos/pepe-do-bosque.webp",
     available: true,
     position: 2,
     badges: ["picante"] as Product['badges']
@@ -999,7 +999,7 @@ export const menuProducts: Product[] = [
     name: "“Romão”",
     description: "Molho de tomate, mozzarella fior di latte, presunto, mix cogumelos shitake e paris, manjericão fresco.",
     price: 14.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -1010,7 +1010,7 @@ export const menuProducts: Product[] = [
     name: "Ibérica",
     description: "Molho de tomate, mozzarella fior di latte, rúcula, presunto, raspas de parmesão e fio de azeite.",
     price: 14.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4
   },
@@ -1021,7 +1021,7 @@ export const menuProducts: Product[] = [
     name: "Dos Camarões",
     description: "Molho de tomate, mozzarella fior di latte, miolo de camarão, cebola roxa, rúcula e fio de balsâmico.",
     price: 14.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5
   },
@@ -1032,7 +1032,7 @@ export const menuProducts: Product[] = [
     name: "Calzone",
     description: "Molho de tomate, mozzarella fior di latte + 3 ingredientes à escolha, fio de azeite, parmesão, balsâmico e salada. Sugestão: chourição, cogumelos e ovo.",
     price: 14.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6
   },
@@ -1043,7 +1043,7 @@ export const menuProducts: Product[] = [
     name: "Adiciona Burrata nas pizzas especiais",
     description: "100% produto origem italiana.",
     price: 3.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 7,
     badges: ["extra"] as Product['badges']
@@ -1055,7 +1055,7 @@ export const menuProducts: Product[] = [
     name: "alteração de produto",
     description: "",
     price: 0.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1066,7 +1066,7 @@ export const menuProducts: Product[] = [
     name: "base molho pesto",
     description: "Em troca do molho de tomate.",
     price: 1.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -1077,7 +1077,7 @@ export const menuProducts: Product[] = [
     name: "Burrata de leite italiano",
     description: "",
     price: 3.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -1088,7 +1088,7 @@ export const menuProducts: Product[] = [
     name: "legumes / vegetais / queijo parmesão / molho de tomate",
     description: "",
     price: 0.80,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4
   },
@@ -1099,7 +1099,7 @@ export const menuProducts: Product[] = [
     name: "queijo mozzarella / ovo",
     description: "",
     price: 1.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5
   },
@@ -1110,7 +1110,7 @@ export const menuProducts: Product[] = [
     name: "fiambre / bacon / chourição / ananás / cogumelo shitake",
     description: "",
     price: 1.30,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6
   },
@@ -1121,7 +1121,7 @@ export const menuProducts: Product[] = [
     name: "troca por queijo vegan",
     description: "",
     price: 1.80,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 7
   },
@@ -1132,7 +1132,7 @@ export const menuProducts: Product[] = [
     name: "atum / pepperoni / frango / camarões / presunto",
     description: "",
     price: 2.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 8
   },
@@ -1143,7 +1143,7 @@ export const menuProducts: Product[] = [
     name: "azeite trufado / molho kebab / balsâmico / pesto",
     description: "",
     price: 0.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 9
   },
@@ -1154,7 +1154,7 @@ export const menuProducts: Product[] = [
     name: "caixa take away",
     description: "",
     price: 0.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 10
   },
@@ -1165,7 +1165,7 @@ export const menuProducts: Product[] = [
     name: "SÃO MIGUEL BURGER",
     description: "Pão brioche, molho secreto, 120gr carne bovina, queijo da Ilha, bacon, ananás grelhado e ovo.",
     price: 9.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1,
     customizationNote: "sem alterações"
@@ -1177,7 +1177,7 @@ export const menuProducts: Product[] = [
     name: "CHEESEBURGER BACON EDITION",
     description: "Pão brioche, 120 gr de carne bovina, maionese de bacon, pickles, queijo cheddar e bacon.",
     price: 9.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2,
     customizationNote: "sem alterações, exceto extra carne (com custo)"
@@ -1189,7 +1189,7 @@ export const menuProducts: Product[] = [
     name: "Gulas Burger",
     description: "Pão brioche, 120gr de carne bovina, bacon, cogumelos shitake salteados, queijo flamengo, ovo.",
     price: 9.40,
-    imageUrl: '',
+    imageUrl: "/images/produtos/gulas-burger.webp",
     available: true,
     position: 3
   },
@@ -1200,7 +1200,7 @@ export const menuProducts: Product[] = [
     name: "CLASSIC 2.0",
     description: "Pão brioche, 120gr de carne bovina, molho smoked barbecue, alface, queijo cheddar, bacon, tomate e cebola roxa fresca.",
     price: 9.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4
   },
@@ -1211,7 +1211,7 @@ export const menuProducts: Product[] = [
     name: "Mostarda’s",
     description: "Bolo do caco, 120gr de carne bovina, mostarda, cebola caramelizada em mostarda, queijo cheddar e presunto.",
     price: 9.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5
   },
@@ -1222,7 +1222,7 @@ export const menuProducts: Product[] = [
     name: "Frango Burger",
     description: "Bolo do caco, 130gr de frango panado, queijo flamengo, cebola frita, alface, maionese d'alho. Se peito de frango panado esgotar, substituído por burger de frango crocante.",
     price: 9.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6
   },
@@ -1233,7 +1233,7 @@ export const menuProducts: Product[] = [
     name: "SPICY CHICKEN",
     description: "Em pão brioche, ketchup picante, pimento jalapeño, crocante de frango, rúcula e queijo cheddar.",
     price: 8.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 7,
     badges: ["picante"] as Product['badges']
@@ -1245,7 +1245,7 @@ export const menuProducts: Product[] = [
     name: "Veg Burger",
     description: "Em bolo do caco, burger crocante de vegetais, tomate, cebola roxa e cogumelos shitake salteados, molho de mostarda e mel, rúcula.",
     price: 9.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 8,
     badges: ["vegetariano"] as Product['badges']
@@ -1257,7 +1257,7 @@ export const menuProducts: Product[] = [
     name: "Cheese Burger",
     description: "Pão brioche, 120gr de carne bovina, queijo cheddar, pickles, ketchup.",
     price: 8.40,
-    imageUrl: '',
+    imageUrl: "/images/produtos/cheese-burger.webp",
     available: true,
     position: 9
   },
@@ -1268,7 +1268,7 @@ export const menuProducts: Product[] = [
     name: "Classic Burger",
     description: "Pão brioche, 120gr de carne bovina, queijo cheddar, fiambre, alface, tomate.",
     price: 8.40,
-    imageUrl: '',
+    imageUrl: "/images/produtos/classic-burger.webp",
     available: true,
     position: 10
   },
@@ -1279,7 +1279,7 @@ export const menuProducts: Product[] = [
     name: "“Malhão”",
     description: "Escolhe a tua combinação de burger preferida, sem pão e com salada, por mais 2,5€.",
     price: 2.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 11,
     badges: ["extra"] as Product['badges'],
@@ -1292,7 +1292,7 @@ export const menuProducts: Product[] = [
     name: "alteração de produto",
     description: "",
     price: 0.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1303,7 +1303,7 @@ export const menuProducts: Product[] = [
     name: "molho extra",
     description: "",
     price: 0.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -1314,7 +1314,7 @@ export const menuProducts: Product[] = [
     name: "extra ovo / legumes / vegetais / fiambre / queijo / bacon",
     description: "",
     price: 1.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -1325,7 +1325,7 @@ export const menuProducts: Product[] = [
     name: "extra presunto / cebola caramelizada / cogumelo shitake",
     description: "",
     price: 1.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4
   },
@@ -1336,7 +1336,7 @@ export const menuProducts: Product[] = [
     name: "extra burger carne bovina",
     description: "",
     price: 2.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5
   },
@@ -1347,7 +1347,7 @@ export const menuProducts: Product[] = [
     name: "caixa take away",
     description: "",
     price: 0.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6
   },
@@ -1358,7 +1358,7 @@ export const menuProducts: Product[] = [
     name: "Prego no Caco",
     description: "Bolo do Caco, bife, queijo flamengo, fiambre acompanhado com chips de batata.",
     price: 7.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1369,7 +1369,7 @@ export const menuProducts: Product[] = [
     name: "PREGO 2.0",
     description: "Bolo do Caco, bife, queijo cheddar, bacon, ovo, acompanhado com chips de batata.",
     price: 8.60,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -1380,7 +1380,7 @@ export const menuProducts: Product[] = [
     name: "WRAP FRANGO",
     description: "Frango panado, queijo flamengo, alface, cebola frita, molho 54. Acompanha com chips batata doce.",
     price: 6.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1,
     customizationNote: "só almoço · sem alterações"
@@ -1392,7 +1392,7 @@ export const menuProducts: Product[] = [
     name: "WRAP ATUM",
     description: "Atum, ovo cozido, rúcula, cebola roxa, molho vinagrete. Acompanha com chips batata doce.",
     price: 6.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2,
     customizationNote: "só almoço · sem alterações"
@@ -1404,7 +1404,7 @@ export const menuProducts: Product[] = [
     name: "WRAP VEGAN",
     description: "Nugget vegan, queijo vegan, tomate, alface, rúcula, cebola, molho vinagrete. Acompanha com chips batata doce.",
     price: 6.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3,
     badges: ["vegan"] as Product['badges'],
@@ -1417,7 +1417,7 @@ export const menuProducts: Product[] = [
     name: "Erdinger HELLES 33cl",
     description: "",
     price: 5.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1,
     includesNotes: "Alemanha"
@@ -1429,7 +1429,7 @@ export const menuProducts: Product[] = [
     name: "LA ROSA IPA 33cl",
     description: "",
     price: 4.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2,
     includesNotes: "Portugal"
@@ -1441,7 +1441,7 @@ export const menuProducts: Product[] = [
     name: "Copo de Cerveja – Estrella Damm",
     description: "",
     price: 1.60,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3,
     unitQuantity: "20cl",
@@ -1454,7 +1454,7 @@ export const menuProducts: Product[] = [
     name: "Copo de Cerveja – Estrella Damm",
     description: "",
     price: 2.20,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4,
     unitQuantity: "33cl",
@@ -1467,7 +1467,7 @@ export const menuProducts: Product[] = [
     name: "Caneca de Cerveja – Estrella Damm 50cl",
     description: "",
     price: 2.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5,
     includesNotes: "Espanha"
@@ -1479,7 +1479,7 @@ export const menuProducts: Product[] = [
     name: "BOCK Damm 25cl",
     description: "",
     price: 2.10,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6,
     includesNotes: "Espanha"
@@ -1491,7 +1491,7 @@ export const menuProducts: Product[] = [
     name: "SEM ALCOOL Damm 25cl",
     description: "",
     price: 2.10,
-    imageUrl: '',
+    imageUrl: "/images/produtos/sem-alcool-damm.webp",
     available: true,
     position: 7,
     includesNotes: "Espanha"
@@ -1503,7 +1503,7 @@ export const menuProducts: Product[] = [
     name: "Damm INEDIT 33cl",
     description: "",
     price: 3.10,
-    imageUrl: '',
+    imageUrl: "/images/produtos/damm-inedit.webp",
     available: true,
     position: 8,
     includesNotes: "Espanha"
@@ -1515,7 +1515,7 @@ export const menuProducts: Product[] = [
     name: "ERDINGER WEISS 50cl",
     description: "",
     price: 4.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 9,
     includesNotes: "Alemanha"
@@ -1527,7 +1527,7 @@ export const menuProducts: Product[] = [
     name: "ERDINGER Pikantus 50cl",
     description: "",
     price: 5.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 10,
     includesNotes: "Alemanha"
@@ -1539,7 +1539,7 @@ export const menuProducts: Product[] = [
     name: "VINHA DO CONDE tinto 37cl",
     description: "Alentejo - Herdade Paço do Conde",
     price: 6.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1550,7 +1550,7 @@ export const menuProducts: Product[] = [
     name: "Adega Mayor Reserva Tinto 75cl",
     description: "Alentejo",
     price: 15.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -1561,7 +1561,7 @@ export const menuProducts: Product[] = [
     name: "Verde Branco Pequenos Rebentos 75cl",
     description: "Márcio Lopes winemaker - Alvarinho & Trajadura",
     price: 13.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -1572,7 +1572,7 @@ export const menuProducts: Product[] = [
     name: "ANEL DOC Douro Branco 75cl",
     description: "Márcio Lopes winemaker",
     price: 14.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4
   },
@@ -1583,7 +1583,7 @@ export const menuProducts: Product[] = [
     name: "Sidra",
     description: "Maçã / Frutos Vermelhos",
     price: 3.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1594,7 +1594,7 @@ export const menuProducts: Product[] = [
     name: "Coca-Cola 35cl",
     description: "",
     price: 2.10,
-    imageUrl: '',
+    imageUrl: "/images/produtos/coca-cola.webp",
     available: true,
     position: 2
   },
@@ -1605,7 +1605,7 @@ export const menuProducts: Product[] = [
     name: "Sumol / Ice Tea / 7UP 33cl",
     description: "",
     price: 2.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -1616,7 +1616,7 @@ export const menuProducts: Product[] = [
     name: "Guaraná 33cl",
     description: "",
     price: 2.10,
-    imageUrl: '',
+    imageUrl: "/images/produtos/guarana.webp",
     available: true,
     position: 4
   },
@@ -1627,7 +1627,7 @@ export const menuProducts: Product[] = [
     name: "BI Maracuja",
     description: "",
     price: 2.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5
   },
@@ -1638,7 +1638,7 @@ export const menuProducts: Product[] = [
     name: "Schweppes Ginger Ale",
     description: "",
     price: 2.40,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6
   },
@@ -1649,7 +1649,7 @@ export const menuProducts: Product[] = [
     name: "FRIZE SABORES",
     description: "",
     price: 1.60,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 7
   },
@@ -1660,7 +1660,7 @@ export const menuProducts: Product[] = [
     name: "Água Tónica",
     description: "",
     price: 2.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 8
   },
@@ -1671,7 +1671,7 @@ export const menuProducts: Product[] = [
     name: "Água 50cl",
     description: "",
     price: 1.40,
-    imageUrl: '',
+    imageUrl: "/images/produtos/agua.webp",
     available: true,
     position: 9
   },
@@ -1682,7 +1682,7 @@ export const menuProducts: Product[] = [
     name: "Compal",
     description: "",
     price: 1.60,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 10
   },
@@ -1693,7 +1693,7 @@ export const menuProducts: Product[] = [
     name: "Café / Descafeinado / Carioca",
     description: "c/ gelo +0,10€",
     price: 0.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1704,7 +1704,7 @@ export const menuProducts: Product[] = [
     name: "Pingo",
     description: "",
     price: 1.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -1715,7 +1715,7 @@ export const menuProducts: Product[] = [
     name: "Café Americano / Abatanado / Café Duplo",
     description: "",
     price: 1.30,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -1726,7 +1726,7 @@ export const menuProducts: Product[] = [
     name: "Chá",
     description: "",
     price: 1.30,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4
   },
@@ -1737,7 +1737,7 @@ export const menuProducts: Product[] = [
     name: "Bolinho de bolacha e côco",
     description: "",
     price: 4.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1748,7 +1748,7 @@ export const menuProducts: Product[] = [
     name: "SORVETE EM FRASCO ARTIFRAMI",
     description: "Morango / Tanjerina e manjericão",
     price: 3.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -1759,7 +1759,7 @@ export const menuProducts: Product[] = [
     name: "Creme Catalão",
     description: "",
     price: 4.90,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3,
     includesNotes: "Espanha"
@@ -1771,7 +1771,7 @@ export const menuProducts: Product[] = [
     name: "CHEESECAKE",
     description: "",
     price: 4.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4
   },
@@ -1782,7 +1782,7 @@ export const menuProducts: Product[] = [
     name: "GIN PABLO",
     description: "",
     price: 7.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1793,7 +1793,7 @@ export const menuProducts: Product[] = [
     name: "LIMONTEJO",
     description: "O Limoncello português!",
     price: 3.20,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -1804,7 +1804,7 @@ export const menuProducts: Product[] = [
     name: "LIMONTEJO TÓNICO",
     description: "",
     price: 7.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   },
@@ -1815,7 +1815,7 @@ export const menuProducts: Product[] = [
     name: "Jack Daniels",
     description: "",
     price: 3.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 4,
     unitQuantity: "25cl"
@@ -1827,7 +1827,7 @@ export const menuProducts: Product[] = [
     name: "Jack Daniels",
     description: "",
     price: 5.20,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 5,
     unitQuantity: "50cl"
@@ -1839,7 +1839,7 @@ export const menuProducts: Product[] = [
     name: "Tomatin",
     description: "",
     price: 6.20,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 6
   },
@@ -1850,7 +1850,7 @@ export const menuProducts: Product[] = [
     name: "CR F",
     description: "",
     price: 2.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 7,
     unitQuantity: "25cl"
@@ -1862,7 +1862,7 @@ export const menuProducts: Product[] = [
     name: "CR F",
     description: "",
     price: 3.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 8,
     unitQuantity: "50cl"
@@ -1874,7 +1874,7 @@ export const menuProducts: Product[] = [
     name: "Licor Beirão",
     description: "",
     price: 3.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 9
   },
@@ -1885,7 +1885,7 @@ export const menuProducts: Product[] = [
     name: "AMENDOA AMARGA",
     description: "",
     price: 3.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 10
   },
@@ -1896,7 +1896,7 @@ export const menuProducts: Product[] = [
     name: "Vinho do Porto",
     description: "Branco / Tinto",
     price: 2.50,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 11
   },
@@ -1907,7 +1907,7 @@ export const menuProducts: Product[] = [
     name: "Comida de bebé",
     description: "Aquecimento e/ou fornecimento de utensílios para refeições de bebé/criança, não adquiridas no estabelecimento. Sem microondas: aquecimento de sopa nos recipientes do restaurante, mediante disponibilidade da cozinha. Apenas aquecemos sopa.",
     price: 2.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 1
   },
@@ -1918,7 +1918,7 @@ export const menuProducts: Product[] = [
     name: "Bolo de aniversário",
     description: "",
     price: 5.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 2
   },
@@ -1929,7 +1929,7 @@ export const menuProducts: Product[] = [
     name: "Taxa de “rolha”",
     description: "Por unidade.",
     price: 10.00,
-    imageUrl: '',
+    imageUrl: "",
     available: true,
     position: 3
   }
