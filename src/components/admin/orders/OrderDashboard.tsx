@@ -16,6 +16,7 @@ import {
 import { ValidNextStatus } from '@/lib/validations/order-management';
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
 import { useKdsAlerts } from '@/hooks/useKdsAlerts';
+import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { OrderCard } from './OrderCard';
 import ConsolidatedItems from '@/components/admin/kds/ConsolidatedItems';
 import {
@@ -33,6 +34,8 @@ import {
   Loader2,
   Radio,
   RotateCcw,
+  Sun,
+  SunDim,
   Undo2,
   UtensilsCrossed,
   X,
@@ -87,6 +90,13 @@ export function OrderDashboard({
   >({});
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>('all');
+  const {
+    isSupported: isWakeLockSupported,
+    isActive: isWakeLockActive,
+    status: wakeLockStatus,
+    requestWakeLock,
+    releaseWakeLock,
+  } = useScreenWakeLock(true);
   const [a11yAnnouncement, setA11yAnnouncement] = useState('');
 
   const previousOrderIdsRef = useRef<Set<string>>(
@@ -440,6 +450,45 @@ export function OrderDashboard({
 
               <Radio className="h-3 w-3 sm:hidden" />
             </div>
+
+            {/* Wake Lock Screen Indicator & Control for Kitchen Tablet */}
+            {isWakeLockSupported ? (
+              isWakeLockActive ? (
+                <button
+                  type="button"
+                  onClick={() => void releaseWakeLock()}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-900 transition-all hover:bg-amber-100"
+                  title="Ecrã do tablet mantido sempre ligado na cozinha. Clique para libertar."
+                  aria-label="Ecrã do tablet mantido sempre ligado. Clique para permitir suspensão"
+                >
+                  <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                  <Sun className="h-3.5 w-3.5 text-amber-600" />
+                  <span className="hidden sm:inline">Ecrã Ligado</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void requestWakeLock()}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-200"
+                  title="O ecrã pode suspender por inatividade. Clique para manter ligado."
+                  aria-label="Manter ecrã do tablet sempre ligado"
+                >
+                  <span className="h-2 w-2 rounded-full bg-zinc-400" />
+                  <SunDim className="h-3.5 w-3.5 text-zinc-500" />
+                  <span className="hidden sm:inline">
+                    {wakeLockStatus === 'error' ? 'Tentar Ecrã Ligado' : 'Manter Ecrã Ligado'}
+                  </span>
+                </button>
+              )
+            ) : (
+              <span
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs font-medium text-zinc-400"
+                title="Screen Wake Lock não suportado neste browser. Configure a suspensão nas definições do tablet."
+              >
+                <SunDim className="h-3.5 w-3.5 text-zinc-400" />
+                <span>Wake Lock N/D</span>
+              </span>
+            )}
           </div>
 
           <p className="mt-0.5 text-xs text-gulas-gray-500 sm:text-sm">

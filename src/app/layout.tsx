@@ -12,14 +12,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'GULAS — Pizza, Burger & Coffee (Vila das Aves)',
+  title: 'GULAS \u2014 Pizza, Burger & Coffee (Vila das Aves)',
   description:
-    'Menu digital do Gulas – Pizza, Burger & Coffee, em Vila das Aves.',
+    'Menu digital do Gulas em Vila das Aves: Carac\u00f3izzz, Burgers artesanais, Pizzas de longa fermenta\u00e7\u00e3o, Panuozzos e Pregos no Caco.',
   icons: {
-    icon: [{ url: '/images/logo.jpg', type: 'image/jpeg' }],
-    shortcut: ['/images/logo.jpg'],
-    apple: [{ url: '/images/logo.jpg', type: 'image/jpeg' }],
+    icon: '/icons/icon.svg',
+    apple: '/icons/apple-touch-icon.png',
   },
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({

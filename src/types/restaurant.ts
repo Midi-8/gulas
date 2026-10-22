@@ -98,5 +98,7 @@ export interface Order {
   status: OrderStatus;
   createdAt: string;
   customerNotes?: string;
+  trackingToken?: string;
 }
+
 

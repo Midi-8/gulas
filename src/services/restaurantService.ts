@@ -19,11 +19,31 @@ type CategoryRow = Database['public']['Tables']['categories']['Row'];
 type ProductRow = Database['public']['Tables']['products']['Row'];
 type TableRow = Database['public']['Tables']['tables']['Row'];
 
+type PublicProductRow = Pick<
+  ProductRow,
+  | 'id'
+  | 'restaurant_id'
+  | 'category_id'
+  | 'name'
+  | 'description'
+  | 'price'
+  | 'image_url'
+  | 'is_available'
+  | 'display_order'
+  | 'badges'
+  | 'unit_quantity'
+  | 'includes_notes'
+  | 'customization_note'
+  | 'allergens'
+  | 'prep_time_minutes'
+>;
+
 function isSupabaseConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   return Boolean(url && key && !url.includes('your-project'));
 }
 
@@ -61,7 +81,7 @@ function mapCategoryFromRow(row: CategoryRow): Category {
   };
 }
 
-function mapProductFromRow(row: ProductRow): Product {
+function mapProductFromRow(row: PublicProductRow): Product {
   return {
     id: row.id,
     restaurantId: row.restaurant_id,
@@ -69,7 +89,7 @@ function mapProductFromRow(row: ProductRow): Product {
     name: row.name,
     description: row.description || '',
     price: Number(row.price),
-    cost: row.cost !== null ? Number(row.cost) : undefined,
+    cost: undefined,
     imageUrl: row.image_url || '',
     available: row.is_available,
     position: row.display_order,
@@ -92,11 +112,14 @@ function mapTableFromRow(row: TableRow): Table {
   };
 }
 
-export async function getRestaurantBySlug(slug: string): Promise<Restaurant | null> {
+export async function getRestaurantBySlug(
+  slug: string
+): Promise<Restaurant | null> {
   if (!isSupabaseConfigured()) {
     if (slug === mockRestaurant.slug || slug === 'casa-do-norte') {
       return mockRestaurant;
     }
+
     return null;
   }
 
@@ -111,11 +134,16 @@ export async function getRestaurantBySlug(slug: string): Promise<Restaurant | nu
     .maybeSingle();
 
   if (error) {
-    console.error(`[restaurantService] Error fetching restaurant by slug "${slug}":`, error);
+    console.error(
+      `[restaurantService] Error fetching restaurant by slug "${slug}":`,
+      error
+    );
+
     throw new Error(`Falha ao carregar restaurante: ${error.message}`);
   }
 
   if (!data) return null;
+
   return mapRestaurantFromRow(data);
 }
 
@@ -130,6 +158,7 @@ export async function getRestaurantMenu(
   }
 
   const supabase = await createServerSupabaseClient();
+
   if (!supabase) {
     return { categories: [], products: [] };
   }
@@ -141,22 +170,51 @@ export async function getRestaurantMenu(
       .eq('restaurant_id', restaurantId)
       .eq('is_active', true)
       .order('display_order', { ascending: true }),
+
     supabase
       .from('products')
-      .select('*')
+      .select(`
+        id,
+        restaurant_id,
+        category_id,
+        name,
+        description,
+        price,
+        image_url,
+        is_available,
+        display_order,
+        badges,
+        unit_quantity,
+        includes_notes,
+        customization_note,
+        allergens,
+        prep_time_minutes
+      `)
       .eq('restaurant_id', restaurantId)
       .eq('is_available', true)
       .order('display_order', { ascending: true }),
   ]);
 
   if (categoriesRes.error) {
-    console.error(`[restaurantService] Error fetching categories:`, categoriesRes.error);
-    throw new Error(`Falha ao carregar categorias: ${categoriesRes.error.message}`);
+    console.error(
+      '[restaurantService] Error fetching categories:',
+      categoriesRes.error
+    );
+
+    throw new Error(
+      `Falha ao carregar categorias: ${categoriesRes.error.message}`
+    );
   }
 
   if (productsRes.error) {
-    console.error(`[restaurantService] Error fetching products:`, productsRes.error);
-    throw new Error(`Falha ao carregar produtos: ${productsRes.error.message}`);
+    console.error(
+      '[restaurantService] Error fetching products:',
+      productsRes.error
+    );
+
+    throw new Error(
+      `Falha ao carregar produtos: ${productsRes.error.message}`
+    );
   }
 
   return {
@@ -167,11 +225,17 @@ export async function getRestaurantMenu(
 
 export async function getRestaurantBySlugWithMenu(
   slug: string
-): Promise<{ restaurant: Restaurant; categories: Category[]; products: Product[] } | null> {
+): Promise<{
+  restaurant: Restaurant;
+  categories: Category[];
+  products: Product[];
+} | null> {
   const restaurant = await getRestaurantBySlug(slug);
+
   if (!restaurant) return null;
 
   const menu = await getRestaurantMenu(restaurant.id);
+
   return {
     restaurant,
     categories: menu.categories,
@@ -184,7 +248,10 @@ export async function getTableByNumber(
   tableNumber: number
 ): Promise<Table | null> {
   if (!isSupabaseConfigured()) {
-    const table = mockTables.find((t) => t.number === tableNumber && t.active);
+    const table = mockTables.find(
+      (t) => t.number === tableNumber && t.active
+    );
+
     return table || null;
   }
 
@@ -204,9 +271,11 @@ export async function getTableByNumber(
       `[restaurantService] Error fetching table ${tableNumber} for restaurant ${restaurantId}:`,
       error
     );
+
     throw new Error(`Falha ao verificar mesa: ${error.message}`);
   }
 
   if (!data) return null;
+
   return mapTableFromRow(data);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Product } from '@/types/restaurant';
 import { formatCurrency } from '@/data/mockRestaurant';
@@ -16,6 +16,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails }) => {
   const { items, addItem, updateQuantity } = useCart();
+  const [imageFailed, setImageFailed] = useState(false);
 
   const cartItem = items.find((item) => item.product.id === product.id);
   const currentQuantity = cartItem ? cartItem.quantity : 0;
@@ -46,7 +47,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
     >
       {/* Top Media: Fotografia com enquadramento panorâmico ou fallback refinado */}
       <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden bg-[#EAE5DF] border-b border-[#E5DED6]">
-        {product.imageUrl ? (
+        {product.imageUrl && !imageFailed ? (
           <>
             <Image
               src={product.imageUrl}
@@ -57,6 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
                 'object-cover transition-transform duration-500 ease-out group-hover:scale-105',
                 !product.available && 'grayscale contrast-75'
               )}
+              onError={() => setImageFailed(true)}
             />
             {/* Gradiente de proteção de contraste muito suave */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#35271F]/40 via-transparent to-transparent pointer-events-none" />

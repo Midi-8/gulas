@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Gulas Official Emblem Mark (Fiel a public/images/logo.svg) -->
+  <g transform="translate(6, 6)">
+    <!-- Artisan Rounded Square Emblem Background -->
+    <rect width="52" height="52" rx="14" fill="#5E4939" />
+    <rect x="2" y="2" width="48" height="48" rx="12" stroke="#C09573" stroke-width="1.5" stroke-opacity="0.4" />
+    
+    <!-- Stylized "G" Emblem with Flame/Artisan Oven Accent -->
+    <path d="M 36 21 C 33 17 28 15 22 15 C 15.5 15 11 20 11 27 C 11 34 15.5 39 22 39 C 29 39 34 35 35 29 L 23 29" 
+          stroke="#F5F4F1" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+          
+    <!-- Caramel Warm Spark Dot -->
+    <circle cx="34" cy="21" r="3.2" fill="#C09573" />
+  </g>
+</svg>
