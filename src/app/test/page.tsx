@@ -318,15 +318,15 @@ export default function TestBenchPage() {
     addLog('info', 'A submeter Pedido Normal na Mesa 3 (2 artigos comuns)...');
 
     const foodItem = products[0] || {
-      id: 'b1111111-0001-4000-8000-000000000001',
-      name: "Bolo do Caco com Manteiga d'Alho",
-      price: 3.8,
+      id: 'b1111111-0024-4000-8000-000000000024',
+      name: 'Bolo do Caco com Manteiga d’ Alho',
+      price: 3,
     };
     const drinkItem = products.find((p) => p.categorySlug === 'bebidas') ||
       products[1] || {
-        id: 'b1111111-0053-4000-8000-000000000053',
-        name: 'Cerveja Super Bock (33cl)',
-        price: 2.2,
+        id: 'b1111111-0121-4000-8000-000000000121',
+        name: 'Coca-Cola 35cl',
+        price: 2.1,
       };
 
     try {
@@ -362,15 +362,15 @@ export default function TestBenchPage() {
     addLog('info', 'A submeter Pedido Especial com Notas e Alérgenos na Mesa 7...');
 
     const foodItem = products[0] || {
-      id: 'b1111111-0001-4000-8000-000000000001',
-      name: "Bolo do Caco com Manteiga d'Alho",
-      price: 3.8,
+      id: 'b1111111-0024-4000-8000-000000000024',
+      name: 'Bolo do Caco com Manteiga d’ Alho',
+      price: 3,
     };
     const drinkItem = products.find((p) => p.categorySlug === 'bebidas') ||
       products[1] || {
-        id: 'b1111111-0051-4000-8000-000000000051',
-        name: 'Coca-Cola Zero (33cl)',
-        price: 2.0,
+        id: 'b1111111-0121-4000-8000-000000000121',
+        name: 'Coca-Cola 35cl',
+        price: 2.1,
       };
 
     try {
@@ -409,15 +409,15 @@ export default function TestBenchPage() {
     addLog('info', '🚀 A disparar rajada concorrente: 3 pedidos quase instantâneos (Mesas 1, 2 e 5)...');
 
     const itemA = products[0] || {
-      id: 'b1111111-0001-4000-8000-000000000001',
-      name: "Bolo do Caco com Manteiga d'Alho",
-      price: 3.8,
+      id: 'b1111111-0024-4000-8000-000000000024',
+      name: 'Bolo do Caco com Manteiga d’ Alho',
+      price: 3,
     };
     const itemB = products.find((p) => p.categorySlug === 'bebidas') ||
       products[1] || {
-        id: 'b1111111-0053-4000-8000-000000000053',
-        name: 'Cerveja Super Bock (33cl)',
-        price: 2.2,
+        id: 'b1111111-0121-4000-8000-000000000121',
+        name: 'Coca-Cola 35cl',
+        price: 2.1,
       };
 
     try {
@@ -892,7 +892,7 @@ export default function TestBenchPage() {
                     </span>
                   </div>
                   <p className="mt-0.5 text-[11px] text-zinc-500">
-                    1x Bolo do Caco + 1x Super Bock. Testa alarme áudio, vibração e badge &quot;NOVO&quot;.
+                    1x Bolo do Caco + 1x Coca-Cola 35cl. Testa alarme áudio, vibração e badge &quot;NOVO&quot;.
                   </p>
                 </div>
                 {activeAction === 'dispatch-normal' ? (

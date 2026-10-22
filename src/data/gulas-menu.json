@@ -1,0 +1,356 @@
+{
+  "restaurante": "Gulas – Pizza, Burger & Coffee",
+  "fonte": "https://voucomer.pt/md/gulas/",
+  "avisos_globais": [
+    "Todas as pizzas de tamanho familiar são EXCLUSIVAS para o serviço take-away"
+  ],
+  "categorias": [
+    {
+      "nome": "Menú \"Às 12 na Tojela\"",
+      "slug": "menu-as-12-na-tojela",
+      "notas_categoria": "",
+      "itens": [
+        {
+          "nome": "Menú “Às 12 na Tojela”",
+          "descricao": "Entrada do dia + Pizza OU Burger do dia + Bebida (copo cerveja 20cl/água/refrigerante) + Café (Sobremesa do dia + 2€). Menu INDIVIDUAL. Disponível de QUI-SAB ao almoço apenas em sala. Não pode trocar/adicionar ingredientes. Não acumula com outras…",
+          "preco": 11.0,
+          "restricoes": ["só em sala", "QUI-SAB almoço", "sem alterações", "não acumula"],
+          "tags": []
+        }
+      ]
+    },
+    {
+      "nome": "NOVIDADES DO MÊS",
+      "slug": "novidades",
+      "notas_categoria": "Itens repetidos noutras categorias.",
+      "itens": [
+        {
+          "nome": "Oktoberfest -20%",
+          "descricao": "Desconto de 20% aplicável nas cervejas Erdinger, La Rosa IPA, Estrella Damm 50cl e Inedit 33cl. Desconto já aplicado no preço apresentado. Válido de 16/10 a 31/10.",
+          "preco": 0.0,
+          "restricoes": ["válido 16/10 a 31/10"],
+          "tags": ["promoção", "novidade"]
+        },
+        { "nome": "LA ROSA IPA 33cl", "preco": 4.0, "duplicado_de": "Cervejas", "tags": ["novidade"] },
+        { "nome": "Bolinho de bolacha e côco", "preco": 4.9, "duplicado_de": "Sobremesas", "tags": ["novidade"] },
+        { "nome": "SORVETE EM FRASCO ARTIFRAMI", "descricao": "Morango / Tanjerina e manjericão", "preco": 3.0, "duplicado_de": "Sobremesas", "tags": ["novidade"] },
+        { "nome": "SÃO MIGUEL BURGER", "preco": 9.9, "duplicado_de": "Burger", "tags": ["novidade"] },
+        { "nome": "Bruschetta Ibérica", "preco": 6.0, "duplicado_de": "Entradas/Acompanhamentos", "tags": ["novidade"] },
+        { "nome": "PIÑA COLADA FIZZ", "preco": 6.0, "duplicado_de": "Cocktails", "tags": ["novidade"] },
+        { "nome": "PALITOS DO BOSQUE", "preco": 4.0, "duplicado_de": "Entradas/Acompanhamentos", "tags": ["novidade"] },
+        { "nome": "PANUOZZO CAPRESE", "preco": 11.0, "duplicado_de": "Panuozzo", "tags": ["novidade"] },
+        { "nome": "CHEESEBURGER BACON EDITION", "preco": 9.9, "duplicado_de": "Burger", "tags": ["novidade"] },
+        { "nome": "BURRATA BOWL SALMÃO FUMADO", "preco": 13.0, "duplicado_de": "Entradas/Acompanhamentos", "tags": ["novidade"] },
+        { "nome": "PANUOZZO IBERICO", "preco": 12.0, "duplicado_de": "Panuozzo", "tags": ["novidade"] },
+        {
+          "nome": "Acompanha o teu burger c/ batata palito c/ cheddar e cebola frita",
+          "descricao": "Batata palito com cheddar e cebola frita.",
+          "preco": 4.0,
+          "tags": ["novidade", "acompanhamento"]
+        }
+      ]
+    },
+    {
+      "nome": "COCKTAILS",
+      "slug": "cocktails",
+      "notas_categoria": "",
+      "itens": [
+        { "nome": "GIN PABLO", "preco": 7.0 },
+        { "nome": "LIMONTEJO TÓNICO", "preco": 7.0 },
+        { "nome": "PIÑA COLADA FIZZ", "preco": 6.0 }
+      ]
+    },
+    {
+      "nome": "SANGRIAS",
+      "slug": "sangrias",
+      "notas_categoria": "As nossas sangrias são feitas de raíz e sem concentrados.",
+      "itens": [
+        { "nome": "SANGRIA a copo", "descricao": "Frutos vermelhos/maracujá", "preco": 6.0 },
+        { "nome": "SANGRIA de espumante e maracujá", "preco": 17.0 },
+        { "nome": "SANGRIA Lambrusco de Frutos Vermelhos – 1LT", "preco": 17.0 }
+      ]
+    },
+    {
+      "nome": "ENTRADAS/ACOMPANHAMENTOS",
+      "slug": "entradas",
+      "notas_categoria": "",
+      "itens": [
+        {
+          "nome": "Bruschetta Ibérica",
+          "descricao": "Pão torrado em azeite, rúcula, tomate cherry, presunto, pesto e creme balsâmico.",
+          "ingredientes": ["pão", "azeite", "rúcula", "tomate cherry", "presunto", "pesto", "creme balsâmico"],
+          "preco": 6.0
+        },
+        {
+          "nome": "BURRATA BOWL SALMÃO FUMADO",
+          "descricao": "Bowl feita em massa de pizza, burrata de leite italiano, rúcula, mix de tomate cherry, salmão fumado, abacate, manjericão fresco, mel, nozes, parmesão, lima e molho pesto.",
+          "preco": 13.0,
+          "restricoes": ["sem alterações", "indisponível take away"]
+        },
+        {
+          "nome": "PALITOS DO BOSQUE",
+          "descricao": "Batata frita palito com maionese de trufa e queijo parmesão ralado.",
+          "preco": 4.0
+        },
+        { "nome": "Bolo do Caco com Manteiga d’ Alho", "preco": 3.0 },
+        {
+          "nome": "CACO OᗡITЯƎVͶI",
+          "descricao": "Bolo do Caco, a nossa manteiga d'alho, queijo mozzarella, bacon e oregãos.",
+          "preco": 4.5
+        },
+        {
+          "nome": "BURRATA BOWL",
+          "descricao": "Bowl feita em massa de pizza, burrata de leite italiano, rúcula, mix de tomate cherry, pepino, ananás, manjericão fresco, mel, nozes, parmesão, molho pesto e vinagre balsâmico.",
+          "preco": 10.5,
+          "restricoes": ["sem alterações", "indisponível take away"]
+        },
+        { "nome": "Lulas Romanas com Molho Agridoce", "descricao": "(6un)", "preco": 4.3 },
+        { "nome": "Sticks de Frango", "descricao": "(5un)", "preco": 5.4 },
+        {
+          "nome": "Bruschetta Clássica",
+          "descricao": "Pão tostado em azeite, cogumelo shitake, tomate cherry, rúcula, lascas de parmesão, oregãos e um fio de azeite virgem.",
+          "preco": 6.0
+        },
+        {
+          "nome": "Chacon Fries",
+          "descricao": "Batata frita, bacon, molho de cheddar, jalapeño e cebola frita.",
+          "preco": 6.0,
+          "tags": ["picante"]
+        },
+        {
+          "nome": "Ovos Rotos",
+          "descricao": "Batata frita, presunto, 2 ovos, paprika fumada e salsa fresca picada.",
+          "preco": 7.0
+        },
+        { "nome": "Batata Rústica", "descricao": "Batata cortada em gomo, condimentada.", "preco": 3.0 },
+        { "nome": "Batata frita palito", "preco": 2.7 },
+        { "nome": "CHIPS BATATA DOCE", "preco": 1.9 }
+      ]
+    },
+    {
+      "nome": "CARACÓIZZ",
+      "slug": "caracoizz",
+      "notas_categoria": "Especialidade. Produtos não sujeitos a alterações. 6 un.",
+      "itens": [
+        { "nome": "Caracóizz ao Alho", "descricao": "Em massa de pizza, mozzarella e manteiga d'alho, fio de azeite virgem extra e oregãos (6un).", "preco": 6.0 },
+        { "nome": "Caracóizz Clássicos", "descricao": "Em massa de pizza, molho de tomate, mozzarella, fiambre, fio de azeite virgem extra e oregãos (6un).", "preco": 6.0 },
+        { "nome": "Caracóizz Genovese", "descricao": "Em massa de pizza, tomate cherry, molho pesto, parmesão, fio de azeite virgem extra e oregãos (6un).", "preco": 6.0 },
+        { "nome": "Caracóizz Vegan", "descricao": "Em massa de pizza, molho de tomate, queijo vegan, cogumelo shitake, pimentos, cebola, fio de azeite virgem extra e manjericão seco. Opção queijo mozzarella s/custo (6un).", "preco": 6.0, "tags": ["vegan"] },
+        { "nome": "Caracóizz Mexicanos", "descricao": "Em massa de pizza, molho de tomate, mozzarella e pimento-jalapeño, fio de azeite virgem extra e oregãos. Acompanha com molho de cheddar (6un).", "preco": 6.0, "tags": ["picante"] },
+        { "nome": "Caracóizz Cheddar e Bacon", "descricao": "Em massa de pizza, molho de tomate, queijo cheddar e bacon, fio de azeite virgem extra e oregãos (6un). Acompanha com molho cheddar.", "preco": 6.5 },
+        { "nome": "CARACÓIZZ POPULARES", "descricao": "Em massa de pizza, molho de tomate, queijo flamengo, chourição e topping de cebola granulada, fio de azeite virgem extra e oregãos (6un).", "preco": 6.5 },
+        { "nome": "Caracóizz Turcos", "descricao": "Em massa de pizza, molho de tomate, mozzarella, kebab e cebola frita, fio de azeite virgem extra e oregãos. Acompanha com molho de kebab (6un).", "preco": 6.5 }
+      ]
+    },
+    {
+      "nome": "PANUOZZO",
+      "slug": "panuozzos",
+      "notas_categoria": "",
+      "itens": [
+        {
+          "nome": "PANUOZZO CAPRESE",
+          "descricao": "Em massa de pizza, burrata, manjericão, molho pesto, tomate, parmesão e um fio de azeite virgem extra.",
+          "preco": 11.0,
+          "restricoes": ["sem alterações"]
+        },
+        {
+          "nome": "PANUOZZO IBERICO",
+          "descricao": "Em massa de pizza, burrata, rúcula, molho pesto, presunto, parmesão e um fio de azeite virgem extra.",
+          "preco": 12.0,
+          "restricoes": ["sem alterações"]
+        }
+      ]
+    },
+    {
+      "nome": "PIZZAS CLÁSSICAS",
+      "slug": "pizzas-classicas",
+      "notas_categoria": "Tamanho FAMILIAR exclusivo TAKE AWAY. Alterações/ingredientes extra sob consulta. Intervalo de preço = tamanho normal – familiar.",
+      "itens": [
+        { "nome": "Gulas", "descricao": "Molho de tomate, mozzarella, frango grelhado, pimentos, azeitonas, cogumelos, cebola e oregãos.", "preco_min": 12.5, "preco_max": 16.5 },
+        { "nome": "Pepe", "descricao": "Molho de tomate, mozzarella, pepperoni e orégãos.", "preco_min": 12.5, "preco_max": 16.5, "tags": ["picante"] },
+        { "nome": "Aquela com Tabasco®", "descricao": "Molho de tomate, mozzarella, fiambre, bacon, pimentos, cogumelos, orégãos e Tabasco®.", "preco_min": 12.5, "preco_max": 16.5 },
+        { "nome": "Pescador", "descricao": "Molho de tomate, mozzarella, atum, cebola roxa, ovo cozido e manjericão fresco.", "preco_min": 12.5, "preco_max": 16.5 },
+        { "nome": "Salamandra", "descricao": "Molho de tomate, mozzarella, ovo, bacon, cogumelos, cebola roxa e orégãos.", "preco_min": 12.5, "preco_max": 16.5 },
+        { "nome": "A Mais Formosa", "descricao": "Molho de tomate, mozzarella, fiambre, bacon, chourição, cogumelos e azeitonas.", "preco_min": 12.5, "preco_max": 16.5 },
+        { "nome": "Vegetariana", "descricao": "Molho de tomate, mozzarella, azeitonas, rúcula, mix cogumelos, pimentos, cebola e tomate cherry. Opção queijo vegan: consultar disponibilidade e mediante custo extra.", "preco_min": 12.5, "preco_max": 16.5, "tags": ["vegetariano"] },
+        { "nome": "Kebab", "descricao": "Molho de tomate, mozzarella, carne de kebab, cebola e molho kebab.", "preco_min": 12.5, "preco_max": 16.5 },
+        { "nome": "A Polémica", "descricao": "Molho de tomate, mozzarella, fiambre e ananás.", "preco_min": 12.5, "preco_max": 16.5 },
+        { "nome": "Clássica", "descricao": "Molho de tomate, mozzarella, pimentos, fiambre, cogumelos, azeitonas e oregãos.", "preco_min": 12.5, "preco_max": 16.5 },
+        { "nome": "Mista", "descricao": "Molho de tomate, mozzarella, fiambre e oregãos.", "preco_min": 12.0, "preco_max": 16.0 }
+      ]
+    },
+    {
+      "nome": "PIZZAS ESPECIAIS",
+      "slug": "pizzas-especiais",
+      "notas_categoria": "Tamanho único (médio) c/ borda alta. Alterações/ingredientes extra sob consulta.",
+      "itens": [
+        { "nome": "Margarida", "descricao": "Molho tomate, mozzarella fior di latte, queijo parmesão, manjericão fresco e um fio de azeite.", "preco": 12.0 },
+        { "nome": "PEPE DO BOSQUE", "descricao": "Molho tomate, mozzarella fior di latte, pepperoni, cogumelos, lascas de parmesão, manjericão, regada com fio de azeite trufado.", "preco": 14.5, "tags": ["picante"] },
+        { "nome": "“Romão”", "descricao": "Molho de tomate, mozzarella fior di latte, presunto, mix cogumelos shitake e paris, manjericão fresco.", "preco": 14.5 },
+        { "nome": "Ibérica", "descricao": "Molho de tomate, mozzarella fior di latte, rúcula, presunto, raspas de parmesão e fio de azeite.", "preco": 14.5 },
+        { "nome": "Dos Camarões", "descricao": "Molho de tomate, mozzarella fior di latte, miolo de camarão, cebola roxa, rúcula e fio de balsâmico.", "preco": 14.5 },
+        { "nome": "Calzone", "descricao": "Molho de tomate, mozzarella fior di latte + 3 ingredientes à escolha, fio de azeite, parmesão, balsâmico e salada. Sugestão: chourição, cogumelos e ovo.", "preco": 14.5 },
+        { "nome": "Adiciona Burrata nas pizzas especiais", "descricao": "100% produto origem italiana.", "preco": 3.4, "tags": ["extra"] }
+      ]
+    },
+    {
+      "nome": "INGREDIENTES EXTRA PIZZA",
+      "slug": "ingredientes-extra-pizza",
+      "notas_categoria": "Todas as alterações ao produto carecem de validação e podem ter um custo. Podes adicionar ingredientes da lista mediante o custo apresentado.",
+      "itens": [
+        { "nome": "alteração de produto", "preco": 0.5 },
+        { "nome": "base molho pesto", "descricao": "Em troca do molho de tomate.", "preco": 1.0 },
+        { "nome": "Burrata de leite italiano", "preco": 3.4 },
+        { "nome": "legumes / vegetais / queijo parmesão / molho de tomate", "preco": 0.8 },
+        { "nome": "queijo mozzarella / ovo", "preco": 1.0 },
+        { "nome": "fiambre / bacon / chourição / ananás / cogumelo shitake", "preco": 1.3 },
+        { "nome": "troca por queijo vegan", "preco": 1.8 },
+        { "nome": "atum / pepperoni / frango / camarões / presunto", "preco": 2.0 },
+        { "nome": "azeite trufado / molho kebab / balsâmico / pesto", "preco": 0.5 },
+        { "nome": "caixa take away", "preco": 0.5 }
+      ]
+    },
+    {
+      "nome": "BURGER",
+      "slug": "burgers",
+      "notas_categoria": "Alterações/ingredientes extra: consultar tabela de extras.",
+      "itens": [
+        { "nome": "SÃO MIGUEL BURGER", "descricao": "Pão brioche, molho secreto, 120gr carne bovina, queijo da Ilha, bacon, ananás grelhado e ovo.", "preco": 9.9, "restricoes": ["sem alterações"] },
+        { "nome": "CHEESEBURGER BACON EDITION", "descricao": "Pão brioche, 120 gr de carne bovina, maionese de bacon, pickles, queijo cheddar e bacon.", "preco": 9.9, "restricoes": ["sem alterações, exceto extra carne (com custo)"] },
+        { "nome": "Gulas Burger", "descricao": "Pão brioche, 120gr de carne bovina, bacon, cogumelos shitake salteados, queijo flamengo, ovo.", "preco": 9.4 },
+        { "nome": "CLASSIC 2.0", "descricao": "Pão brioche, 120gr de carne bovina, molho smoked barbecue, alface, queijo cheddar, bacon, tomate e cebola roxa fresca.", "preco": 9.4 },
+        { "nome": "Mostarda’s", "descricao": "Bolo do caco, 120gr de carne bovina, mostarda, cebola caramelizada em mostarda, queijo cheddar e presunto.", "preco": 9.4 },
+        { "nome": "Frango Burger", "descricao": "Bolo do caco, 130gr de frango panado, queijo flamengo, cebola frita, alface, maionese d'alho. Se peito de frango panado esgotar, substituído por burger de frango crocante.", "preco": 9.0 },
+        { "nome": "SPICY CHICKEN", "descricao": "Em pão brioche, ketchup picante, pimento jalapeño, crocante de frango, rúcula e queijo cheddar.", "preco": 8.4, "tags": ["picante"] },
+        { "nome": "Veg Burger", "descricao": "Em bolo do caco, burger crocante de vegetais, tomate, cebola roxa e cogumelos shitake salteados, molho de mostarda e mel, rúcula.", "preco": 9.0, "tags": ["vegetariano"] },
+        { "nome": "Cheese Burger", "descricao": "Pão brioche, 120gr de carne bovina, queijo cheddar, pickles, ketchup.", "preco": 8.4 },
+        { "nome": "Classic Burger", "descricao": "Pão brioche, 120gr de carne bovina, queijo cheddar, fiambre, alface, tomate.", "preco": 8.4 },
+        { "nome": "“Malhão”", "descricao": "Escolhe a tua combinação de burger preferida, sem pão e com salada, por mais 2,5€.", "preco": 2.5, "restricoes": ["indisponível take away", "indisponível produtos do mês"], "tags": ["extra"] }
+      ]
+    },
+    {
+      "nome": "INGREDIENTES EXTRA BURGER",
+      "slug": "ingredientes-extra-burger",
+      "notas_categoria": "Todas as alterações carecem de validação e podem ter um custo. Não aceitamos substituição de ingredientes.",
+      "itens": [
+        { "nome": "alteração de produto", "preco": 0.5 },
+        { "nome": "molho extra", "preco": 0.5 },
+        { "nome": "extra ovo / legumes / vegetais / fiambre / queijo / bacon", "preco": 1.0 },
+        { "nome": "extra presunto / cebola caramelizada / cogumelo shitake", "preco": 1.5 },
+        { "nome": "extra burger carne bovina", "preco": 2.5 },
+        { "nome": "caixa take away", "preco": 0.5 }
+      ]
+    },
+    {
+      "nome": "PREGO",
+      "slug": "pregos",
+      "notas_categoria": "Alterações carecem de validação. Ingredientes extra iguais aos da categoria \"burger\".",
+      "itens": [
+        { "nome": "Prego no Caco", "descricao": "Bolo do Caco, bife, queijo flamengo, fiambre acompanhado com chips de batata.", "preco": 7.4 },
+        { "nome": "PREGO 2.0", "descricao": "Bolo do Caco, bife, queijo cheddar, bacon, ovo, acompanhado com chips de batata.", "preco": 8.6 }
+      ]
+    },
+    {
+      "nome": "WRAPS",
+      "slug": "wraps",
+      "notas_categoria": "Disponível todos os dias ao almoço. Acompanham com chips batata doce.",
+      "itens": [
+        { "nome": "WRAP FRANGO", "descricao": "Frango panado, queijo flamengo, alface, cebola frita, molho 54. Acompanha com chips batata doce.", "preco": 6.5, "restricoes": ["só almoço", "sem alterações"] },
+        { "nome": "WRAP ATUM", "descricao": "Atum, ovo cozido, rúcula, cebola roxa, molho vinagrete. Acompanha com chips batata doce.", "preco": 6.5, "restricoes": ["só almoço", "sem alterações"] },
+        { "nome": "WRAP VEGAN", "descricao": "Nugget vegan, queijo vegan, tomate, alface, rúcula, cebola, molho vinagrete. Acompanha com chips batata doce.", "preco": 6.5, "restricoes": ["só almoço", "sem alterações, exceto queijo (opção flamengo s/ custo)"], "tags": ["vegan"] }
+      ]
+    },
+    {
+      "nome": "CERVEJAS",
+      "slug": "cervejas",
+      "notas_categoria": "Oktoberfest -20% (16/10 a 31/10) já aplicado em Erdinger, La Rosa IPA, Estrella Damm 50cl e Inedit 33cl.",
+      "itens": [
+        { "nome": "Erdinger HELLES 33cl", "origem": "Alemanha", "preco": 5.0 },
+        { "nome": "LA ROSA IPA 33cl", "origem": "Portugal", "preco": 4.0 },
+        { "nome": "Copo de Cerveja – Estrella Damm", "origem": "Espanha", "variantes_preco": [{ "tamanho": "20cl", "preco": 1.6 }, { "tamanho": "33cl", "preco": 2.2 }] },
+        { "nome": "Caneca de Cerveja – Estrella Damm 50cl", "origem": "Espanha", "preco": 2.9 },
+        { "nome": "BOCK Damm 25cl", "origem": "Espanha", "preco": 2.1 },
+        { "nome": "SEM ALCOOL Damm 25cl", "origem": "Espanha", "preco": 2.1 },
+        { "nome": "Damm INEDIT 33cl", "origem": "Espanha", "preco": 3.1 },
+        { "nome": "ERDINGER WEISS 50cl", "origem": "Alemanha", "preco": 4.5 },
+        { "nome": "ERDINGER Pikantus 50cl", "origem": "Alemanha", "preco": 5.0 }
+      ]
+    },
+    {
+      "nome": "VINHOS",
+      "slug": "vinhos",
+      "notas_categoria": "",
+      "itens": [
+        { "nome": "VINHA DO CONDE tinto 37cl", "descricao": "Alentejo - Herdade Paço do Conde", "preco": 6.0 },
+        { "nome": "Adega Mayor Reserva Tinto 75cl", "descricao": "Alentejo", "preco": 15.0 },
+        { "nome": "Verde Branco Pequenos Rebentos 75cl", "descricao": "Márcio Lopes winemaker - Alvarinho & Trajadura", "preco": 13.0 },
+        { "nome": "ANEL DOC Douro Branco 75cl", "descricao": "Márcio Lopes winemaker", "preco": 14.0 }
+      ]
+    },
+    {
+      "nome": "BEBIDAS",
+      "slug": "bebidas",
+      "notas_categoria": "",
+      "itens": [
+        { "nome": "Sidra", "descricao": "Maçã / Frutos Vermelhos", "preco": 3.4 },
+        { "nome": "Coca-Cola 35cl", "preco": 2.1 },
+        { "nome": "Sumol / Ice Tea / 7UP 33cl", "preco": 2.0 },
+        { "nome": "Guaraná 33cl", "preco": 2.1 },
+        { "nome": "BI Maracuja", "preco": 2.0 },
+        { "nome": "Schweppes Ginger Ale", "preco": 2.4 },
+        { "nome": "FRIZE SABORES", "preco": 1.6 },
+        { "nome": "Água Tónica", "preco": 2.0 },
+        { "nome": "Água 50cl", "preco": 1.4 },
+        { "nome": "Compal", "preco": 1.6 }
+      ]
+    },
+    {
+      "nome": "COFFEE",
+      "slug": "coffee",
+      "notas_categoria": "Cafetaria c/ acréscimo de copo com gelo +0,10€.",
+      "itens": [
+        { "nome": "Café / Descafeinado / Carioca", "descricao": "c/ gelo +0,10€", "preco": 0.9 },
+        { "nome": "Pingo", "preco": 1.0 },
+        { "nome": "Café Americano / Abatanado / Café Duplo", "preco": 1.3 },
+        { "nome": "Chá", "preco": 1.3 }
+      ]
+    },
+    {
+      "nome": "SOBREMESAS",
+      "slug": "sobremesas",
+      "notas_categoria": "Consultar disponibilidade.",
+      "itens": [
+        { "nome": "Bolinho de bolacha e côco", "preco": 4.9 },
+        { "nome": "SORVETE EM FRASCO ARTIFRAMI", "descricao": "Morango / Tanjerina e manjericão", "preco": 3.0 },
+        { "nome": "Creme Catalão", "origem": "Espanha", "preco": 4.9 },
+        { "nome": "CHEESECAKE", "preco": 4.5 }
+      ]
+    },
+    {
+      "nome": "DIGESTIVOS / ESPIRITUOSAS",
+      "slug": "digestivos",
+      "notas_categoria": "",
+      "itens": [
+        { "nome": "GIN PABLO", "preco": 7.0 },
+        { "nome": "LIMONTEJO", "descricao": "O Limoncello português!", "preco": 3.2 },
+        { "nome": "LIMONTEJO TÓNICO", "preco": 7.0 },
+        { "nome": "Jack Daniels", "variantes_preco": [{ "tamanho": "25cl", "preco": 3.0 }, { "tamanho": "50cl", "preco": 5.2 }] },
+        { "nome": "Tomatin", "preco": 6.2 },
+        { "nome": "CR F", "variantes_preco": [{ "tamanho": "25cl", "preco": 2.0 }, { "tamanho": "50cl", "preco": 3.5 }] },
+        { "nome": "Licor Beirão", "preco": 3.0 },
+        { "nome": "AMENDOA AMARGA", "preco": 3.0 },
+        { "nome": "Vinho do Porto", "descricao": "Branco / Tinto", "preco": 2.5 }
+      ]
+    },
+    {
+      "nome": "TAXAS EXTRA",
+      "slug": "taxas-extra",
+      "notas_categoria": "Poderão, mediante entendimento da gerência, ser aplicadas as seguintes taxas.",
+      "itens": [
+        { "nome": "Comida de bebé", "descricao": "Aquecimento e/ou fornecimento de utensílios para refeições de bebé/criança, não adquiridas no estabelecimento. Sem microondas: aquecimento de sopa nos recipientes do restaurante, mediante disponibilidade da cozinha. Apenas aquecemos sopa.", "preco": 2.0 },
+        { "nome": "Bolo de aniversário", "preco": 5.0 },
+        { "nome": "Taxa de “rolha”", "descricao": "Por unidade.", "preco": 10.0 }
+      ]
+    }
+  ]
+}

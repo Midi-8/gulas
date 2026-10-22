@@ -15,6 +15,7 @@ import { ActiveOrderDetailModal } from '@/components/menu/ActiveOrderDetailModal
 import { Toast } from '@/components/ui/Toast';
 import { useCart } from '@/context/CartContext';
 import { Utensils } from 'lucide-react';
+import { menuAvisos } from '@/data/gulasCatalog';
 
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/types';
@@ -119,9 +120,12 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       // Filter pill matching
       let matchesPill = true;
       if (activeFilter === 'especialidade') {
-        matchesPill = !!p.badges?.some(
-          (b) => b === 'especialidade' || b === 'house_special'
+        const specialtyCategory = categories.some(
+          (c) => c.id === p.categoryId && c.isSpecialty
         );
+        matchesPill =
+          specialtyCategory ||
+          !!p.badges?.some((b) => b === 'especialidade' || b === 'house_special');
       } else if (activeFilter === 'novidade') {
         matchesPill = !!p.badges?.includes('novidade');
       } else if (activeFilter === 'picante') {
@@ -132,7 +136,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
 
       return matchesSearch && matchesPill;
     });
-  }, [menuProducts, searchQuery, activeFilter]);
+  }, [menuProducts, searchQuery, activeFilter, categories]);
 
   // Group filtered products by category
   const productsByCategory = useMemo(() => {
@@ -155,6 +159,17 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
 
       {/* Gulas Header */}
       <RestaurantHeader restaurant={restaurant} />
+
+      <div className="max-w-4xl mx-auto px-4 pt-3 space-y-1.5">
+        {menuAvisos.map((aviso) => (
+          <p
+            key={aviso}
+            className="text-[11px] sm:text-xs font-semibold text-[#5E4939] bg-[#EAE5DF] border border-[#E5DED6] rounded-lg px-3 py-2"
+          >
+            {aviso}
+          </p>
+        ))}
+      </div>
 
       {/* Search & Filter Bar */}
       <SearchBar
@@ -213,6 +228,11 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                     </span>
                   )}
                 </div>
+                {category.description && (
+                  <p className="text-[11px] sm:text-xs text-[#4C453F] leading-relaxed">
+                    {category.description}
+                  </p>
+                )}
 
                 {/* Products Grid: 1 col on mobile, 2 cols on desktop */}
                 {items.length === 0 ? (

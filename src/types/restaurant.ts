@@ -13,7 +13,10 @@ export type ProductBadge =
   | 'especialidade'
   | 'novidade'
   | 'house_special'
-  | 'popular';
+  | 'popular'
+  | 'promocao'
+  | 'extra'
+  | 'acompanhamento';
 
 export interface Restaurant {
   id: string;
