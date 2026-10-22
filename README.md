@@ -453,3 +453,30 @@ pm run build gerou com sucesso 11 rotas e /manifest.webmanifest. |
 | **Teste de Integração Supabase** | **Pendente de Aplicação Remota** | SQL preparado e validado sintaticamente; execução e testes em base de dados remota pendentes de autorização. |
 | **Teste Físico em Tablet de Cozinha** | **Pendente** | Requer teste prático de bancada num tablet físico na cozinha do restaurante. |
 | **Registo de Horas** | **Pendente de Atualização** | O controlo de horas do projeto deve ser atualizado com tempos reais pelo operador. |
+
+
+---
+
+## 18. Auditoria Go-Live e Correções Críticas de Produção (Outubro 2026)
+
+Em preparação para o lançamento oficial (Go-Live) do ecossistema Gulas / Café do Rio, foi conduzida uma auditoria técnica 360° com resolução cirúrgica dos seguintes pontos:
+
+### 1. Correção de Compilação TypeScript (`src/data/mockRestaurant.ts`)
+* **Problema:** A importação no cabeçalho do ficheiro omitia os tipos `Category` e `Product`, bloqueando o comando `next build` com o erro `TS2304`.
+* **Resolução:** Inclusão dos tipos na importação de `@/types/restaurant`. Verificação via `npx tsc --noEmit` concluída com 0 erros.
+
+### 2. Blindagem de Carregamento de Imagens (`next.config.ts`)
+* **Problema:** O array `remotePatterns` não incluía o wildcard de domínios Supabase, provocando erro fatal de runtime (`Invalid src prop`) em pratos com fotografias alojadas no Supabase Storage.
+* **Resolução:** Adicionada a regra `{ protocol: "https", hostname: "**.supabase.co", pathname: "/**" }` ao `next.config.ts`.
+
+### 3. Prevenção de Perda Acidental de Dados em Produção
+* **Problema:** O ficheiro `20261018_hugo_clear_test_orders.sql` continha comandos incondicionais de `DELETE` em `orders` e `order_items` dentro da pasta ativa de migrações automáticas (`supabase/migrations/`).
+* **Resolução:** O ficheiro foi movido fisicamente para `supabase/manual_procedures/20261018_hugo_clear_test_orders.sql`, blindando os pipelines de CI/CD e comandos de sincronização de banco contra a perda de pedidos reais em produção.
+
+### 4. Checklist Pré-Lançamento no Supabase Remoto
+* [ ] Executar no SQL Editor do Supabase para ativar Realtime nas ruturas de stock:
+  ```sql
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
+  ```
+* [ ] Aplicar no Supabase remoto a migração de reforço de Row Level Security e tokens de rastreio (`supabase/migrations/20261015_security_audit_and_rls_hardening.sql`).
+* [ ] Confirmar configuração das variáveis de ambiente na Vercel/Hosting (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEFAULT_RESTAURANT_SLUG=gulas`).

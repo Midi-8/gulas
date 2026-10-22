@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         hostname: "firebasestorage.googleapis.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+        pathname: "/**",
+      },
     ],
   },
 };

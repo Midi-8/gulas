@@ -1,4 +1,4 @@
-import { Restaurant, Table } from '@/types/restaurant';
+import { Restaurant, Table, Category, Product } from '@/types/restaurant';
 import {
   RESTAURANT_ID,
   menuAvisos,
