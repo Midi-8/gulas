@@ -112,13 +112,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
       {/* Corpo do Cartão: Hierarquia Tipográfica e Descrição */}
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-[#35271F] group-hover:text-[#5E4939] tracking-tight leading-snug transition-colors line-clamp-1">
+          <h3 className="text-base sm:text-lg font-bold text-[#35271F] group-hover:text-[#5E4939] tracking-tight leading-snug transition-colors line-clamp-2">
             {product.name}
           </h3>
 
-          <p className="text-xs sm:text-sm text-[#4C453F] font-normal leading-relaxed line-clamp-2 mt-1.5">
-            {product.description}
-          </p>
+          {product.description && (
+            <p className="text-xs sm:text-sm text-[#4C453F] font-normal leading-relaxed line-clamp-2 mt-1.5">
+              {product.description}
+            </p>
+          )}
+
+          {product.customizationNote && (
+            <p className="text-[11px] text-[#5E4939] font-medium leading-relaxed line-clamp-2 mt-1">
+              {product.customizationNote}
+            </p>
+          )}
 
           {product.includesNotes && (
             <p className="text-[11px] sm:text-xs text-[#C09573] font-semibold pt-1.5">

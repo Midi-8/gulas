@@ -102,9 +102,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
 
           {/* Full description */}
-          <p className="text-xs sm:text-sm text-zinc-600 font-normal leading-relaxed">
-            {product.description}
-          </p>
+          {product.description && (
+            <p className="text-xs sm:text-sm text-zinc-600 font-normal leading-relaxed">
+              {product.description}
+            </p>
+          )}
 
           {/* Included sides note */}
           {product.includesNotes && (
