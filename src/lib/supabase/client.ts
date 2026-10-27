@@ -8,10 +8,13 @@ let clientInstance: ReturnType<typeof createBrowserClient<Database>> | null = nu
  * Garante preservação de sessão, sincronização de tokens e reaproveitamento do WebSocket Realtime.
  */
 export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'https://emjhabwmuvmjwshbkgvt.supabase.co';
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    'sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u';
 
   if (!supabaseUrl || !supabaseKey) {
     return null;

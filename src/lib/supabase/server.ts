@@ -3,10 +3,13 @@ import { cookies } from 'next/headers';
 import { Database } from './types';
 
 export async function createServerSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'https://emjhabwmuvmjwshbkgvt.supabase.co';
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    'sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u';
 
   if (!supabaseUrl || !supabaseKey) {
     console.error(

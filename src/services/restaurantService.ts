@@ -39,10 +39,13 @@ type PublicProductRow = Pick<
 >;
 
 function isSupabaseConfigured(): boolean {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'https://emjhabwmuvmjwshbkgvt.supabase.co';
   const key =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    'sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u';
 
   return Boolean(url && key && !url.includes('your-project'));
 }
