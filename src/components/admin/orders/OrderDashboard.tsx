@@ -522,6 +522,27 @@ export function OrderDashboard({
                 <span>Wake Lock N/D</span>
               </span>
             )}
+
+            {/* Dark Mode Kitchen Tablet Toggle — Imediatamente ao lado do Ecrã Ligado */}
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              className={clsx(
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold transition-all shadow-2xs',
+                isDarkMode
+                  ? 'border-amber-400/40 bg-zinc-800 text-amber-300 hover:bg-zinc-700'
+                  : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+              )}
+              title={isDarkMode ? 'Mudar para Modo Claro' : 'Ativar Modo Noturno de Cozinha'}
+              aria-label="Comutar tema do monitor KDS"
+            >
+              {isDarkMode ? (
+                <Sun className="h-3.5 w-3.5 text-amber-400" />
+              ) : (
+                <Moon className="h-3.5 w-3.5 text-zinc-600" />
+              )}
+              <span>{isDarkMode ? 'Modo Claro' : 'Modo Cozinha'}</span>
+            </button>
           </div>
 
           <p className="mt-0.5 text-xs text-gulas-gray-500 sm:text-sm">
@@ -544,29 +565,6 @@ export function OrderDashboard({
                 {outOfStockCount} esgotados
               </span>
             )}
-          </button>
-
-          {/* Dark Mode Toggle for Kitchen Tablet */}
-          <button
-            type="button"
-            onClick={toggleDarkMode}
-            className={clsx(
-              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold transition-all sm:text-sm',
-              isDarkMode
-                ? 'bg-zinc-800 border-zinc-700 text-amber-300 hover:bg-zinc-700 shadow-sm'
-                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] shadow-xs hover:bg-[#EAE5DF]'
-            )}
-            title={isDarkMode ? 'Mudar para Modo Claro' : 'Ativar Modo Noturno de Cozinha'}
-            aria-label="Comutar tema do monitor KDS"
-          >
-            {isDarkMode ? (
-              <Sun className="h-4 w-4 text-amber-400" />
-            ) : (
-              <Moon className="h-4 w-4 text-zinc-600" />
-            )}
-            <span className="hidden sm:inline">
-              {isDarkMode ? 'Modo Claro' : 'Modo Cozinha'}
-            </span>
           </button>
 
           {lastRefreshedAt && (
