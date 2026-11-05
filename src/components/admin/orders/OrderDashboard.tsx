@@ -100,14 +100,14 @@ export function OrderDashboard({
     releaseWakeLock,
   } = useScreenWakeLock(true);
   const [a11yAnnouncement, setA11yAnnouncement] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem('gulas_kds_dark_mode');
-      if (saved === 'true') {
+      if (saved === 'false') {
         queueMicrotask(() => {
-          setIsDarkMode(true);
+          setIsDarkMode(false);
         });
       }
     } catch {
@@ -437,8 +437,10 @@ export function OrderDashboard({
   return (
     <div
       className={clsx(
-        'space-y-6 pb-12 transition-colors duration-300 rounded-2xl',
-        isDarkMode && 'bg-[#18181B] text-[#F4F4F5] p-3 sm:p-5 shadow-2xl'
+        'space-y-6 pb-12 transition-colors duration-300 rounded-3xl min-h-screen',
+        isDarkMode
+          ? 'dark bg-[#0E1117] text-zinc-100 p-3 sm:p-6 shadow-2xl'
+          : 'bg-transparent text-[#35271F]'
       )}
     >
       <div
@@ -450,14 +452,31 @@ export function OrderDashboard({
         {a11yAnnouncement}
       </div>
 
-      <div className="flex flex-col justify-between gap-4 border-b border-gulas-gray-200 pb-4 md:flex-row md:items-center">
+      <div
+        className={clsx(
+          'flex flex-col justify-between gap-4 border-b pb-4 md:flex-row md:items-center',
+          isDarkMode ? 'border-[#2A313E]' : 'border-gulas-gray-200'
+        )}
+      >
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-gulas-dark sm:text-3xl">
-              Gestão de Pedidos
+            <h1
+              className={clsx(
+                'text-2xl font-black tracking-tight sm:text-3xl',
+                isDarkMode ? 'text-white' : 'text-gulas-dark'
+              )}
+            >
+              Monitor de Cozinha (KDS)
             </h1>
 
-            <span className="hidden rounded-md bg-gulas-gray-100 px-2 py-0.5 font-mono text-xs text-gulas-gray-600 sm:inline-flex">
+            <span
+              className={clsx(
+                'hidden rounded-md px-2 py-0.5 font-mono text-xs sm:inline-flex',
+                isDarkMode
+                  ? 'bg-[#1C2029] text-amber-300 border border-[#2A313E]'
+                  : 'bg-gulas-gray-100 text-gulas-gray-600'
+              )}
+            >
               /{restaurantSlug}
             </span>
 
@@ -555,21 +574,31 @@ export function OrderDashboard({
           <button
             type="button"
             onClick={() => setIsStockDrawerOpen(true)}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#E5DED6] bg-[#FFFFFF] px-3.5 py-2 text-xs font-bold text-[#35271F] shadow-xs transition-all hover:bg-[#EAE5DF] hover:border-[#C09573]/50 sm:text-sm"
+            className={clsx(
+              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold shadow-xs transition-all sm:text-sm',
+              isDarkMode
+                ? 'border-[#2A313E] bg-[#161922] text-zinc-200 hover:bg-[#202530] hover:border-amber-500/40'
+                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+            )}
             aria-label="Gerir stock e artigos esgotados"
           >
             <Boxes className="h-4 w-4 text-[#C09573]" />
             <span>Gerir Stock / Esgotados</span>
             {outOfStockCount > 0 && (
-              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-amber-900 border border-amber-300">
+              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-amber-400 border border-amber-500/40">
                 {outOfStockCount} esgotados
               </span>
             )}
           </button>
 
           {lastRefreshedAt && (
-            <span className="hidden text-xs text-gulas-gray-400 sm:inline-block">
-              Última atualização:{' '}
+            <span
+              className={clsx(
+                'hidden text-xs sm:inline-block font-mono',
+                isDarkMode ? 'text-zinc-500' : 'text-gulas-gray-400'
+              )}
+            >
+              Atualizado:{' '}
               {lastRefreshedAt.toLocaleTimeString('pt-PT', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -583,7 +612,12 @@ export function OrderDashboard({
               type="button"
               id="kds-alerts-activate-btn"
               onClick={activateAlerts}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#5E4939] px-4 py-2.5 text-xs font-bold text-[#F5F4F1] shadow-xs transition-all hover:bg-[#453426] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] sm:text-sm"
+              className={clsx(
+                'inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold shadow-xs transition-all sm:text-sm',
+                isDarkMode
+                  ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                  : 'bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1]'
+              )}
               aria-label="Ativar alertas sonoros e de vibração para pedidos novos"
             >
               <Bell className="h-4 w-4" />
@@ -594,11 +628,16 @@ export function OrderDashboard({
               type="button"
               id="kds-alerts-deactivate-btn"
               onClick={deactivateAlerts}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#EAE5DF] border border-[#C09573] px-4 py-2.5 text-xs font-bold text-[#5E4939] shadow-xs transition-all hover:bg-[#E5DED6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C09573] sm:text-sm"
+              className={clsx(
+                'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold shadow-xs transition-all sm:text-sm',
+                isDarkMode
+                  ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
+                  : 'border-[#C09573] bg-[#EAE5DF] text-[#5E4939] hover:bg-[#E5DED6]'
+              )}
               aria-label="Alertas ativos. Clique para desativar"
               aria-pressed
             >
-              <BellOff className="h-4 w-4 text-[#C09573]" />
+              <BellOff className="h-4 w-4 text-emerald-400" />
               <span>Alertas ativos</span>
             </button>
           )}
@@ -607,11 +646,16 @@ export function OrderDashboard({
             type="button"
             disabled={isLoading || isRefreshing}
             onClick={handleManualRefresh}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#E5DED6] bg-[#FFFFFF] px-4 py-2.5 text-xs font-bold text-[#35271F] shadow-xs transition-all hover:bg-[#EAE5DF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+            className={clsx(
+              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold shadow-xs transition-all sm:text-sm disabled:cursor-not-allowed disabled:opacity-50',
+              isDarkMode
+                ? 'border-[#2A313E] bg-[#161922] text-zinc-200 hover:bg-[#202530]'
+                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+            )}
             aria-label="Atualizar lista de pedidos"
           >
             <RotateCcw
-              className={`h-4 w-4 text-[#78716C] ${
+              className={`h-4 w-4 text-zinc-400 ${
                 isLoading || isRefreshing ? 'animate-spin' : ''
               }`}
             />
@@ -621,69 +665,139 @@ export function OrderDashboard({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
+        {/* Total Ativos */}
+        <div
+          className={clsx(
+            'flex items-center justify-between rounded-2xl border p-4 shadow-xs sm:p-5 transition-all',
+            isDarkMode
+              ? 'bg-[#161922] border-[#2A313E] text-white'
+              : 'bg-[#FFFFFF] border-[#E5DED6] text-[#35271F]'
+          )}
+        >
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
+            <span
+              className={clsx(
+                'text-[11px] sm:text-xs font-bold uppercase tracking-wider',
+                isDarkMode ? 'text-zinc-400' : 'text-[#78716C]'
+              )}
+            >
               Total Ativos
             </span>
-            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black font-mono sm:text-3xl">
               {totalActiveCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
+          <div
+            className={clsx(
+              'flex h-11 w-11 items-center justify-center rounded-xl',
+              isDarkMode
+                ? 'bg-[#222734] text-zinc-300'
+                : 'bg-[#EAE5DF] text-[#5E4939]'
+            )}
+          >
             <UtensilsCrossed className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
+        {/* A Aguardar */}
+        <div
+          className={clsx(
+            'flex items-center justify-between rounded-2xl border p-4 shadow-xs sm:p-5 transition-all',
+            isDarkMode
+              ? 'bg-[#161922] border-amber-500/35 text-white'
+              : 'bg-[#FFFFFF] border-amber-200 text-[#35271F]'
+          )}
+        >
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-500">
               A Aguardar
             </span>
-            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black font-mono text-amber-400 sm:text-3xl">
               {pendingCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#C09573]">
+          <div
+            className={clsx(
+              'flex h-11 w-11 items-center justify-center rounded-xl',
+              isDarkMode
+                ? 'bg-amber-500/15 text-amber-400'
+                : 'bg-amber-50 text-amber-600'
+            )}
+          >
             <Clock className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
+        {/* Em Preparação */}
+        <div
+          className={clsx(
+            'flex items-center justify-between rounded-2xl border p-4 shadow-xs sm:p-5 transition-all',
+            isDarkMode
+              ? 'bg-[#161922] border-blue-500/35 text-white'
+              : 'bg-[#FFFFFF] border-blue-200 text-[#35271F]'
+          )}
+        >
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-500">
               Em Preparação
             </span>
-            <p className="mt-0.5 text-2xl font-black text-[#35271F] sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black font-mono text-blue-400 sm:text-3xl">
               {preparingCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
-            <Flame className="h-5 w-5 text-[#C09573]" />
+          <div
+            className={clsx(
+              'flex h-11 w-11 items-center justify-center rounded-xl',
+              isDarkMode
+                ? 'bg-blue-500/15 text-blue-400'
+                : 'bg-blue-50 text-blue-600'
+            )}
+          >
+            <Flame className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-[#E5DED6] bg-[#FFFFFF] p-4 shadow-xs sm:p-5">
+        {/* Prontos p/ Entrega */}
+        <div
+          className={clsx(
+            'flex items-center justify-between rounded-2xl border p-4 shadow-xs sm:p-5 transition-all',
+            isDarkMode
+              ? 'bg-[#161922] border-emerald-500/35 text-white'
+              : 'bg-[#FFFFFF] border-emerald-200 text-[#35271F]'
+          )}
+        >
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
-              Prontos p/ Entrega
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-500">
+              Prontos (Pass)
             </span>
-            <p className="mt-0.5 text-2xl font-black text-[#5E4939] sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-black font-mono text-emerald-400 sm:text-3xl">
               {readyCount}
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAE5DF] text-[#5E4939]">
-            <BellRing className="h-5 w-5 text-[#C09573]" />
+          <div
+            className={clsx(
+              'flex h-11 w-11 items-center justify-center rounded-xl',
+              isDarkMode
+                ? 'bg-emerald-500/15 text-emerald-400'
+                : 'bg-emerald-50 text-emerald-600'
+            )}
+          >
+            <BellRing className="h-5 w-5" />
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-xs font-bold uppercase tracking-wider text-[#78716C]">
+        <span
+          className={clsx(
+            'mr-1 text-xs font-bold uppercase tracking-wider',
+            isDarkMode ? 'text-zinc-400' : 'text-[#78716C]'
+          )}
+        >
           Secção:
         </span>
 
@@ -692,11 +806,14 @@ export function OrderDashboard({
             key={key}
             type="button"
             onClick={() => setSectionFilter(key)}
-            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E4939] sm:text-sm ${
+            className={clsx(
+              'inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold transition-all sm:text-sm',
               sectionFilter === key
-                ? 'border-[#5E4939] bg-[#5E4939] text-[#F5F4F1] shadow-xs'
+                ? 'border-amber-500 bg-amber-600 text-white shadow-xs'
+                : isDarkMode
+                ? 'border-[#2A313E] bg-[#161922] text-zinc-300 hover:bg-[#222734]'
                 : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
-            }`}
+            )}
           >
             {icon}
             <span>{label}</span>
@@ -738,24 +855,44 @@ export function OrderDashboard({
           </button>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="mx-auto max-w-lg space-y-3 rounded-2xl border border-gulas-gray-200 bg-white p-10 text-center shadow-xs sm:p-14">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-gulas-gray-200 bg-gulas-cream text-gulas-gray-400">
-            <Inbox className="h-8 w-8 text-gulas-gray-400" />
+        <div
+          className={clsx(
+            'mx-auto max-w-lg space-y-3 rounded-2xl border p-10 text-center shadow-xs sm:p-14 transition-colors',
+            isDarkMode
+              ? 'bg-[#161922] border-[#2A313E] text-zinc-100'
+              : 'bg-white border-gulas-gray-200 text-gulas-dark'
+          )}
+        >
+          <div
+            className={clsx(
+              'mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border',
+              isDarkMode
+                ? 'bg-[#202530] border-[#2A313E] text-amber-400'
+                : 'bg-gulas-cream border-gulas-gray-200 text-gulas-gray-400'
+            )}
+          >
+            <Inbox className="h-8 w-8" />
           </div>
-          <h3 className="text-lg font-bold text-gulas-dark">
+          <h3 className="text-lg font-black tracking-tight">
             {sectionFilter === 'all'
-              ? 'Não existem pedidos ativos.'
-              : `Não existem pedidos para ${sectionFilter === 'bar' ? 'Bar / Copa' : 'Cozinha'
-              }.`}
+              ? 'Não existem pedidos ativos na bancada.'
+              : `Não existem pedidos para ${
+                  sectionFilter === 'bar' ? 'Bar / Copa' : 'Cozinha'
+                }.`}
           </h3>
-          <p className="mx-auto max-w-xs text-xs leading-relaxed text-gulas-gray-500 sm:text-sm">
-            Assim que os clientes submeterem pedidos a partir do menu digital das
-            mesas, eles surgirão aqui automaticamente em tempo real.
+          <p
+            className={clsx(
+              'mx-auto max-w-xs text-xs leading-relaxed sm:text-sm',
+              isDarkMode ? 'text-zinc-400' : 'text-gulas-gray-500'
+            )}
+          >
+            Assim que os clientes submeterem pedidos a partir do menu digital,
+            eles surgirão aqui em tempo real.
           </p>
           <button
             type="button"
             onClick={handleManualRefresh}
-            className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
+            className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-500 px-4 py-2 text-xs font-bold text-white transition-all shadow-xs"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span>Verificar Novos Pedidos</span>

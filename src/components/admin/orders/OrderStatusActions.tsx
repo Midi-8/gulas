@@ -46,18 +46,17 @@ export function OrderStatusActions({
   }
 
   return (
-    <div className="pt-3 border-t border-gulas-gray-200 flex flex-col gap-2">
+    <div className="pt-2 flex flex-col gap-2">
       {/* Explicit Cancellation Confirmation Sub-Panel */}
       {isConfirmingCancel ? (
         <div
           role="alert"
-          className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-2.5 animate-in fade-in duration-150"
+          className="p-3 bg-rose-500/15 border border-rose-500/30 rounded-xl space-y-2 animate-in fade-in duration-150"
         >
-          <div className="flex items-start gap-2 text-xs font-bold text-rose-950">
-            <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 text-xs font-bold text-rose-300">
+            <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
             <p className="leading-snug">
-              Tem a certeza que pretende cancelar o pedido #{orderNumber} (Mesa{' '}
-              {tableNumber})?
+              Cancelar pedido #{orderNumber} (Mesa {tableNumber})?
             </p>
           </div>
 
@@ -66,34 +65,34 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('cancelled')}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white text-xs font-bold transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-rose-800 focus-visible:outline-none cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
             >
               {isUpdating && activeNextStatus === 'cancelled' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 <XCircle className="w-3.5 h-3.5" />
               )}
-              <span>Confirmar Cancelamento</span>
+              <span>Confirmar</span>
             </button>
             <button
               type="button"
               disabled={isUpdating}
               onClick={() => setIsConfirmingCancel(false)}
-              className="py-2 px-3 rounded-lg bg-white border border-rose-200 text-rose-800 hover:bg-rose-100/60 text-xs font-bold transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-rose-800 focus-visible:outline-none cursor-pointer"
+              className="py-2 px-3 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
             >
               Voltar
             </button>
           </div>
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          {/* Primary Action Button by Status */}
+        <div className="flex items-center gap-2">
+          {/* Primary Full-Width Action Button by Status */}
           {status === 'pending' && (
             <button
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('accepted')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-800 focus-visible:outline-none cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Aceitar pedido número ${orderNumber}`}
             >
               {isUpdating && activeNextStatus === 'accepted' ? (
@@ -110,7 +109,7 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('preparing')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-orange-600 hover:bg-orange-700 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-orange-800 focus-visible:outline-none cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Iniciar preparação do pedido número ${orderNumber}`}
             >
               {isUpdating && activeNextStatus === 'preparing' ? (
@@ -127,7 +126,7 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('ready')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-800 focus-visible:outline-none cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer ring-2 ring-emerald-500/30"
               aria-label={`Marcar pedido número ${orderNumber} como pronto`}
             >
               {isUpdating && activeNextStatus === 'ready' ? (
@@ -135,7 +134,7 @@ export function OrderStatusActions({
               ) : (
                 <BellRing className="w-4 h-4" />
               )}
-              <span>Marcar como Pronto</span>
+              <span>Pronto p/ Entrega (Pass)</span>
             </button>
           )}
 
@@ -144,15 +143,15 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('completed')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] active:scale-[0.98] text-[#F5F4F1] text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[#5E4939] focus-visible:outline-none cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-[0.98] text-zinc-100 text-xs sm:text-sm font-bold border border-zinc-700 shadow-xs transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Concluir entrega do pedido número ${orderNumber}`}
             >
               {isUpdating && activeNextStatus === 'completed' ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Check className="w-4 h-4" />
+                <Check className="w-4 h-4 text-emerald-400" />
               )}
-              <span>Concluir Entrega</span>
+              <span>Concluir / Entregue</span>
             </button>
           )}
 
@@ -164,11 +163,11 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => setIsConfirmingCancel(true)}
-              className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 hover:border-rose-300 text-xs sm:text-sm font-bold transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none cursor-pointer"
+              className="inline-flex items-center justify-center p-3 rounded-xl bg-zinc-800/80 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 border border-zinc-700/60 transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Cancelar pedido número ${orderNumber}`}
+              title="Cancelar Pedido"
             >
-              <XCircle className="w-4 h-4 text-rose-500" />
-              <span>Cancelar</span>
+              <XCircle className="w-4 h-4" />
             </button>
           )}
         </div>

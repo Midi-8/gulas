@@ -19,19 +19,19 @@ interface OrderCardProps {
 function getTimerStyles(minutes: number) {
   if (minutes < 10) {
     return {
-      badge: 'bg-[#EAE5DF] text-[#35271F] border-[#E5DED6]',
-      ring: 'border-[#E5DED6]',
+      badge: 'bg-zinc-800/80 text-zinc-300 border-zinc-700',
+      ring: 'border-zinc-700',
     };
   }
   if (minutes < 20) {
     return {
-      badge: 'bg-amber-50 text-amber-900 border-amber-200/80',
-      ring: 'border-amber-200',
+      badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      ring: 'border-amber-500/40',
     };
   }
   return {
-    badge: 'bg-rose-50 text-rose-900 border-rose-200/80',
-    ring: 'border-rose-200',
+    badge: 'bg-rose-500/25 text-rose-300 border-rose-500/50 animate-pulse ring-1 ring-rose-500/40',
+    ring: 'border-rose-500/50',
   };
 }
 
@@ -59,24 +59,17 @@ export function OrderCard({
     }
   };
 
-  // Format currency
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat('pt-PT', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(price);
-
   return (
     <article
       aria-labelledby={`order-card-title-${order.id}`}
-      className={`bg-[#FFFFFF] rounded-2xl border transition-all flex flex-col justify-between shadow-xs ${
+      className={`rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-sm ${
         isNew
-          ? 'border-[#C09573] ring-2 ring-[#C09573]/40 shadow-xs animate-in fade-in zoom-in-98 duration-300'
+          ? 'bg-[#1C2029] border-amber-500/60 ring-2 ring-amber-500/40 animate-in fade-in zoom-in-98 duration-300'
           : order.status === 'pending'
-          ? 'border-[#C09573]/50'
+          ? 'bg-[#1C2029] border-amber-500/40'
           : order.status === 'ready'
-          ? 'border-[#5E4939]/40'
-          : 'border-[#E5DED6]'
+          ? 'bg-[#1C2029] border-emerald-500/40'
+          : 'bg-[#1C2029] border-[#2A313E]'
       }`}
     >
       {/* Top Card Header */}
@@ -86,32 +79,34 @@ export function OrderCard({
             <div className="flex items-center gap-2">
               <span
                 id={`order-card-title-${order.id}`}
-                className="text-xl sm:text-2xl font-black text-[#35271F] tracking-tight leading-none"
+                className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight leading-none"
               >
                 #{order.orderNumber}
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#5E4939] text-[#F5F4F1] text-xs font-bold uppercase tracking-wide">
+
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#2A313E] text-amber-300 text-xs sm:text-sm font-black uppercase tracking-wider border border-[#3E4758]">
                 Mesa {order.tableNumber}
               </span>
+
               {isNew && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#EAE5DF] text-[#5E4939] text-xs font-black border border-[#E5DED6]">
-                  <Sparkles className="w-3 h-3 text-[#C09573]" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-xs font-black border border-amber-500/40 animate-pulse">
+                  <Sparkles className="w-3 h-3 text-amber-400" />
                   NOVO
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-gulas-gray-500 font-medium mt-1.5">
-              <Clock className="w-3.5 h-3.5 text-gulas-gray-400" />
+            <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium mt-1.5">
+              <Clock className="w-3.5 h-3.5 text-zinc-500" />
               <span>{formatTime(order.createdAt)}</span>
             </div>
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
-            {/* Temporizador visual por pedido */}
+            {/* Temporizador visual de SLA por pedido */}
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-xs font-bold ${timerStyles.badge}`}
-              title="Tempo desde a criação do pedido"
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-mono font-bold ${timerStyles.badge}`}
+              title="Tempo decorrido desde a receção do pedido"
             >
               <Timer className="w-3.5 h-3.5" />
               {elapsedMinutes} min
@@ -123,10 +118,12 @@ export function OrderCard({
 
         {/* Customer General Notes */}
         {order.customerNotes && (
-          <div className="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 flex items-start gap-2 text-xs text-amber-950 font-medium leading-relaxed">
-            <MessageSquare className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="mt-3 p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-start gap-2 text-xs text-amber-300 font-medium leading-relaxed">
+            <MessageSquare className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
-              <strong className="font-bold text-amber-900">Nota do cliente: </strong>
+              <strong className="font-bold text-amber-400 uppercase text-[10px] tracking-wider block">
+                Observação do cliente:
+              </strong>
               <span>{order.customerNotes}</span>
             </div>
           </div>
@@ -136,17 +133,17 @@ export function OrderCard({
         {error && (
           <div
             role="alert"
-            className="mt-2.5 p-2.5 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-2 text-xs text-rose-800 font-medium animate-in fade-in duration-150"
+            className="mt-2.5 p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-between gap-2 text-xs text-rose-300 font-medium animate-in fade-in duration-150"
           >
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 flex-shrink-0" />
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
               <span>{error}</span>
             </div>
             {onClearError && (
               <button
                 type="button"
                 onClick={onClearError}
-                className="text-rose-400 hover:text-rose-700 p-0.5 rounded transition-colors cursor-pointer"
+                className="text-rose-400 hover:text-rose-200 p-0.5 rounded transition-colors cursor-pointer"
                 aria-label="Dispensar aviso de erro"
               >
                 <X className="w-3.5 h-3.5" />
@@ -157,21 +154,12 @@ export function OrderCard({
       </div>
 
       {/* Middle: Items List */}
-      <div className="px-4 sm:px-5 py-2 border-t border-zinc-100/90 flex-1">
+      <div className="px-4 sm:px-5 py-2 border-t border-[#2A313E]/60 flex-1">
         <OrderItemsList items={order.items} />
       </div>
 
-      {/* Bottom Footer: Total & Actions */}
-      <div className="p-4 sm:p-5 pt-3 bg-[#F5F4F1] rounded-b-2xl border-t border-[#E5DED6] space-y-3">
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
-            Total do Pedido
-          </span>
-          <span className="text-lg sm:text-xl font-black text-[#35271F] tracking-tight">
-            {formatPrice(order.total)}
-          </span>
-        </div>
-
+      {/* Bottom Footer: Touch-first Action Button */}
+      <div className="p-3 sm:p-4 bg-[#14171E] rounded-b-2xl border-t border-[#2A313E]">
         <OrderStatusActions
           orderNumber={order.orderNumber}
           tableNumber={order.tableNumber}
