@@ -27,7 +27,7 @@ export function AdminHeader({ staff }: AdminHeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 bg-[#F5F4F1]/90 backdrop-blur-sm border-b border-[#E5DED6] px-4 sm:px-6 py-3.5 shadow-2xs">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div className="max-w-[1920px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         {/* Left: Brand / Restaurant Info */}
         <div className="flex items-center justify-between md:justify-start gap-3">
           <div className="flex items-center gap-3">

@@ -41,6 +41,8 @@ import {
   Undo2,
   UtensilsCrossed,
   X,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { QuickStockDrawer } from '@/components/admin/stock/QuickStockDrawer';
 import { getRestaurantStockList } from '@/actions/product-stock';
@@ -135,6 +137,34 @@ export function OrderDashboard({
   const announcementTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      }
+    } catch {
+      // Ignorar exceções de permissão do browser
+    }
+  };
 
   const [isRefreshing, startRefreshTransition] = useTransition();
   const [isStockDrawerOpen, setIsStockDrawerOpen] = useState(false);
@@ -562,6 +592,29 @@ export function OrderDashboard({
               )}
               <span>{isDarkMode ? 'Modo Claro' : 'Modo Cozinha'}</span>
             </button>
+
+            {/* Ecrã Inteiro (Fullscreen API) para Monitores de Cozinha */}
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className={clsx(
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold transition-all shadow-2xs',
+                isFullscreen
+                  ? 'border-indigo-400/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30'
+                  : isDarkMode
+                  ? 'border-[#2A313E] bg-[#1C2029] text-zinc-300 hover:bg-[#2A313E]'
+                  : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+              )}
+              title={isFullscreen ? 'Sair do Modo Ecrã Inteiro (Esc)' : 'Expandir para Ecrã Inteiro na Cozinha'}
+              aria-label="Alternar ecrã inteiro"
+            >
+              {isFullscreen ? (
+                <Minimize className="h-3.5 w-3.5 text-indigo-400" />
+              ) : (
+                <Maximize className="h-3.5 w-3.5 text-zinc-400" />
+              )}
+              <span>{isFullscreen ? 'Sair Ecrã Inteiro' : 'Ecrã Inteiro'}</span>
+            </button>
           </div>
 
           <p className="mt-0.5 text-xs text-gulas-gray-500 sm:text-sm">
@@ -899,7 +952,7 @@ export function OrderDashboard({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5">
           {filteredOrders.map((order) => (
             <OrderCard
               key={order.id}

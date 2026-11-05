@@ -126,7 +126,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
             if (
               typeof parsed.selectedTableNumber === 'number' &&
               Number.isInteger(parsed.selectedTableNumber) &&
-              parsed.selectedTableNumber > 0
+              parsed.selectedTableNumber >= 0
             ) {
               setSelectedTableNumber(parsed.selectedTableNumber);
             }
@@ -255,9 +255,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
       throw new Error('O carrinho está vazio.');
     }
 
-    if (!selectedTableNumber) {
+    if (selectedTableNumber === null || selectedTableNumber === undefined || selectedTableNumber < 0) {
       setIsCartOpen(true);
-      throw new Error('Por favor selecione o número da mesa.');
+      throw new Error('Por favor selecione a mesa ou escolha Take-away.');
     }
 
     if (!restaurantSlug) {

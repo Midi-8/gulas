@@ -196,9 +196,11 @@ export const ActiveOrderBanner: React.FC = () => {
   }
 
   const tableLabel =
-    primaryOrder?.tableName ||
-    (primaryOrder?.tableNumber ? `Mesa ${primaryOrder.tableNumber}` : '') ||
-    (selectedTableNumber ? `Mesa ${selectedTableNumber}` : 'O teu pedido');
+    primaryOrder?.tableNumber === 0
+      ? '🛍️ Take-Away'
+      : primaryOrder?.tableName ||
+        (primaryOrder?.tableNumber ? `Mesa ${primaryOrder.tableNumber}` : '') ||
+        (selectedTableNumber === 0 ? '🛍️ Take-Away' : selectedTableNumber ? `Mesa ${selectedTableNumber}` : 'O teu pedido');
 
   return (
     <aside

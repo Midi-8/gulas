@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency, mockTables } from '@/data/mockRestaurant';
-import { X, Trash2, Plus, Minus, Utensils, ShoppingBag } from 'lucide-react';
+import { X, Trash2, Plus, Minus, Utensils, ShoppingBag, User, Phone } from 'lucide-react';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -25,6 +25,11 @@ export const CartDrawer: React.FC = () => {
   } = useCart();
   const { setActiveOrderId } = useActiveOrderTracker();
 
+  const [orderType, setOrderType] = useState<'dine_in' | 'takeaway'>(
+    selectedTableNumber === 0 ? 'takeaway' : 'dine_in'
+  );
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -33,9 +38,17 @@ export const CartDrawer: React.FC = () => {
   const handleConfirmOrder = async () => {
     if (isSubmitting) return;
     if (items.length === 0) return;
-    if (!selectedTableNumber) {
-      setErrorMessage('Por favor escolhe a mesa onde estás sentado.');
-      return;
+
+    if (orderType === 'takeaway') {
+      if (!customerName.trim()) {
+        setErrorMessage('Por favor introduz o teu nome para identificar o pedido Take-Away.');
+        return;
+      }
+    } else {
+      if (selectedTableNumber === null || selectedTableNumber === undefined || selectedTableNumber <= 0) {
+        setErrorMessage('Por favor escolhe a mesa onde estás sentado.');
+        return;
+      }
     }
 
     // Check if any cart item is currently out of stock
@@ -49,7 +62,13 @@ export const CartDrawer: React.FC = () => {
 
     setErrorMessage(null);
     try {
-      const createdOrder = await submitOrder(orderNotes.trim() || undefined);
+      let finalCustomerNotes = orderNotes.trim();
+      if (orderType === 'takeaway') {
+        const takeAwayHeader = `[TAKE-AWAY] Cliente: ${customerName.trim()}${customerPhone.trim() ? ` (Tel: ${customerPhone.trim()})` : ''}`;
+        finalCustomerNotes = finalCustomerNotes ? `${takeAwayHeader}\nNotas: ${finalCustomerNotes}` : takeAwayHeader;
+      }
+
+      const createdOrder = await submitOrder(finalCustomerNotes || undefined);
       if (createdOrder?.id) {
         try {
           localStorage.setItem('gulas_active_order_id', createdOrder.id);
@@ -121,40 +140,117 @@ export const CartDrawer: React.FC = () => {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#F5F4F1]">
-            {/* Table Selection */}
-            <div className={`p-3 rounded-xl bg-[#FFFFFF] border space-y-1.5 transition-all ${
-              !selectedTableNumber
-                ? 'border-[#C09573] ring-1 ring-[#C09573]/30'
-                : 'border-[#E5DED6]'
-            }`}>
-              <label htmlFor="cart-table-select" className="text-xs font-bold text-[#35271F] flex items-center justify-between">
-                <span>Mesa de Entrega:</span>
-                {isTableLocked ? (
-                  <span className="text-[10px] text-[#C09573] font-bold">Bloqueada por QR</span>
-                ) : !selectedTableNumber ? (
-                  <span className="text-[10px] text-[#C09573] font-bold">Obrigatório</span>
-                ) : null}
-              </label>
-              <select
-                id="cart-table-select"
-                disabled={isTableLocked}
-                value={selectedTableNumber ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value ? Number(e.target.value) : null;
-                  setSelectedTableNumber(val);
-                  if (val) setErrorMessage(null);
-                }}
-                className={`w-full px-3 py-1.5 rounded-lg border text-xs font-semibold text-[#35271F] focus:outline-none focus:border-[#C09573] disabled:opacity-75 cursor-pointer ${
-                  !selectedTableNumber ? 'bg-[#FFFFFF] border-[#C09573]/50' : 'bg-[#F5F4F1] border-[#E5DED6]'
-                }`}
-              >
-                <option value="">-- Escolhe a tua mesa --</option>
-                {mockTables.map((t) => (
-                  <option key={t.id} value={t.number}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+            {/* Tipo de Pedido: Sala vs Take-Away */}
+            <div className="p-3 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] space-y-2.5">
+              {!isTableLocked && (
+                <div className="flex p-0.5 bg-[#EAE5DF] rounded-lg border border-[#E5DED6]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOrderType('dine_in');
+                      if (selectedTableNumber === 0) setSelectedTableNumber(null);
+                      setErrorMessage(null);
+                    }}
+                    className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      orderType === 'dine_in'
+                        ? 'bg-[#FFFFFF] text-[#35271F] shadow-xs'
+                        : 'text-[#4C453F] hover:text-[#35271F]'
+                    }`}
+                  >
+                    <Utensils className="w-3.5 h-3.5" />
+                    <span>No Restaurante</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOrderType('takeaway');
+                      setSelectedTableNumber(0);
+                      setErrorMessage(null);
+                    }}
+                    className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      orderType === 'takeaway'
+                        ? 'bg-[#5E4939] text-[#F5F4F1] shadow-xs'
+                        : 'text-[#4C453F] hover:text-[#35271F]'
+                    }`}
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>Levar / Take-Away</span>
+                  </button>
+                </div>
+              )}
+
+              {orderType === 'dine_in' ? (
+                <div className="space-y-1.5">
+                  <label htmlFor="cart-table-select" className="text-xs font-bold text-[#35271F] flex items-center justify-between">
+                    <span>Mesa de Entrega:</span>
+                    {isTableLocked ? (
+                      <span className="text-[10px] text-[#C09573] font-bold">Bloqueada por QR</span>
+                    ) : (!selectedTableNumber || selectedTableNumber <= 0) ? (
+                      <span className="text-[10px] text-[#C09573] font-bold">Obrigatório</span>
+                    ) : null}
+                  </label>
+                  <select
+                    id="cart-table-select"
+                    disabled={isTableLocked}
+                    value={(selectedTableNumber && selectedTableNumber > 0) ? selectedTableNumber : ''}
+                    onChange={(e) => {
+                      const val = e.target.value ? Number(e.target.value) : null;
+                      setSelectedTableNumber(val);
+                      if (val) setErrorMessage(null);
+                    }}
+                    className={`w-full px-3 py-1.5 rounded-lg border text-xs font-semibold text-[#35271F] focus:outline-none focus:border-[#C09573] disabled:opacity-75 cursor-pointer ${
+                      (!selectedTableNumber || selectedTableNumber <= 0) ? 'bg-[#FFFFFF] border-[#C09573]/50' : 'bg-[#F5F4F1] border-[#E5DED6]'
+                    }`}
+                  >
+                    <option value="">-- Escolhe a tua mesa --</option>
+                    {mockTables.map((t) => (
+                      <option key={t.id} value={t.number}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="p-2 bg-[#EAE5DF]/60 border border-[#E5DED6] rounded-lg">
+                    <p className="text-[11px] text-[#5E4939] font-medium leading-relaxed">
+                      🛍️ <strong>Take-Away:</strong> O teu pedido será embalado e chamado ao balcão para levantamento.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="takeaway-name" className="text-xs font-bold text-[#35271F] flex items-center gap-1">
+                      <User className="w-3.5 h-3.5 text-[#C09573]" />
+                      <span>Nome para levantar:</span>
+                      <span className="text-[10px] text-[#C09573] font-bold">*</span>
+                    </label>
+                    <input
+                      id="takeaway-name"
+                      type="text"
+                      placeholder="Ex: Miguel Silva"
+                      value={customerName}
+                      onChange={(e) => {
+                        setCustomerName(e.target.value);
+                        if (e.target.value.trim()) setErrorMessage(null);
+                      }}
+                      className="w-full px-3 py-1.5 rounded-lg border border-[#E5DED6] bg-[#F5F4F1] text-xs font-semibold text-[#35271F] placeholder-[#A89F95] focus:outline-none focus:border-[#C09573] focus:bg-[#FFFFFF]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="takeaway-phone" className="text-xs font-bold text-[#35271F] flex items-center gap-1">
+                      <Phone className="w-3.5 h-3.5 text-[#C09573]" />
+                      <span>Telemóvel (opcional):</span>
+                    </label>
+                    <input
+                      id="takeaway-phone"
+                      type="tel"
+                      placeholder="Ex: 912 345 678"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg border border-[#E5DED6] bg-[#F5F4F1] text-xs font-semibold text-[#35271F] placeholder-[#A89F95] focus:outline-none focus:border-[#C09573] focus:bg-[#FFFFFF]"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Item list */}

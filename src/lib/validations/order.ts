@@ -31,7 +31,7 @@ export const createOrderSchema = z.object({
   tableNumber: z
     .number()
     .int('O número da mesa deve ser um número inteiro.')
-    .min(1, 'O número da mesa deve ser maior ou igual a 1.')
+    .min(0, 'O número da mesa deve ser maior ou igual a 0.')
     .max(999, 'Número da mesa inválido.'),
   customerNotes: z
     .string()

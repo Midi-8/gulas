@@ -64,7 +64,7 @@ export const OrderConfirmationModal: React.FC = () => {
               <span className="text-[#78716C] block text-[10px]">Mesa</span>
               <span className="text-xs font-bold text-[#35271F] flex items-center gap-1 justify-end">
                 <UtensilsCrossed className="w-3 h-3 text-[#C09573]" />
-                {activeOrder.tableName || `Mesa ${activeOrder.tableNumber}`}
+                {activeOrder.tableNumber === 0 ? '🛍️ Take-Away' : activeOrder.tableName || `Mesa ${activeOrder.tableNumber}`}
               </span>
             </div>
           </div>

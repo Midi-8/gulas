@@ -18,7 +18,7 @@ export default async function ProtectedAdminLayout({
   return (
     <div className="min-h-screen flex flex-col bg-gulas-cream">
       <AdminHeader staff={staff} />
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8">
+      <main className="flex-1 max-w-[1920px] w-full mx-auto p-3 sm:p-5 lg:p-6">
         {children}
       </main>
     </div>

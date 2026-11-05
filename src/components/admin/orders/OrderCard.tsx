@@ -4,7 +4,7 @@ import { ValidNextStatus } from '@/lib/validations/order-management';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { OrderItemsList } from './OrderItemsList';
 import { OrderStatusActions } from './OrderStatusActions';
-import { Clock, MessageSquare, AlertTriangle, Sparkles, X, Timer } from 'lucide-react';
+import { Clock, MessageSquare, AlertTriangle, Sparkles, X, Timer, ShoppingBag } from 'lucide-react';
 import { useOrderTimer } from '@/hooks/useOrderTimer';
 
 interface OrderCardProps {
@@ -84,9 +84,16 @@ export function OrderCard({
                 #{order.orderNumber}
               </span>
 
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#2A313E] text-amber-300 text-xs sm:text-sm font-black uppercase tracking-wider border border-[#3E4758]">
-                Mesa {order.tableNumber}
-              </span>
+              {order.tableNumber === 0 ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs sm:text-sm font-black uppercase tracking-wider border border-emerald-500/40">
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  Take-Away
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#2A313E] text-amber-300 text-xs sm:text-sm font-black uppercase tracking-wider border border-[#3E4758]">
+                  Mesa {order.tableNumber}
+                </span>
+              )}
 
               {isNew && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-xs font-black border border-amber-500/40 animate-pulse">

@@ -73,14 +73,20 @@ export function OrderHistoryDetailModal({
               >
                 #{order.orderNumber}
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#5E4939] text-[#F5F4F1] text-xs font-bold uppercase">
-                Mesa {order.tableNumber}
-              </span>
+              {order.tableNumber === 0 ? (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-emerald-700 text-white text-xs font-bold uppercase">
+                  🛍️ Take-Away
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#5E4939] text-[#F5F4F1] text-xs font-bold uppercase">
+                  Mesa {order.tableNumber}
+                </span>
+              )}
               <OrderStatusBadge status={order.status} size="sm" />
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-gulas-gray-500 font-medium mt-1.5">
-              <Calendar className="w-3.5 h-3.5 text-gulas-gray-400" />
+            <div className="flex items-center gap-2 text-xs text-[#78716C] font-medium mt-1.5">
+              <Calendar className="w-3.5 h-3.5 text-[#A89F95]" />
               <span>{formatDateTime(order.createdAt)}</span>
             </div>
           </div>
@@ -88,7 +94,7 @@ export function OrderHistoryDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-[#EAE5DF] text-[#4C453F] hover:bg-[#E5DED6] focus-visible:ring-2 focus-visible:ring-[#35271F] focus-visible:outline-none flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Fechar modal"
           >
             <X className="w-4 h-4" />
@@ -112,33 +118,33 @@ export function OrderHistoryDetailModal({
 
           {/* Items Section */}
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-400 block mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C] block mb-2">
               Artigos do Pedido ({order.items.reduce((acc, i) => acc + i.quantity, 0)})
             </span>
-            <div className="bg-zinc-50/70 rounded-xl p-3 border border-zinc-100">
+            <div className="bg-[#F5F4F1] rounded-xl p-3 border border-[#E5DED6]">
               <OrderItemsList items={order.items} />
             </div>
           </div>
 
           {/* Timestamp details */}
-          <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 flex items-center justify-between text-xs text-gulas-gray-500">
+          <div className="p-3 bg-[#F5F4F1] rounded-xl border border-[#E5DED6] flex items-center justify-between text-xs text-[#4C453F]">
             <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5 text-[#A89F95]" />
               Concluído / Atualizado em:
             </span>
-            <span className="font-medium text-gulas-dark">
+            <span className="font-medium text-[#35271F]">
               {formatDateTime(order.updatedAt)}
             </span>
           </div>
         </div>
 
         {/* Footer Financials */}
-        <div className="p-5 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between gap-3">
+        <div className="p-5 bg-[#F5F4F1] border-t border-[#E5DED6] flex items-center justify-between gap-3">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-400 block">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C] block">
               Subtotal: {formatPrice(order.subtotal)}
             </span>
-            <span className="text-xl font-black text-gulas-dark tracking-tight">
+            <span className="text-xl font-black text-[#35271F] tracking-tight">
               Total: {formatPrice(order.total)}
             </span>
           </div>
@@ -158,7 +164,7 @@ export function OrderHistoryDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-gulas-dark hover:bg-black text-white text-xs font-bold focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs font-bold focus-visible:ring-2 focus-visible:ring-[#35271F] focus-visible:outline-none transition-all cursor-pointer shadow-xs"
             >
               Fechar
             </button>

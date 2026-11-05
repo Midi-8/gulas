@@ -105,8 +105,10 @@ export const ActiveOrderDetailModal: React.FC = () => {
       ? `Pedido #${activeOrder.orderNumber}`
       : `Pedido #${activeOrder.id.replace('ord_', '').slice(0, 8)}`;
   const tableDisplay =
-    activeOrder.tableName ||
-    (activeOrder.tableNumber ? `Mesa ${activeOrder.tableNumber}` : 'Mesa');
+    activeOrder.tableNumber === 0
+      ? '🛍️ Take-Away / Balcão'
+      : activeOrder.tableName ||
+        (activeOrder.tableNumber ? `Mesa ${activeOrder.tableNumber}` : 'Mesa');
   const orderTimeDisplay = formatTime(activeOrder.createdAt);
 
   return (

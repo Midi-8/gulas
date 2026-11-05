@@ -271,17 +271,17 @@ export function OrderHistoryView({
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header & Actions Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gulas-gray-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E5DED6]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-gulas-dark tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#35271F] tracking-tight">
               Histórico de Pedidos
             </h1>
-            <span className="hidden sm:inline-flex text-xs font-mono bg-gulas-gray-100 text-gulas-gray-600 px-2 py-0.5 rounded-md">
+            <span className="hidden sm:inline-flex text-xs font-mono bg-[#EAE5DF] text-[#4C453F] px-2 py-0.5 rounded-md">
               /{restaurantSlug}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-gulas-gray-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#4C453F] mt-0.5">
             Registo de pedidos concluídos e cancelados &bull; {restaurantName}
           </p>
         </div>
@@ -290,7 +290,7 @@ export function OrderHistoryView({
         {/* Refresh button & info */}
         <div className="flex items-center gap-3 self-start md:self-auto">
           {lastRefreshedAt && (
-            <span className="text-xs text-gulas-gray-400 hidden sm:inline-block">
+            <span className="text-xs text-[#78716C] hidden sm:inline-block">
               Última atualização:{' '}
               {lastRefreshedAt.toLocaleTimeString('pt-PT', {
                 hour: '2-digit',
@@ -305,11 +305,11 @@ export function OrderHistoryView({
             type="button"
             disabled={isLoading || isRefreshing}
             onClick={handleManualRefresh}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gulas-gray-200 hover:bg-gulas-gray-100 text-gulas-dark text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] hover:bg-[#EAE5DF] text-[#35271F] text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
             aria-label="Atualizar histórico"
           >
             <RotateCcw
-              className={`w-4 h-4 text-gulas-gray-600 ${isLoading || isRefreshing ? 'animate-spin' : ''
+              className={`w-4 h-4 text-[#4C453F] ${isLoading || isRefreshing ? 'animate-spin' : ''
                 }`}
             />
             <span>Atualizar</span>
@@ -321,25 +321,25 @@ export function OrderHistoryView({
       {/* KPI Summary Cards (Representing the full loaded dataset) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Total Finalizados */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gulas-gray-200 shadow-xs flex items-center justify-between">
+        <div className="bg-[#FFFFFF] p-4 sm:p-5 rounded-2xl border border-[#E5DED6] shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
               Total no Histórico
             </span>
-            <p className="text-2xl sm:text-3xl font-black text-gulas-dark mt-0.5">
+            <p className="text-2xl sm:text-3xl font-black text-[#35271F] mt-0.5">
               {totalHistoryCount}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-600">
-            <History className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-[#EAE5DF] flex items-center justify-center text-[#5E4939]">
+            <History className="w-5 h-5 text-[#C09573]" />
           </div>
         </div>
 
 
         {/* Concluídos */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gulas-gray-200 shadow-xs flex items-center justify-between">
+        <div className="bg-[#FFFFFF] p-4 sm:p-5 rounded-2xl border border-[#E5DED6] shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-gulas-gray-500">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#4C453F]">
               Concluídos com Sucesso
             </span>
             <p className="text-2xl sm:text-3xl font-black text-[#35271F] mt-0.5">
@@ -353,7 +353,7 @@ export function OrderHistoryView({
 
 
         {/* Cancelados */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-rose-200 shadow-xs flex items-center justify-between">
+        <div className="bg-[#FFFFFF] p-4 sm:p-5 rounded-2xl border border-rose-200 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
               Cancelados
@@ -369,24 +369,24 @@ export function OrderHistoryView({
       </div>
 
 
-      {/* Filter and Search Bar (M4.5.2) */}
-      <div className="bg-white p-4 rounded-2xl border border-gulas-gray-200 shadow-xs space-y-3">
+      {/* Filter and Search Bar */}
+      <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#E5DED6] shadow-xs space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center gap-3">
           {/* 1. Search by Order Number */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-gulas-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#A89F95] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Pesquisar pedido (ex: 8)..."
-              className="w-full pl-9 pr-9 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm text-gulas-dark placeholder-gulas-gray-400 focus:outline-none focus:border-[#C09573] focus:bg-white transition-all"
+              className="w-full pl-9 pr-9 py-2 bg-[#F5F4F1] border border-[#E5DED6] rounded-xl text-xs sm:text-sm text-[#35271F] placeholder-[#A89F95] focus:outline-none focus:border-[#C09573] focus:bg-[#FFFFFF] transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gulas-gray-400 hover:text-gulas-dark transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A89F95] hover:text-[#35271F] transition-colors cursor-pointer"
                 aria-label="Limpar pesquisa"
               >
                 <X className="w-3.5 h-3.5" />
@@ -400,7 +400,7 @@ export function OrderHistoryView({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusOption)}
-              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-[#C09573] focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
+              className="px-3 py-2 bg-[#F5F4F1] border border-[#E5DED6] rounded-xl text-xs sm:text-sm font-semibold text-[#35271F] focus:outline-none focus:border-[#C09573] focus:bg-[#FFFFFF] transition-all cursor-pointer flex-1 sm:flex-none"
               aria-label="Filtrar por estado"
             >
               <option value="all">Todos os Estados</option>
@@ -413,13 +413,13 @@ export function OrderHistoryView({
             <select
               value={tableFilter}
               onChange={(e) => setTableFilter(e.target.value)}
-              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-[#C09573] focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
+              className="px-3 py-2 bg-[#F5F4F1] border border-[#E5DED6] rounded-xl text-xs sm:text-sm font-semibold text-[#35271F] focus:outline-none focus:border-[#C09573] focus:bg-[#FFFFFF] transition-all cursor-pointer flex-1 sm:flex-none"
               aria-label="Filtrar por mesa"
             >
               <option value="all">Todas as Mesas</option>
               {availableTables.map((num) => (
                 <option key={num} value={String(num)}>
-                  Mesa {num}
+                  {num === 0 ? '🛍️ Take-Away' : `Mesa ${num}`}
                 </option>
               ))}
             </select>
@@ -429,7 +429,7 @@ export function OrderHistoryView({
             <select
               value={periodFilter}
               onChange={(e) => setPeriodFilter(e.target.value as PeriodOption)}
-              className="px-3 py-2 bg-gulas-gray-100/80 border border-gulas-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gulas-dark focus:outline-none focus:border-[#C09573] focus:bg-white transition-all cursor-pointer flex-1 sm:flex-none"
+              className="px-3 py-2 bg-[#F5F4F1] border border-[#E5DED6] rounded-xl text-xs sm:text-sm font-semibold text-[#35271F] focus:outline-none focus:border-[#C09573] focus:bg-[#FFFFFF] transition-all cursor-pointer flex-1 sm:flex-none"
               aria-label="Filtrar por período"
             >
               <option value="all">Todos os Períodos</option>
@@ -444,7 +444,7 @@ export function OrderHistoryView({
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-gulas-dark text-xs sm:text-sm font-bold transition-all cursor-pointer flex-shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#EAE5DF] hover:bg-[#E5DED6] text-[#35271F] text-xs sm:text-sm font-bold transition-all cursor-pointer flex-shrink-0"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Limpar filtros</span>
@@ -455,11 +455,11 @@ export function OrderHistoryView({
 
 
         {/* Filter Results Summary */}
-        <div className="flex items-center justify-between text-xs text-gulas-gray-500 pt-1">
+        <div className="flex items-center justify-between text-xs text-[#4C453F] pt-1">
           <span className="flex items-center gap-1 font-medium">
-            <Filter className="w-3 h-3 text-gulas-gray-400" />
-            A mostrar <strong className="text-gulas-dark font-bold">{filteredOrders.length}</strong> de{' '}
-            <strong className="text-gulas-dark font-bold">{orders.length}</strong> pedidos
+            <Filter className="w-3 h-3 text-[#A89F95]" />
+            A mostrar <strong className="text-[#35271F] font-bold">{filteredOrders.length}</strong> de{' '}
+            <strong className="text-[#35271F] font-bold">{orders.length}</strong> pedidos
           </span>
           {hasActiveFilters && (
             <span className="text-xs text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
@@ -490,14 +490,14 @@ export function OrderHistoryView({
           </button>
         </div>
       ) : orders.length === 0 ? (
-        <div className="bg-white border border-gulas-gray-200 rounded-2xl p-10 sm:p-14 text-center max-w-lg mx-auto shadow-xs space-y-3">
-          <div className="w-16 h-16 bg-gulas-cream text-gulas-gray-400 rounded-2xl flex items-center justify-center mx-auto border border-gulas-gray-200">
-            <Inbox className="w-8 h-8 text-gulas-gray-400" />
+        <div className="bg-[#FFFFFF] border border-[#E5DED6] rounded-2xl p-10 sm:p-14 text-center max-w-lg mx-auto shadow-xs space-y-3">
+          <div className="w-16 h-16 bg-[#F5F4F1] text-[#A89F95] rounded-2xl flex items-center justify-center mx-auto border border-[#E5DED6]">
+            <Inbox className="w-8 h-8 text-[#A89F95]" />
           </div>
-          <h3 className="text-lg font-bold text-gulas-dark">
+          <h3 className="text-lg font-bold text-[#35271F]">
             Não existem pedidos no histórico
           </h3>
-          <p className="text-xs sm:text-sm text-gulas-gray-500 max-w-xs mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#4C453F] max-w-xs mx-auto leading-relaxed">
             Os pedidos concluídos ou cancelados aparecerão arquivados nesta lista.
           </p>
           <button
@@ -511,14 +511,14 @@ export function OrderHistoryView({
         </div>
       ) : filteredOrders.length === 0 ? (
         /* Empty State for Filters */
-        <div className="bg-white border border-gulas-gray-200 rounded-2xl p-10 sm:p-12 text-center max-w-lg mx-auto shadow-xs space-y-3">
+        <div className="bg-[#FFFFFF] border border-[#E5DED6] rounded-2xl p-10 sm:p-12 text-center max-w-lg mx-auto shadow-xs space-y-3">
           <div className="w-14 h-14 bg-[#EAE5DF] text-[#5E4939] rounded-2xl flex items-center justify-center mx-auto border border-[#E5DED6]">
             <Search className="w-6 h-6 text-[#C09573]" />
           </div>
-          <h3 className="text-base sm:text-lg font-bold text-gulas-dark">
+          <h3 className="text-base sm:text-lg font-bold text-[#35271F]">
             Nenhum pedido corresponde aos filtros
           </h3>
-          <p className="text-xs sm:text-sm text-gulas-gray-500 max-w-xs mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#4C453F] max-w-xs mx-auto leading-relaxed">
             Tenta ajustar o termo de pesquisa, o estado, a mesa ou o período selecionado.
           </p>
           <button
@@ -532,11 +532,11 @@ export function OrderHistoryView({
         </div>
       ) : (
         /* Orders List & Table */
-        <div className="bg-white rounded-2xl border border-gulas-gray-200 shadow-xs overflow-hidden">
+        <div className="bg-[#FFFFFF] rounded-2xl border border-[#E5DED6] shadow-xs overflow-hidden">
           {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-zinc-50/80 border-b border-gulas-gray-200 text-xs font-bold text-gulas-gray-500 uppercase tracking-wider">
+              <thead className="bg-[#F5F4F1] border-b border-[#E5DED6] text-xs font-bold text-[#4C453F] uppercase tracking-wider">
                 <tr>
                   <th scope="col" className="px-5 py-3.5">
                     Pedido
@@ -561,7 +561,7 @@ export function OrderHistoryView({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gulas-gray-100">
+              <tbody className="divide-y divide-[#E5DED6]">
                 {filteredOrders.map((order) => {
                   const totalItemsCount = order.items.reduce(
                     (acc, item) => acc + item.quantity,
@@ -570,27 +570,33 @@ export function OrderHistoryView({
                    return (
                     <tr
                       key={order.id}
-                      className="hover:bg-zinc-50/60 transition-colors"
+                      className="hover:bg-[#F5F4F1]/60 transition-colors"
                     >
-                      <td className="px-5 py-4 font-black text-gulas-dark">
+                      <td className="px-5 py-4 font-black text-[#35271F]">
                         #{order.orderNumber}
                       </td>
-                      <td className="px-5 py-4 font-bold text-gulas-dark">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-zinc-100 text-xs font-bold">
-                          Mesa {order.tableNumber}
-                        </span>
+                      <td className="px-5 py-4 font-bold text-[#35271F]">
+                        {order.tableNumber === 0 ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-bold">
+                            🛍️ Take-Away
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#EAE5DF] text-[#35271F] text-xs font-bold">
+                            Mesa {order.tableNumber}
+                          </span>
+                        )}
                       </td>
-                      <td className="px-5 py-4 text-xs text-gulas-gray-500 font-medium">
+                      <td className="px-5 py-4 text-xs text-[#78716C] font-medium">
                         {formatDateTime(order.createdAt)}
                       </td>
-                      <td className="px-5 py-4 text-xs text-gulas-dark font-medium">
+                      <td className="px-5 py-4 text-xs text-[#35271F] font-medium">
                         <span className="font-bold">{totalItemsCount}x</span>{' '}
                         artigo{totalItemsCount > 1 ? 's' : ''}
                       </td>
                       <td className="px-5 py-4">
                         <OrderStatusBadge status={order.status} size="sm" />
                       </td>
-                      <td className="px-5 py-4 font-black text-gulas-dark text-right">
+                      <td className="px-5 py-4 font-black text-[#35271F] text-right">
                         {formatPrice(order.total)}
                       </td>
                       <td className="px-5 py-4">
@@ -598,7 +604,7 @@ export function OrderHistoryView({
                           <button
                             type="button"
                             onClick={() => setSelectedOrder(order)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-gulas-dark text-xs font-bold transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EAE5DF] hover:bg-[#E5DED6] text-[#35271F] text-xs font-bold transition-all cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>Ver</span>
@@ -660,7 +666,7 @@ export function OrderHistoryView({
 
 
           {/* Mobile Card List View */}
-          <div className="md:hidden divide-y divide-gulas-gray-100">
+          <div className="md:hidden divide-y divide-[#E5DED6]">
             {filteredOrders.map((order) => {
               const totalItemsCount = order.items.reduce(
                 (acc, item) => acc + item.quantity,
@@ -671,15 +677,21 @@ export function OrderHistoryView({
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-black text-gulas-dark">
+                        <span className="text-lg font-black text-[#35271F]">
                           #{order.orderNumber}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-zinc-100 text-xs font-bold">
-                          Mesa {order.tableNumber}
-                        </span>
+                        {order.tableNumber === 0 ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-bold">
+                            🛍️ Take-Away
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#EAE5DF] text-[#35271F] text-xs font-bold">
+                            Mesa {order.tableNumber}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-gulas-gray-500 font-medium mt-1">
-                        <Calendar className="w-3.5 h-3.5 text-gulas-gray-400" />
+                      <div className="flex items-center gap-1.5 text-xs text-[#78716C] font-medium mt-1">
+                        <Calendar className="w-3.5 h-3.5 text-[#A89F95]" />
                         <span>{formatDateTime(order.createdAt)}</span>
                       </div>
                     </div>
@@ -688,9 +700,9 @@ export function OrderHistoryView({
 
 
                   <div className="flex items-center justify-between pt-1 gap-2 flex-wrap">
-                    <span className="text-xs text-gulas-gray-500">
+                    <span className="text-xs text-[#4C453F]">
                       {totalItemsCount} artigo{totalItemsCount > 1 ? 's' : ''} &bull;{' '}
-                      <strong className="text-sm font-black text-gulas-dark">
+                      <strong className="text-sm font-black text-[#35271F]">
                         {formatPrice(order.total)}
                       </strong>
                     </span>
