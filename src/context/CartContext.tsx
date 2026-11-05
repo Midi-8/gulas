@@ -118,17 +118,19 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
         const parsed = JSON.parse(saved);
 
         if (parsed && typeof parsed === 'object') {
-          if (Array.isArray(parsed.items)) {
-            setItems(parsed.items);
-          }
+          queueMicrotask(() => {
+            if (Array.isArray(parsed.items)) {
+              setItems(parsed.items);
+            }
 
-          if (
-            typeof parsed.selectedTableNumber === 'number' &&
-            Number.isInteger(parsed.selectedTableNumber) &&
-            parsed.selectedTableNumber > 0
-          ) {
-            setSelectedTableNumber(parsed.selectedTableNumber);
-          }
+            if (
+              typeof parsed.selectedTableNumber === 'number' &&
+              Number.isInteger(parsed.selectedTableNumber) &&
+              parsed.selectedTableNumber > 0
+            ) {
+              setSelectedTableNumber(parsed.selectedTableNumber);
+            }
+          });
         }
       }
     } catch {

@@ -14,7 +14,7 @@
 -- ============================================================================
 
 BEGIN;
-
+    
 -- 1. CRIAÇÃO DE SCHEMA DE ARQUIVO ISOLADO COM ACESSO RESTRITO
 -- Impede que os backups fiquem no schema public e fiquem expostos a consultas anon/authenticated
 CREATE SCHEMA IF NOT EXISTS _backup_archive;

@@ -19,6 +19,7 @@ import { useKdsAlerts } from '@/hooks/useKdsAlerts';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { OrderCard } from './OrderCard';
 import ConsolidatedItems from '@/components/admin/kds/ConsolidatedItems';
+import { clsx } from 'clsx';
 import {
   AlertCircle,
   Bell,
@@ -32,6 +33,7 @@ import {
   Inbox,
   LayoutGrid,
   Loader2,
+  Moon,
   Radio,
   RotateCcw,
   Sun,
@@ -98,6 +100,32 @@ export function OrderDashboard({
     releaseWakeLock,
   } = useScreenWakeLock(true);
   const [a11yAnnouncement, setA11yAnnouncement] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('gulas_kds_dark_mode');
+      if (saved === 'true') {
+        queueMicrotask(() => {
+          setIsDarkMode(true);
+        });
+      }
+    } catch {
+      // Ignorar indisponibilidade de localStorage
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('gulas_kds_dark_mode', String(next));
+      } catch {
+        // Ignorar
+      }
+      return next;
+    });
+  };
 
   const previousOrderIdsRef = useRef<Set<string>>(
     new Set(initialOrders.map((order) => order.id))
@@ -407,7 +435,12 @@ export function OrderDashboard({
   });
 
   return (
-    <div className="space-y-6 pb-12">
+    <div
+      className={clsx(
+        'space-y-6 pb-12 transition-colors duration-300 rounded-2xl',
+        isDarkMode && 'bg-[#18181B] text-[#F4F4F5] p-3 sm:p-5 shadow-2xl'
+      )}
+    >
       <div
         role="status"
         aria-live="polite"
@@ -511,6 +544,29 @@ export function OrderDashboard({
                 {outOfStockCount} esgotados
               </span>
             )}
+          </button>
+
+          {/* Dark Mode Toggle for Kitchen Tablet */}
+          <button
+            type="button"
+            onClick={toggleDarkMode}
+            className={clsx(
+              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold transition-all sm:text-sm',
+              isDarkMode
+                ? 'bg-zinc-800 border-zinc-700 text-amber-300 hover:bg-zinc-700 shadow-sm'
+                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] shadow-xs hover:bg-[#EAE5DF]'
+            )}
+            title={isDarkMode ? 'Mudar para Modo Claro' : 'Ativar Modo Noturno de Cozinha'}
+            aria-label="Comutar tema do monitor KDS"
+          >
+            {isDarkMode ? (
+              <Sun className="h-4 w-4 text-amber-400" />
+            ) : (
+              <Moon className="h-4 w-4 text-zinc-600" />
+            )}
+            <span className="hidden sm:inline">
+              {isDarkMode ? 'Modo Claro' : 'Modo Cozinha'}
+            </span>
           </button>
 
           {lastRefreshedAt && (

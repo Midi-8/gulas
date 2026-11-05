@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Restaurant, Category, Product } from '@/types/restaurant';
 import { RestaurantHeader } from '@/components/menu/RestaurantHeader';
 import { CategoryNav } from '@/components/menu/CategoryNav';
@@ -43,6 +43,48 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
   const [activeFilter, setActiveFilter] = useState<MenuFilterType>('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const isClickScrollingRef = useRef(false);
+
+  // Sincronização da barra de categorias com a rolagem do utilizador (IntersectionObserver)
+  useEffect(() => {
+    if (categories.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isClickScrollingRef.current) return;
+
+        // Procura a secção que está visível no terço superior do ecrã
+        const visibleSection = entries.find((entry) => entry.isIntersecting);
+        if (visibleSection) {
+          const categoryId = visibleSection.target.id.replace('section-', '');
+          if (categoryId) {
+            setActiveCategoryId(categoryId);
+          }
+        }
+      },
+      {
+        rootMargin: '-80px 0px -65% 0px',
+        threshold: 0.1,
+      }
+    );
+
+    categories.forEach((cat) => {
+      const el = document.getElementById(`section-${cat.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [categories]);
+
+  const handleSelectCategory = (categoryId: string) => {
+    isClickScrollingRef.current = true;
+    setActiveCategoryId(categoryId);
+    setTimeout(() => {
+      isClickScrollingRef.current = false;
+    }, 750);
+  };
 
   if (products !== prevProducts) {
     setPrevProducts(products);
@@ -183,7 +225,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       <CategoryNav
         categories={categories}
         activeCategoryId={activeCategoryId}
-        onSelectCategory={setActiveCategoryId}
+        onSelectCategory={handleSelectCategory}
       />
 
       {/* Menu Content */}
@@ -199,7 +241,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
             </p>
           </div>
         ) : (
-          categories.map((category) => {
+          categories.map((category, catIndex) => {
             const items = productsByCategory.get(category.id) || [];
             if (items.length === 0 && (searchQuery !== '' || activeFilter !== 'all')) {
               return null;
@@ -241,11 +283,12 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    {items.map((product) => (
+                    {items.map((product, itemIndex) => (
                       <ProductCard
                         key={product.id}
                         product={product}
                         onOpenDetails={handleOpenProductDetails}
+                        priority={catIndex === 0 && itemIndex < 2}
                       />
                     ))}
                   </div>

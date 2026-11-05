@@ -277,47 +277,6 @@ export const ActiveOrderTrackerProvider: React.FC<{
   }, []);
 
 
-  const purgeOrphanOrders = useCallback(
-    (orphanIds?: string[]) => {
-      setActiveOrderIdsState((prevIds) => {
-        const nextIds =
-          orphanIds && orphanIds.length > 0
-            ? prevIds.filter((id) => !orphanIds.includes(id))
-            : [];
-
-
-        setActiveOrders((prevOrders) => {
-          const nextOrders =
-            orphanIds && orphanIds.length > 0
-              ? prevOrders.filter((o) => !orphanIds.includes(o.id))
-              : [];
-
-
-          persistOrders(nextIds, nextOrders);
-          return nextOrders;
-        });
-
-
-        if (orphanIds && orphanIds.length > 0) {
-          const nextTokens = { ...orderTokensRef.current };
-          orphanIds.forEach((id) => delete nextTokens[id]);
-          orderTokensRef.current = nextTokens;
-          persistOrderTokens(nextTokens);
-        }
-
-
-        setSelectedOrderId((current) =>
-          current && (!orphanIds || orphanIds.includes(current))
-            ? nextIds[nextIds.length - 1] || null
-            : current
-        );
-
-
-        return nextIds;
-      });
-    },
-    [persistOrders]
-  );
 
 
   const removeActiveOrder = useCallback(

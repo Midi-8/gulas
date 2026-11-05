@@ -167,6 +167,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     table_id UUID REFERENCES public.tables(id) ON DELETE SET NULL,
     table_number INTEGER NOT NULL,
     order_number INTEGER NOT NULL,
+    tracking_token VARCHAR(64) DEFAULT encode(gen_random_bytes(32), 'hex'),
     status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled')),
     subtotal NUMERIC(10,2) NOT NULL DEFAULT 0.00 CHECK (subtotal >= 0),
     total NUMERIC(10,2) NOT NULL DEFAULT 0.00 CHECK (total >= 0),

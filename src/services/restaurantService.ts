@@ -1,4 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { unstable_cache } from 'next/cache';
 import { Database } from '@/lib/supabase/types';
 import {
   Restaurant,
@@ -48,6 +50,20 @@ function isSupabaseConfigured(): boolean {
     'sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u';
 
   return Boolean(url && key && !url.includes('your-project'));
+}
+
+function getPublicSupabaseClient() {
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'https://emjhabwmuvmjwshbkgvt.supabase.co';
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    'sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u';
+
+  return createSupabaseClient<Database>(url, key, {
+    auth: { persistSession: false },
+  });
 }
 
 function mapRestaurantFromRow(row: RestaurantRow): Restaurant {
@@ -126,8 +142,7 @@ export async function getRestaurantBySlug(
     return null;
   }
 
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return null;
+  const supabase = getPublicSupabaseClient();
 
   const { data, error } = await supabase
     .from('restaurants')
@@ -160,11 +175,7 @@ export async function getRestaurantMenu(
     };
   }
 
-  const supabase = await createServerSupabaseClient();
-
-  if (!supabase) {
-    return { categories: [], products: [] };
-  }
+  const supabase = getPublicSupabaseClient();
 
   const [categoriesRes, productsRes] = await Promise.all([
     supabase
@@ -194,7 +205,6 @@ export async function getRestaurantMenu(
         prep_time_minutes
       `)
       .eq('restaurant_id', restaurantId)
-      .eq('is_available', true)
       .order('display_order', { ascending: true }),
   ]);
 
@@ -245,6 +255,21 @@ export async function getRestaurantBySlugWithMenu(
     products: menu.products,
   };
 }
+
+/**
+ * Consulta otimizada com cache no Edge da Vercel / Next.js (TTL 60s).
+ * Revalidada instantaneamente via revalidateTag('menu') quando o staff altera stock ou preços.
+ */
+export const getCachedRestaurantBySlugWithMenu = unstable_cache(
+  async (slug: string) => {
+    return getRestaurantBySlugWithMenu(slug);
+  },
+  ['restaurant-menu-by-slug'],
+  {
+    revalidate: 60,
+    tags: ['menu'],
+  }
+);
 
 export async function getTableByNumber(
   restaurantId: string,

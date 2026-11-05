@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAuthenticatedStaff } from '@/lib/auth/staff';
 
@@ -109,6 +109,7 @@ export async function toggleProductAvailability(
 
     // 3. Revalidar rotas críticas do Next.js
     try {
+      updateTag('menu');
       revalidatePath(`/menu/${staff.restaurant.slug}`, 'page');
       revalidatePath(`/menu/${staff.restaurant.slug}`, 'layout');
       revalidatePath('/admin/orders', 'page');

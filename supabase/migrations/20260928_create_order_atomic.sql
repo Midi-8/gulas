@@ -24,6 +24,7 @@ DECLARE
     v_order_id UUID;
     v_order_number INTEGER;
     v_created_at TIMESTAMPTZ;
+    v_tracking_token VARCHAR(64);
     v_subtotal NUMERIC(10,2) := 0.00;
     v_total NUMERIC(10,2) := 0.00;
     -- Iteração de Itens
@@ -231,7 +232,7 @@ BEGIN
         v_total,
         nullif(trim(p_customer_notes), '')
     )
-    RETURNING id, created_at INTO v_order_id, v_created_at;
+    RETURNING id, created_at, tracking_token INTO v_order_id, v_created_at, v_tracking_token;
 
     -- ------------------------------------------------------------------------
     -- 9. INSERÇÃO DOS ITENS (ORDER_ITEMS) COM SNAPSHOT HISTÓRICO
@@ -291,6 +292,7 @@ BEGIN
             'total', v_total,
             'customer_notes', nullif(trim(p_customer_notes), ''),
             'created_at', v_created_at,
+            'tracking_token', v_tracking_token,
             'items', v_returned_items
         )
     );

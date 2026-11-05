@@ -12,28 +12,52 @@ import { clsx } from 'clsx';
 interface ProductCardProps {
   product: Product;
   onOpenDetails: (product: Product) => void;
+  priority?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  onOpenDetails,
+  priority = false,
+}) => {
   const { items, addItem, updateQuantity } = useCart();
   const [imageFailed, setImageFailed] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
 
   const cartItem = items.find((item) => item.product.id === product.id);
   const currentQuantity = cartItem ? cartItem.quantity : 0;
 
+  const triggerHaptic = (ms: number = 12) => {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(ms);
+      } catch {
+        // Silenciosamente ignorado caso o browser bloqueie
+      }
+    }
+  };
+
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!product.available) return;
+    triggerHaptic(18);
+    setIsPulsing(true);
+    setTimeout(() => setIsPulsing(false), 260);
     addItem(product, 1);
   };
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation();
+    triggerHaptic(12);
+    setIsPulsing(true);
+    setTimeout(() => setIsPulsing(false), 220);
     updateQuantity(product.id, currentQuantity + 1);
   };
 
   const handleDecrement = (e: React.MouseEvent) => {
     e.stopPropagation();
+    triggerHaptic(8);
     updateQuantity(product.id, currentQuantity - 1);
   };
 
@@ -49,15 +73,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
       <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden bg-[#EAE5DF] border-b border-[#E5DED6]">
         {product.imageUrl && !imageFailed ? (
           <>
+            {!isImageLoaded && (
+              <div className="absolute inset-0 bg-gradient-to-r from-[#EAE5DF] via-[#F5F4F1] to-[#EAE5DF] animate-pulse" />
+            )}
             <Image
               src={product.imageUrl}
               alt={product.name}
               fill
+              priority={priority}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 420px"
               className={clsx(
-                'object-cover transition-transform duration-500 ease-out group-hover:scale-105',
+                'object-cover transition-all duration-500 ease-out group-hover:scale-105',
+                !isImageLoaded ? 'opacity-0 scale-95' : 'opacity-100 scale-100',
                 !product.available && 'grayscale contrast-75'
               )}
+              onLoad={() => setIsImageLoaded(true)}
               onError={() => setImageFailed(true)}
             />
             {/* Gradiente de proteção de contraste muito suave */}
@@ -164,7 +194,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
                 <button
                   type="button"
                   onClick={handleIncrement}
-                  className="w-7 h-7 rounded-full bg-[#5E4939] text-[#F5F4F1] hover:bg-[#453426] flex items-center justify-center transition-colors active:scale-90 shadow-2xs cursor-pointer"
+                  className={clsx(
+                    'w-7 h-7 rounded-full bg-[#5E4939] text-[#F5F4F1] hover:bg-[#453426] flex items-center justify-center transition-all duration-200 active:scale-75 shadow-2xs cursor-pointer',
+                    isPulsing && 'scale-115 ring-2 ring-[#C09573]/50'
+                  )}
                   aria-label="Aumentar quantidade"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -174,7 +207,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
               <button
                 type="button"
                 onClick={handleQuickAdd}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                className={clsx(
+                  'w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] flex items-center justify-center transition-all duration-200 shadow-xs active:scale-75 cursor-pointer',
+                  isPulsing && 'scale-115 ring-4 ring-[#C09573]/40'
+                )}
                 aria-label={`Adicionar ${product.name}`}
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />

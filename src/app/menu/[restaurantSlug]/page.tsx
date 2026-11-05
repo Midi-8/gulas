@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { getRestaurantBySlugWithMenu } from '@/services/restaurantService';
+import { getCachedRestaurantBySlugWithMenu } from '@/services/restaurantService';
 import { RestaurantMenuView } from '@/components/menu/RestaurantMenuView';
 
 interface MenuPageProps {
@@ -14,7 +14,7 @@ interface MenuPageProps {
 
 export async function generateMetadata({ params }: MenuPageProps) {
   const { restaurantSlug } = await params;
-  const menuData = await getRestaurantBySlugWithMenu(restaurantSlug);
+  const menuData = await getCachedRestaurantBySlugWithMenu(restaurantSlug);
   if (!menuData) {
     return { title: 'Restaurante não encontrado' };
   }
@@ -32,7 +32,7 @@ export default async function RestaurantMenuPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const queryTable = resolvedSearchParams.table ? Number(resolvedSearchParams.table) : undefined;
 
-  const menuData = await getRestaurantBySlugWithMenu(restaurantSlug);
+  const menuData = await getCachedRestaurantBySlugWithMenu(restaurantSlug);
   if (!menuData) {
     notFound();
   }

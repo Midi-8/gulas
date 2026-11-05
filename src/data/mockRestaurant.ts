@@ -2,8 +2,6 @@ import { Restaurant, Table, Category, Product } from '@/types/restaurant';
 import {
   RESTAURANT_ID,
   menuAvisos,
-  menuCategories,
-  menuProducts,
 } from '@/data/gulasCatalog';
 
 export const mockRestaurant: Restaurant = {

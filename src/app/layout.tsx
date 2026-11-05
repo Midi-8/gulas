@@ -29,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full bg-[#FAF8F5] text-[#141619] font-sans flex flex-col">
+      <body className="min-h-full bg-[#F5F4F1] text-[#35271F] font-sans flex flex-col">
         <CartProvider>
           <ActiveOrderTrackerProvider>{children}</ActiveOrderTrackerProvider>
         </CartProvider>
