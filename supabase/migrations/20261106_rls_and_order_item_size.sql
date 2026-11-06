@@ -26,15 +26,43 @@ WITH CHECK (
     )
 );
 
--- 1.5. Garantir suporte a Mesas 1 a 20 na tabela public.tables
+-- 1.5. Garantir suporte a Mesas 1 a 20 na tabela public.tables (usando o ID real do restaurante na BD)
 INSERT INTO public.tables (restaurant_id, number, name, is_active)
 SELECT
-    'b0000000-0000-4000-8000-000000000001'::uuid,
+    r.id,
     gs.num,
     'Mesa ' || gs.num,
     true
-FROM generate_series(1, 20) AS gs(num)
+FROM public.restaurants r
+CROSS JOIN generate_series(1, 20) AS gs(num)
+WHERE r.slug = 'gulas'
 ON CONFLICT (restaurant_id, number) DO NOTHING;
+
+-- 1.6. Garantir que public.restaurants e public.products estão na publicação supabase_realtime
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_publication_rel pr
+        JOIN pg_class c ON c.oid = pr.prrelid
+        JOIN pg_publication p ON p.oid = pr.prpubid
+        WHERE p.pubname = 'supabase_realtime'
+        AND c.relname = 'restaurants'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.restaurants;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_publication_rel pr
+        JOIN pg_class c ON c.oid = pr.prrelid
+        JOIN pg_publication p ON p.oid = pr.prpubid
+        WHERE p.pubname = 'supabase_realtime'
+        AND c.relname = 'products'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
+    END IF;
+END $$;
 
 -- 2. Atualizar create_order_atomic para incluir unit_quantity no product_name quando aplicável
 CREATE OR REPLACE FUNCTION public.create_order_atomic(
