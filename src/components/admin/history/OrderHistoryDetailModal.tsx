@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { ManagedOrder } from '@/actions/order-management';
 import { OrderStatusBadge } from '../orders/OrderStatusBadge';
 import { OrderItemsList } from '../orders/OrderItemsList';
-import { X, Calendar, Clock, MessageSquare, Undo2 } from 'lucide-react';
+import { ThermalReceipt } from '../orders/ThermalReceipt';
+import { X, Calendar, Clock, MessageSquare, Undo2, Printer } from 'lucide-react';
 
 interface OrderHistoryDetailModalProps {
   order: ManagedOrder | null;
@@ -150,6 +151,15 @@ export function OrderHistoryDetailModal({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#EAE5DF] hover:bg-[#E5DED6] text-[#35271F] text-xs font-bold border border-[#E5DED6] transition-all cursor-pointer"
+              title="Imprimir talão (80mm)"
+            >
+              <Printer className="w-3.5 h-3.5 text-[#5E4939]" />
+              <span>Imprimir</span>
+            </button>
             {order.status === 'completed' && onReopen && (
               <button
                 type="button"
@@ -171,6 +181,7 @@ export function OrderHistoryDetailModal({
           </div>
         </div>
       </div>
+      <ThermalReceipt order={order} />
     </div>
   );
 }

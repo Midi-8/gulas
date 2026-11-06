@@ -18,6 +18,7 @@ import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
 import { useKdsAlerts } from '@/hooks/useKdsAlerts';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { OrderCard } from './OrderCard';
+import { ThermalReceipt } from './ThermalReceipt';
 import ConsolidatedItems from '@/components/admin/kds/ConsolidatedItems';
 import { clsx } from 'clsx';
 import {
@@ -34,6 +35,7 @@ import {
   LayoutGrid,
   Loader2,
   Moon,
+  Power,
   Radio,
   RotateCcw,
   Sun,
@@ -45,12 +47,16 @@ import {
   Minimize,
 } from 'lucide-react';
 import { QuickStockDrawer } from '@/components/admin/stock/QuickStockDrawer';
-import { getRestaurantStockList } from '@/actions/product-stock';
+import {
+  getRestaurantStockList,
+  toggleRestaurantOpenStatus,
+} from '@/actions/product-stock';
 
 interface OrderDashboardProps {
   restaurantId: string;
   restaurantName: string;
   restaurantSlug: string;
+  initialIsRestaurantOpen?: boolean;
   initialOrders: ManagedOrder[];
 }
 
@@ -82,9 +88,15 @@ export function OrderDashboard({
   restaurantId,
   restaurantName,
   restaurantSlug,
+  initialIsRestaurantOpen = true,
   initialOrders,
 }: OrderDashboardProps) {
   const [orders, setOrders] = useState<ManagedOrder[]>(initialOrders);
+  const [isRestaurantOpen, setIsRestaurantOpen] = useState(
+    initialIsRestaurantOpen
+  );
+  const [isTogglingOpen, setIsTogglingOpen] = useState(false);
+  const [printingOrder, setPrintingOrder] = useState<ManagedOrder | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
@@ -311,6 +323,45 @@ export function OrderDashboard({
     onOrdersChange: fetchOrders,
     onNewOrder: handleNewOrder,
   });
+
+  // Fallback Polling Automático: Se o canal WebSocket Realtime cair, sincroniza a cada 10s
+  useEffect(() => {
+    if (isConnected) return;
+
+    const fallbackInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
+      void fetchOrders();
+    }, 10000);
+
+    return () => clearInterval(fallbackInterval);
+  }, [isConnected, fetchOrders]);
+
+  const handleToggleRestaurantOpen = async () => {
+    if (isTogglingOpen) return;
+    setIsTogglingOpen(true);
+    const nextOpen = !isRestaurantOpen;
+    try {
+      const res = await toggleRestaurantOpenStatus(nextOpen);
+      if (res.success) {
+        setIsRestaurantOpen(res.data.isOpen);
+      } else {
+        setDashboardError(res.error.message);
+      }
+    } catch {
+      setDashboardError('Não foi possível alterar o estado do restaurante.');
+    } finally {
+      setIsTogglingOpen(false);
+    }
+  };
+
+  const handlePrintOrder = useCallback((orderToPrint: ManagedOrder) => {
+    setPrintingOrder(orderToPrint);
+    setTimeout(() => {
+      window.print();
+    }, 80);
+  }, []);
 
   const handleManualRefresh = () => {
     startRefreshTransition(async () => {
@@ -623,6 +674,31 @@ export function OrderDashboard({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+          {/* Controlo de Receção de Pedidos (Aberto / Encerrado) */}
+          <button
+            type="button"
+            disabled={isTogglingOpen}
+            onClick={handleToggleRestaurantOpen}
+            className={clsx(
+              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold shadow-xs transition-all sm:text-sm disabled:opacity-60',
+              isRestaurantOpen
+                ? isDarkMode
+                  ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
+                  : 'border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
+                : 'border-rose-500/50 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
+            )}
+            title={
+              isRestaurantOpen
+                ? 'O restaurante está a aceitar pedidos digitais. Clique para pausar/encerrar.'
+                : 'A receção de pedidos está encerrada. Clique para reabrir.'
+            }
+          >
+            <Power className="h-4 w-4" />
+            <span>
+              {isRestaurantOpen ? 'Receção: Aberta' : 'Receção: Encerrada'}
+            </span>
+          </button>
+
           {/* Quick Stock Management Trigger Button */}
           <button
             type="button"
@@ -874,7 +950,7 @@ export function OrderDashboard({
         ))}
       </div>
 
-      <ConsolidatedItems orders={filteredOrders} />
+      <ConsolidatedItems orders={filteredOrders} isDarkMode={isDarkMode} />
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center space-y-3 py-20 text-center">
@@ -958,6 +1034,7 @@ export function OrderDashboard({
               key={order.id}
               order={order}
               isNew={newOrderIds.has(order.id)}
+              isDarkMode={isDarkMode}
               isUpdating={Boolean(updatingMap[order.id])}
               error={orderErrorMap[order.id]}
               onClearError={() =>
@@ -967,6 +1044,7 @@ export function OrderDashboard({
                 }))
               }
               onUpdateStatus={handleUpdateStatus}
+              onPrintOrder={handlePrintOrder}
             />
           ))}
         </div>
@@ -982,7 +1060,11 @@ export function OrderDashboard({
           <div className="flex items-center gap-2 text-xs sm:text-sm">
             <span className="h-2 w-2 rounded-full bg-[#C09573]" />
             <span className="font-semibold text-[#EAE5DF]">
-              Pedido <strong className="text-white">#{undoOrder.orderNumber}</strong> (Mesa {undoOrder.tableNumber}) concluído.
+              Pedido <strong className="text-white">#{undoOrder.orderNumber}</strong> (
+              {undoOrder.tableNumber === 0
+                ? 'Take-Away'
+                : `Mesa ${undoOrder.tableNumber}`}
+              ) concluído.
             </span>
           </div>
 
@@ -1025,6 +1107,9 @@ export function OrderDashboard({
           refreshStockCount();
         }}
       />
+
+      {/* Talão Térmico 80mm para Impressora de Cozinha */}
+      <ThermalReceipt order={printingOrder} restaurantName={restaurantName} />
     </div>
   );
 }

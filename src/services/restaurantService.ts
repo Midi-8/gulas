@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
 import { Database } from '@/lib/supabase/types';
+import { getSupabaseEnv } from '@/lib/supabase/config';
 import {
   Restaurant,
   Category,
@@ -41,27 +42,13 @@ type PublicProductRow = Pick<
 >;
 
 function isSupabaseConfigured(): boolean {
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    'https://emjhabwmuvmjwshbkgvt.supabase.co';
-  const key =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    'sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u';
-
-  return Boolean(url && key && !url.includes('your-project'));
+  return getSupabaseEnv().isConfigured;
 }
 
 function getPublicSupabaseClient() {
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    'https://emjhabwmuvmjwshbkgvt.supabase.co';
-  const key =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    'sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u';
+  const { supabaseUrl, supabaseKey } = getSupabaseEnv();
 
-  return createSupabaseClient<Database>(url, key, {
+  return createSupabaseClient<Database>(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
   });
 }

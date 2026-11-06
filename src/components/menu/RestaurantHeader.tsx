@@ -52,23 +52,43 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                 <UtensilsCrossed className="w-3.5 h-3.5 text-[#A89F95]" />
                 <span className="invisible">Mesa 00</span>
               </div>
-            ) : selectedTableNumber ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shadow-xs">
-                <UtensilsCrossed className="w-3.5 h-3.5 text-[#C09573]" />
-                <span>Mesa {selectedTableNumber}</span>
-                {isTableLocked && (
+            ) : selectedTableNumber === 0 ? (
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#5E4939] border border-[#4C392D] text-xs font-bold text-[#F5F4F1] shadow-xs hover:bg-[#453426] transition-all cursor-pointer"
+                title="Pedido configurado para Take-Away. Clica para alterar."
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-[#C09573]" />
+                <span>Take-Away</span>
+              </button>
+            ) : selectedTableNumber !== null && selectedTableNumber > 0 ? (
+              isTableLocked ? (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shadow-xs">
+                  <UtensilsCrossed className="w-3.5 h-3.5 text-[#C09573]" />
+                  <span>Mesa {selectedTableNumber}</span>
                   <span className="text-[10px] text-[#C09573] font-bold">(QR)</span>
-                )}
-              </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsCartOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shadow-xs hover:border-[#C09573] hover:bg-[#EAE5DF] transition-all cursor-pointer"
+                  title="Alterar mesa ou mudar para Take-Away"
+                >
+                  <UtensilsCrossed className="w-3.5 h-3.5 text-[#C09573]" />
+                  <span>Mesa {selectedTableNumber}</span>
+                </button>
+              )
             ) : (
               <button
                 type="button"
                 onClick={() => setIsCartOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#C09573]/50 text-xs font-bold text-[#35271F] shadow-xs hover:border-[#C09573] hover:bg-[#EAE5DF] transition-all cursor-pointer"
-                title="Escolher mesa onde está sentado"
+                title="Escolher mesa ou opção Take-Away"
               >
                 <UtensilsCrossed className="w-3.5 h-3.5 text-[#C09573]" />
-                <span>Mesa?</span>
+                <span>Mesa / Levar?</span>
               </button>
             )}
 
@@ -116,14 +136,32 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                 </p>
               </div>
 
-              {/* Selo Minimalista "Aberto" */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shrink-0 shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-[#C09573] animate-pulse" />
-                <span>Aberto</span>
-              </div>
+              {/* Selo Dinâmico "Aberto" / "Encerrado" */}
+              {restaurant.isOpen ? (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFFFF] border border-[#E5DED6] text-xs font-bold text-[#35271F] shrink-0 shadow-xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Aberto</span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-950/90 border border-rose-500/40 text-xs font-bold text-rose-100 shrink-0 shadow-xs">
+                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+                  <span>Encerrado</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {!restaurant.isOpen && (
+          <div className="mt-2.5 px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-900 flex items-center justify-between gap-2">
+            <span>O restaurante encontra-se temporariamente encerrado para receção de novos pedidos digitais.</span>
+            {restaurant.openingHours && (
+              <span className="text-[11px] font-mono text-rose-700 shrink-0 hidden sm:inline">
+                {restaurant.openingHours}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

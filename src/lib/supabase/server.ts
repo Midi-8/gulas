@@ -1,24 +1,14 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Database } from './types';
+import { getSupabaseEnv } from './config';
 
 export async function createServerSupabaseClient() {
-  const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    'https://emjhabwmuvmjwshbkgvt.supabase.co';
-  const supabaseKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    'sb_publishable_8gy1y8hhb_fCnAz1brYe9Q_VrbpuV2u';
+  const { supabaseUrl, supabaseKey, isConfigured } = getSupabaseEnv();
 
-  if (!supabaseUrl || !supabaseKey) {
+  if (!isConfigured) {
     console.error(
-      '[SUPABASE CONFIG ERROR]: Variáveis de ambiente Supabase ausentes no servidor:',
-      {
-        hasUrl: Boolean(supabaseUrl),
-        hasPublishableKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),
-        hasAnonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-      }
+      '[SUPABASE CONFIG ERROR]: Variáveis de ambiente Supabase ausentes no servidor.'
     );
     return null;
   }

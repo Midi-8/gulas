@@ -531,7 +531,12 @@ export async function getAnalyticsSummary(
       totalRevenue += orderTotal;
 
       if (order.customer_notes) {
-        noteTexts.push(order.customer_notes);
+        const cleanedCustomerNote = order.customer_notes
+          .replace(/^\[TAKE-AWAY\][^\n]*\n?(?:Notas:\s*)?/i, '')
+          .trim();
+        if (cleanedCustomerNote) {
+          noteTexts.push(cleanedCustomerNote);
+        }
       }
 
       const createdMs = new Date(order.created_at).getTime();
@@ -982,7 +987,7 @@ export async function exportAnalyticsCsv(
         `"${dateStr}"`,
         `"${o.id}"`,
         o.order_number,
-        o.table_number,
+        o.table_number === 0 ? '"Take-Away"' : o.table_number,
         `"${itemsStr}"`,
         totalFormatted,
         resolutionMinutes,

@@ -284,7 +284,9 @@ export async function createOrder(
         restaurantName: orderData.restaurant_name,
         tableId: orderData.table_id,
         tableNumber: orderData.table_number,
-        tableName: orderData.table_name,
+        tableName:
+          orderData.table_name ||
+          (orderData.table_number === 0 ? 'Take-Away' : `Mesa ${orderData.table_number}`),
         orderNumber: orderData.order_number,
         status: orderData.status,
         subtotal: Number(orderData.subtotal),
@@ -429,7 +431,7 @@ export async function getOrderPublicStatus(
         id: order.id,
         orderNumber: order.order_number,
         tableNumber: order.table_number,
-        tableName: `Mesa ${order.table_number}`,
+        tableName: order.table_number === 0 ? 'Take-Away' : `Mesa ${order.table_number}`,
         status: order.status,
         subtotal: Number(order.subtotal),
         total: Number(order.total),

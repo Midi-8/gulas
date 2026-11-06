@@ -53,10 +53,11 @@ export function OrderStatusActions({
           role="alert"
           className="p-3 bg-rose-500/15 border border-rose-500/30 rounded-xl space-y-2 animate-in fade-in duration-150"
         >
-          <div className="flex items-start gap-2 text-xs font-bold text-rose-300">
-            <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 text-xs font-bold text-rose-500 dark:text-rose-300">
+            <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-0.5" />
             <p className="leading-snug">
-              Cancelar pedido #{orderNumber} (Mesa {tableNumber})?
+              Cancelar pedido #{orderNumber} (
+              {tableNumber === 0 ? 'Take-Away' : `Mesa ${tableNumber}`})?
             </p>
           </div>
 

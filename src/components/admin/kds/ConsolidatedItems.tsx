@@ -6,9 +6,13 @@ import { Flame } from 'lucide-react';
 
 interface ConsolidatedItemsProps {
   orders: ManagedOrder[];
+  isDarkMode?: boolean;
 }
 
-export default function ConsolidatedItems({ orders }: ConsolidatedItemsProps) {
+export default function ConsolidatedItems({
+  orders,
+  isDarkMode = true,
+}: ConsolidatedItemsProps) {
   const consolidated = useMemo(() => {
     const counts: Record<string, number> = {};
 
@@ -37,25 +41,49 @@ export default function ConsolidatedItems({ orders }: ConsolidatedItemsProps) {
 
   return (
     <section
-      className="rounded-2xl border border-[#2A313E] bg-[#161922] p-4 shadow-xs"
+      className={`rounded-2xl border p-4 shadow-xs transition-colors ${
+        isDarkMode
+          ? 'border-[#2A313E] bg-[#161922]'
+          : 'border-[#E5DED6] bg-[#FFFFFF]'
+      }`}
       aria-label="Artigos agrupados dos pedidos ativos na bancada"
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-amber-500/15 flex items-center justify-center text-amber-400">
+          <div
+            className={`w-6 h-6 rounded-md flex items-center justify-center ${
+              isDarkMode
+                ? 'bg-amber-500/15 text-amber-400'
+                : 'bg-[#EAE5DF] text-[#5E4939]'
+            }`}
+          >
             <Flame className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+            <h2
+              className={`text-xs sm:text-sm font-black uppercase tracking-wider ${
+                isDarkMode ? 'text-white' : 'text-[#35271F]'
+              }`}
+            >
               Na Bancada (Itens Agrupados)
             </h2>
-            <p className="text-[11px] text-zinc-400">
+            <p
+              className={`text-[11px] ${
+                isDarkMode ? 'text-zinc-400' : 'text-[#78716C]'
+              }`}
+            >
               Soma de todos os pratos atualmente a confecionar
             </p>
           </div>
         </div>
 
-        <span className="rounded-lg bg-[#262B35] border border-[#343B48] px-2.5 py-1 text-xs font-mono font-bold text-amber-400">
+        <span
+          className={`rounded-lg border px-2.5 py-1 text-xs font-mono font-bold ${
+            isDarkMode
+              ? 'bg-[#262B35] border-[#343B48] text-amber-400'
+              : 'bg-[#F5F4F1] border-[#E5DED6] text-[#5E4939]'
+          }`}
+        >
           {consolidated.reduce((acc, curr) => acc + curr.quantity, 0)} total
         </span>
       </div>
@@ -64,9 +92,19 @@ export default function ConsolidatedItems({ orders }: ConsolidatedItemsProps) {
         {consolidated.map(({ name, quantity }) => (
           <span
             key={name}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#202530] border border-[#2D3545] px-3 py-1.5 text-xs font-bold text-zinc-200"
+            className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-bold ${
+              isDarkMode
+                ? 'bg-[#202530] border-[#2D3545] text-zinc-200'
+                : 'bg-[#F5F4F1] border-[#E5DED6] text-[#35271F]'
+            }`}
           >
-            <span className="rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 font-mono font-black text-xs">
+            <span
+              className={`rounded-md border px-2 py-0.5 font-mono font-black text-xs ${
+                isDarkMode
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  : 'bg-[#5E4939] text-[#F5F4F1] border-[#4C392D]'
+              }`}
+            >
               {quantity}x
             </span>
             <span>{name}</span>

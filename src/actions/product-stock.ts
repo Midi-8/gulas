@@ -226,3 +226,76 @@ export async function getRestaurantStockList(): Promise<ProductStockActionResult
     };
   }
 }
+
+/**
+ * Server Action para abrir ou encerrar a receção de pedidos digitais do restaurante em tempo real.
+ */
+export async function toggleRestaurantOpenStatus(
+  isOpen: boolean
+): Promise<ProductStockActionResult<{ isOpen: boolean }>> {
+  try {
+    const staff = await getAuthenticatedStaff();
+    if (!staff) {
+      return {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Sessão expirada ou utilizador não autorizado.',
+        },
+      };
+    }
+
+    const supabase = await createServerSupabaseClient();
+    if (!supabase) {
+      return {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Serviço de base de dados indisponível.',
+        },
+      };
+    }
+
+    const { error: updateError } = await supabase
+      .from('restaurants')
+      .update({
+        is_open: Boolean(isOpen),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', staff.restaurant.id);
+
+    if (updateError) {
+      console.error('[toggleRestaurantOpenStatus] Erro no update:', updateError.message);
+      return {
+        success: false,
+        error: {
+          code: 'UPDATE_FAILED',
+          message: 'Não foi possível alterar o estado de abertura do restaurante.',
+        },
+      };
+    }
+
+    try {
+      updateTag('menu');
+      revalidatePath(`/menu/${staff.restaurant.slug}`, 'page');
+      revalidatePath(`/menu/${staff.restaurant.slug}`, 'layout');
+      revalidatePath('/admin/orders', 'page');
+    } catch (revalidateErr) {
+      console.warn('[toggleRestaurantOpenStatus] Revalidação suave:', revalidateErr);
+    }
+
+    return {
+      success: true,
+      data: { isOpen: Boolean(isOpen) },
+    };
+  } catch (err: unknown) {
+    console.error('[toggleRestaurantOpenStatus] Exceção inesperada:', err);
+    return {
+      success: false,
+      error: {
+        code: 'UNEXPECTED_ERROR',
+        message: 'Ocorreu um erro ao alterar o estado do restaurante.',
+      },
+    };
+  }
+}

@@ -405,7 +405,9 @@ export const ActiveOrderTrackerProvider: React.FC<{
           tableNumber: initialData.tableNumber ?? 0,
           tableName:
             initialData.tableName ||
-            `Mesa ${initialData.tableNumber ?? ''}`,
+            (initialData.tableNumber === 0
+              ? 'Take-Away'
+              : `Mesa ${initialData.tableNumber ?? ''}`),
           restaurantId: initialData.restaurantId,
           restaurantSlug: initialData.restaurantSlug,
           restaurantName: initialData.restaurantName,
@@ -487,7 +489,9 @@ export const ActiveOrderTrackerProvider: React.FC<{
               id: fetched.id,
               orderNumber: fetched.orderNumber,
               tableNumber: fetched.tableNumber,
-              tableName: fetched.tableName || `Mesa ${fetched.tableNumber}`,
+              tableName:
+                fetched.tableName ||
+                (fetched.tableNumber === 0 ? 'Take-Away' : `Mesa ${fetched.tableNumber}`),
               status: currentStatus,
               subtotal: fetched.subtotal,
               total: fetched.total,
@@ -599,7 +603,9 @@ export const ActiveOrderTrackerProvider: React.FC<{
               id: fetched.id,
               orderNumber: fetched.orderNumber,
               tableNumber: fetched.tableNumber,
-              tableName: fetched.tableName || `Mesa ${fetched.tableNumber}`,
+              tableName:
+                fetched.tableName ||
+                (fetched.tableNumber === 0 ? 'Take-Away' : `Mesa ${fetched.tableNumber}`),
               status: currentStatus,
               subtotal: fetched.subtotal,
               total: fetched.total,
@@ -739,11 +745,12 @@ export const ActiveOrderTrackerProvider: React.FC<{
   useEffect(() => {
     if (activeOrderIds.length === 0) return;
 
-
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
       void fetchAllActiveStatuses();
-    }, 4000);
-
+    }, 12000);
 
     return () => clearInterval(interval);
   }, [activeOrderIds, fetchAllActiveStatuses]);

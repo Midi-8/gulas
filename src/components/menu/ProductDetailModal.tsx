@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Product } from '@/types/restaurant';
 import { formatCurrency } from '@/data/mockRestaurant';
 import { useCart } from '@/context/CartContext';
-import { X, Plus, Minus, AlertCircle, Info, Clock } from 'lucide-react';
+import { X, Plus, Minus, AlertCircle, Info, Clock, ShoppingBag } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 interface ProductDetailModalProps {
@@ -106,6 +106,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <p className="text-xs sm:text-sm text-zinc-600 font-normal leading-relaxed">
               {product.description}
             </p>
+          )}
+
+          {/* Aviso de Pizza Tamanho Familiar exclusivo Take-Away */}
+          {product.unitQuantity?.toLowerCase().includes('familiar') && (
+            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2 text-xs text-amber-900 font-semibold">
+              <ShoppingBag className="w-4 h-4 text-amber-700 shrink-0" />
+              <span>
+                Tamanho <strong>Familiar</strong> exclusivo para <strong>Take-Away</strong>.
+              </span>
+            </div>
           )}
 
           {/* Included sides note */}

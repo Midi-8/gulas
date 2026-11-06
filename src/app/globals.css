@@ -111,3 +111,36 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
+
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #gulas-thermal-receipt,
+  #gulas-thermal-receipt * {
+    visibility: visible;
+  }
+
+  #gulas-thermal-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 76mm;
+    padding: 3mm;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}

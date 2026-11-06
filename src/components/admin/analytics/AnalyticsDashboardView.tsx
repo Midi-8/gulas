@@ -1095,7 +1095,9 @@ export function AnalyticsDashboardView({
                       <span className="w-5 h-5 rounded-md bg-[#5E4939] text-[#F5F4F1] font-mono text-[10px] flex items-center justify-center font-bold">
                         #{idx + 1}
                       </span>
-                      <span>Mesa {tbl.tableNumber}</span>
+                      <span>
+                        {tbl.tableNumber === 0 ? 'Take-Away / Balcão' : `Mesa ${tbl.tableNumber}`}
+                      </span>
                     </div>
                     <span className="font-mono text-[#5E4939] font-black">
                       {tbl.totalRevenue.toFixed(2)}€

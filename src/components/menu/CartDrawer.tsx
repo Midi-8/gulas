@@ -35,6 +35,10 @@ export const CartDrawer: React.FC = () => {
 
   if (!isCartOpen) return null;
 
+  const hasFamiliarPizza = items.some((i) =>
+    i.product.unitQuantity?.toLowerCase().includes('familiar')
+  );
+
   const handleConfirmOrder = async () => {
     if (isSubmitting) return;
     if (items.length === 0) return;
@@ -45,6 +49,12 @@ export const CartDrawer: React.FC = () => {
         return;
       }
     } else {
+      if (hasFamiliarPizza) {
+        setErrorMessage(
+          'As pizzas de tamanho Familiar são exclusivas para o serviço Take-Away. Por favor muda o tipo de pedido para "Levar / Take-Away" ou substitui pelo tamanho Normal.'
+        );
+        return;
+      }
       if (selectedTableNumber === null || selectedTableNumber === undefined || selectedTableNumber <= 0) {
         setErrorMessage('Por favor escolhe a mesa onde estás sentado.');
         return;
@@ -179,6 +189,27 @@ export const CartDrawer: React.FC = () => {
                 </div>
               )}
 
+              {orderType === 'dine_in' && hasFamiliarPizza && (
+                <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-300 space-y-2">
+                  <p className="text-[11px] text-amber-900 font-semibold leading-snug">
+                    Tens uma pizza de tamanho <strong>Familiar</strong> no pedido (exclusiva para Take-Away).
+                  </p>
+                  {!isTableLocked && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOrderType('takeaway');
+                        setSelectedTableNumber(0);
+                        setErrorMessage(null);
+                      }}
+                      className="w-full py-1.5 px-2.5 rounded-md bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      Mudar para Levar / Take-Away
+                    </button>
+                  )}
+                </div>
+              )}
+
               {orderType === 'dine_in' ? (
                 <div className="space-y-1.5">
                   <label htmlFor="cart-table-select" className="text-xs font-bold text-[#35271F] flex items-center justify-between">
@@ -279,9 +310,16 @@ export const CartDrawer: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-1">
                       <div>
-                        <h4 className="text-xs sm:text-sm font-bold text-[#35271F] truncate">
-                          {product.name}
-                        </h4>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="text-xs sm:text-sm font-bold text-[#35271F] truncate">
+                            {product.name}
+                          </h4>
+                          {product.unitQuantity && (
+                            <span className="px-1.5 py-0.2 rounded bg-[#EAE5DF] border border-[#E5DED6] text-[10px] font-bold text-[#5E4939]">
+                              {product.unitQuantity}
+                            </span>
+                          )}
+                        </div>
                         {!product.available && (
                           <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold">
                             Temporariamente Esgotado
