@@ -38,6 +38,8 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
   const { setSelectedTableNumber, setIsTableLocked, setRestaurantSlug } = useCart();
   const [menuProducts, setMenuProducts] = useState<Product[]>(products);
   const [prevProducts, setPrevProducts] = useState<Product[]>(products);
+  const [realtimeOpenOverride, setRealtimeOpenOverride] = useState<boolean | null>(null);
+  const isRestaurantOpen = realtimeOpenOverride ?? restaurant.isOpen;
   const [activeCategoryId, setActiveCategoryId] = useState<string>(categories[0]?.id || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<MenuFilterType>('all');
@@ -125,6 +127,20 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
           );
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'restaurants',
+          filter: `id=eq.${restaurant.id}`,
+        },
+        (payload: { new: Database['public']['Tables']['restaurants']['Row'] }) => {
+          if (payload.new && typeof payload.new.is_open === 'boolean') {
+            setRealtimeOpenOverride(payload.new.is_open);
+          }
+        }
+      )
       .subscribe();
 
     return () => {
@@ -180,19 +196,43 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
     });
   }, [menuProducts, searchQuery, activeFilter, categories]);
 
-  // Group filtered products by category
+  // Group filtered products by category and deduplicate size variants (e.g. Normal vs Familiar)
   const productsByCategory = useMemo(() => {
-    const map = new Map<string, Product[]>();
+    const map = new Map<string, Array<{ primary: Product; variants: Product[] }>>();
     for (const category of categories) {
       const catProducts = filteredProducts
         .filter((p) => p.categoryId === category.id)
         .sort((a, b) => a.position - b.position);
-      if (catProducts.length > 0 || searchQuery === '') {
-        map.set(category.id, catProducts);
+
+      const groupedByName = new Map<string, Product[]>();
+      for (const prod of catProducts) {
+        const key = prod.unitQuantity
+          ? prod.name.trim().toLowerCase()
+          : `${prod.id}`;
+        const existing = groupedByName.get(key) || [];
+        existing.push(prod);
+        groupedByName.set(key, existing);
+      }
+
+      const deduplicated = Array.from(groupedByName.values()).map((variants) => {
+        const sortedVariants = [...variants].sort((a, b) => a.price - b.price);
+        return {
+          primary: sortedVariants[0],
+          variants: sortedVariants,
+        };
+      });
+
+      if (deduplicated.length > 0 || searchQuery === '') {
+        map.set(category.id, deduplicated);
       }
     }
     return map;
   }, [categories, filteredProducts, searchQuery]);
+
+  const liveRestaurant = useMemo(
+    () => ({ ...restaurant, isOpen: isRestaurantOpen }),
+    [restaurant, isRestaurantOpen]
+  );
 
   return (
     <div className="min-h-screen bg-[#F5F4F1] text-[#35271F] pb-24">
@@ -200,7 +240,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       <Toast />
 
       {/* Gulas Header */}
-      <RestaurantHeader restaurant={restaurant} />
+      <RestaurantHeader restaurant={liveRestaurant} />
 
       <div className="max-w-4xl mx-auto px-4 pt-3 space-y-1.5">
         {menuAvisos.map((aviso) => (
@@ -283,10 +323,11 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    {items.map((product, itemIndex) => (
+                    {items.map(({ primary, variants }, itemIndex) => (
                       <ProductCard
-                        key={product.id}
-                        product={product}
+                        key={primary.id}
+                        product={primary}
+                        variants={variants}
                         onOpenDetails={handleOpenProductDetails}
                         priority={catIndex === 0 && itemIndex < 2}
                       />
@@ -303,12 +344,13 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       <FloatingCartBar />
 
       {/* Cart Slide Drawer */}
-      <CartDrawer />
+      <CartDrawer isRestaurantOpen={isRestaurantOpen} />
 
       {/* Product Detail Modal */}
       <ProductDetailModal
         product={selectedProduct}
         allProducts={menuProducts}
+        categories={categories}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         onSelectVariant={(variant) => setSelectedProduct(variant)}

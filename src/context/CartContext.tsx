@@ -268,11 +268,27 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     setIsSubmitting(true);
 
     try {
-      const payloadItems = items.map((item) => ({
-        productId: item.product.id,
-        quantity: item.quantity,
-        notes: item.notes?.trim() || null,
-      }));
+      const sizeLabels = new Set(['normal', 'familiar', '20cl', '33cl']);
+      const payloadItems = items.map((item) => {
+        const rawNotes = item.notes?.trim() || '';
+        const uq = item.product.unitQuantity?.trim() || '';
+        const shouldTagSize =
+          uq &&
+          sizeLabels.has(uq.toLowerCase()) &&
+          !rawNotes.toLowerCase().includes(uq.toLowerCase());
+
+        const finalNotes = shouldTagSize
+          ? rawNotes
+            ? `Tamanho: ${uq} | ${rawNotes}`
+            : `Tamanho: ${uq}`
+          : rawNotes || null;
+
+        return {
+          productId: item.product.id,
+          quantity: item.quantity,
+          notes: finalNotes,
+        };
+      });
 
       const result = await createOrder({
         restaurantSlug,

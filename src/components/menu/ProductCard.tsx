@@ -11,12 +11,14 @@ import { clsx } from 'clsx';
 
 interface ProductCardProps {
   product: Product;
+  variants?: Product[];
   onOpenDetails: (product: Product) => void;
   priority?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
+  variants,
   onOpenDetails,
   priority = false,
 }) => {
@@ -25,8 +27,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
 
-  const cartItem = items.find((item) => item.product.id === product.id);
-  const currentQuantity = cartItem ? cartItem.quantity : 0;
+  const hasMultipleVariants = Boolean(variants && variants.length > 1);
+  const variantIds = hasMultipleVariants
+    ? new Set(variants!.map((v) => v.id))
+    : new Set([product.id]);
+
+  const matchingCartItems = items.filter((item) =>
+    variantIds.has(item.product.id)
+  );
+  const currentQuantity = matchingCartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  const isAnyVariantAvailable = hasMultipleVariants
+    ? variants!.some((v) => v.available)
+    : product.available;
+
+  const minPrice = hasMultipleVariants
+    ? Math.min(...variants!.map((v) => v.price))
+    : product.price;
+  const maxPrice = hasMultipleVariants
+    ? Math.max(...variants!.map((v) => v.price))
+    : product.price;
+
+  const unitBadgeText = hasMultipleVariants
+    ? variants!
+        .map((v) => v.unitQuantity)
+        .filter(Boolean)
+        .join(' / ')
+    : product.unitQuantity;
 
   const triggerHaptic = (ms: number = 12) => {
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
@@ -40,7 +70,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!product.available) return;
+    if (!isAnyVariantAvailable) return;
+    if (hasMultipleVariants) {
+      onOpenDetails(product);
+      return;
+    }
     triggerHaptic(18);
     setIsPulsing(true);
     setTimeout(() => setIsPulsing(false), 260);
@@ -49,6 +83,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (hasMultipleVariants) {
+      onOpenDetails(product);
+      return;
+    }
     triggerHaptic(12);
     setIsPulsing(true);
     setTimeout(() => setIsPulsing(false), 220);
@@ -58,7 +96,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const handleDecrement = (e: React.MouseEvent) => {
     e.stopPropagation();
     triggerHaptic(8);
-    updateQuantity(product.id, currentQuantity - 1);
+    const targetItem = matchingCartItems[matchingCartItems.length - 1];
+    if (targetItem) {
+      updateQuantity(targetItem.product.id, targetItem.quantity - 1);
+    }
   };
 
   return (
@@ -66,7 +107,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onClick={() => onOpenDetails(product)}
       className={clsx(
         'group relative flex flex-col justify-between rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] transition-all duration-200 hover:border-[#C09573]/50 hover:shadow-sm cursor-pointer select-none active:scale-[0.99] overflow-hidden',
-        !product.available && 'opacity-70 bg-[#F5F4F1]'
+        !isAnyVariantAvailable && 'opacity-70 bg-[#F5F4F1]'
       )}
     >
       {/* Top Media: Fotografia com enquadramento panorâmico ou fallback refinado */}
@@ -123,7 +164,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Badges Flutuantes sobre a Imagem */}
         <div className="absolute top-2.5 left-2.5 right-2.5 flex flex-wrap items-center justify-between gap-1.5 pointer-events-none">
           <div className="flex flex-wrap items-center gap-1.5">
-            {!product.available && (
+            {!isAnyVariantAvailable && (
               <span className="text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full bg-[#35271F]/90 text-[#F5F4F1] border border-[#E5DED6]/40 backdrop-blur-xs shadow-xs">
                 Temporariamente Esgotado
               </span>
@@ -133,9 +174,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             ))}
           </div>
 
-          {product.unitQuantity && (
+          {unitBadgeText && (
             <span className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-[#FFFFFF]/95 text-[#35271F] border border-[#E5DED6] shadow-xs backdrop-blur-xs">
-              {product.unitQuantity}
+              {unitBadgeText}
             </span>
           )}
         </div>
@@ -170,11 +211,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Rodapé: Preço e Botão de Ação */}
         <div className="mt-4 pt-3 border-t border-[#E5DED6] flex items-center justify-between">
           <span className="text-base sm:text-lg font-bold font-mono text-[#C09573] tracking-tight">
-            {formatCurrency(product.price)}
+            {hasMultipleVariants && minPrice !== maxPrice
+              ? `${formatCurrency(minPrice)} – ${formatCurrency(maxPrice)}`
+              : formatCurrency(product.price)}
           </span>
 
           {/* Botão de Adição ou Contador Reativo */}
-          {product.available ? (
+          {isAnyVariantAvailable ? (
             currentQuantity > 0 ? (
               <div
                 onClick={(e) => e.stopPropagation()}

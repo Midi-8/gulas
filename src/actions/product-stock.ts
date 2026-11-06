@@ -256,21 +256,27 @@ export async function toggleRestaurantOpenStatus(
       };
     }
 
-    const { error: updateError } = await supabase
+    const { data: updatedRestaurant, error: updateError } = await supabase
       .from('restaurants')
       .update({
         is_open: Boolean(isOpen),
         updated_at: new Date().toISOString(),
       })
-      .eq('id', staff.restaurant.id);
+      .eq('id', staff.restaurant.id)
+      .select('id, is_open')
+      .maybeSingle();
 
-    if (updateError) {
-      console.error('[toggleRestaurantOpenStatus] Erro no update:', updateError.message);
+    if (updateError || !updatedRestaurant) {
+      console.error(
+        '[toggleRestaurantOpenStatus] Erro ou bloqueio RLS no update:',
+        updateError?.message
+      );
       return {
         success: false,
         error: {
           code: 'UPDATE_FAILED',
-          message: 'Não foi possível alterar o estado de abertura do restaurante.',
+          message:
+            'Não foi possível persistir o estado de abertura do restaurante (verifique permissões na base de dados).',
         },
       };
     }

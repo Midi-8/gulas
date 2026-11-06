@@ -2,15 +2,16 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Product } from '@/types/restaurant';
+import { Category, Product } from '@/types/restaurant';
 import { formatCurrency } from '@/data/mockRestaurant';
 import { useCart } from '@/context/CartContext';
-import { X, Plus, Minus, AlertCircle, Info, Clock, ShoppingBag } from 'lucide-react';
+import { X, Plus, Minus, AlertCircle, Info, Clock, ShoppingBag, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 interface ProductDetailModalProps {
   product: Product | null;
   allProducts?: Product[];
+  categories?: Category[];
   isOpen: boolean;
   onClose: () => void;
   onSelectVariant?: (variant: Product) => void;
@@ -19,6 +20,7 @@ interface ProductDetailModalProps {
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   product,
   allProducts = [],
+  categories = [],
   isOpen,
   onClose,
   onSelectVariant,
@@ -26,6 +28,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const { addItem, items, selectedTableNumber, isTableLocked, setSelectedTableNumber } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
+  const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
   const [prevProductId, setPrevProductId] = useState<string | null>(null);
 
   if (product && product.id !== prevProductId) {
@@ -33,6 +36,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     const existing = items.find((i) => i.product.id === product.id);
     setQuantity(existing ? existing.quantity : 1);
     setNotes(existing?.notes || '');
+    setSelectedExtraIds([]);
   }
 
   if (!isOpen || !product) return null;
@@ -52,15 +56,85 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     product.unitQuantity?.toLowerCase().includes('familiar')
   );
 
+  // Determinar se este artigo suporta Ingredientes Extra (Pizza / Panuozzo ou Burger / Prego)
+  const currentCategory = categories.find((c) => c.id === product.categoryId);
+  const currentSlug = currentCategory?.slug || '';
+
+  let targetExtrasSlug: string | null = null;
+  if (
+    currentSlug === 'pizzas-classicas' ||
+    currentSlug === 'pizzas-especiais' ||
+    currentSlug === 'panuozzos'
+  ) {
+    targetExtrasSlug = 'ingredientes-extra-pizza';
+  } else if (currentSlug === 'burgers' || currentSlug === 'pregos') {
+    targetExtrasSlug = 'ingredientes-extra-burger';
+  }
+
+  const extrasCategory = targetExtrasSlug
+    ? categories.find((c) => c.slug === targetExtrasSlug)
+    : undefined;
+
+  const canCustomizeExtras = !product.customizationNote
+    ?.toLowerCase()
+    .includes('sem alterações');
+
+  const availableExtras =
+    extrasCategory && canCustomizeExtras
+      ? allProducts.filter(
+          (p) =>
+            p.categoryId === extrasCategory.id &&
+            p.available &&
+            !p.name.toLowerCase().includes('alteração de produto') &&
+            !p.name.toLowerCase().includes('caixa take away')
+        )
+      : [];
+
+  const selectedExtrasProducts = availableExtras.filter((ext) =>
+    selectedExtraIds.includes(ext.id)
+  );
+  const extrasUnitTotal = selectedExtrasProducts.reduce(
+    (sum, ext) => sum + ext.price,
+    0
+  );
+
+  const toggleExtra = (extraId: string) => {
+    setSelectedExtraIds((prev) =>
+      prev.includes(extraId)
+        ? prev.filter((id) => id !== extraId)
+        : [...prev, extraId]
+    );
+  };
+
   const handleAddToCart = () => {
     if (isFamiliar && !isTableLocked && selectedTableNumber === null) {
       setSelectedTableNumber(0);
     }
-    addItem(product, quantity, notes.trim() || undefined);
+
+    const extraNamesNote =
+      selectedExtrasProducts.length > 0
+        ? `Extras: ${selectedExtrasProducts.map((e) => e.name).join(', ')}`
+        : '';
+
+    const combinedNotes = [extraNamesNote, notes.trim()]
+      .filter(Boolean)
+      .join(' | ');
+
+    addItem(product, quantity, combinedNotes || undefined);
+
+    // Adiciona também os suplementos selecionados ao carrinho para faturação atómica exata
+    selectedExtrasProducts.forEach((extraProd) => {
+      addItem(
+        extraProd,
+        quantity,
+        `Ref: ${product.name}${product.unitQuantity ? ` (${product.unitQuantity})` : ''}`
+      );
+    });
+
     onClose();
   };
 
-  const totalPrice = product.price * quantity;
+  const totalPrice = (product.price + extrasUnitTotal) * quantity;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#35271F]/40 animate-in fade-in duration-200">
@@ -215,6 +289,57 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <div>
                 <span className="font-semibold text-zinc-800">Alergénios: </span>
                 <span>{product.allergens.join(', ')}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Ingredientes Extra Selecionáveis (Pizzas, Panuozzos, Burgers e Pregos) */}
+          {availableExtras.length > 0 && (
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#141619]">
+                  Adicionar Ingredientes Extra (opcional)
+                </span>
+                {selectedExtraIds.length > 0 && (
+                  <span className="text-[11px] font-bold text-[#C09573]">
+                    +{formatCurrency(extrasUnitTotal)}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                {availableExtras.map((extra) => {
+                  const isChecked = selectedExtraIds.includes(extra.id);
+                  return (
+                    <button
+                      key={extra.id}
+                      type="button"
+                      onClick={() => toggleExtra(extra.id)}
+                      className={`w-full p-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                        isChecked
+                          ? 'bg-[#EAE5DF] border-[#5E4939] text-[#35271F]'
+                          : 'bg-[#F5F4F1] border-[#E5DED6] text-[#4C453F] hover:border-[#C09573]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 transition-colors ${
+                            isChecked
+                              ? 'bg-[#5E4939] border-[#5E4939] text-[#F5F4F1]'
+                              : 'bg-white border-[#C09573]/60'
+                          }`}
+                        >
+                          {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                        </span>
+                        <span className="text-xs font-semibold truncate">
+                          {extra.name}
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-[#5E4939] shrink-0">
+                        +{formatCurrency(extra.price)}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

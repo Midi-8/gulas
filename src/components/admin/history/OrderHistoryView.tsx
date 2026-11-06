@@ -20,6 +20,7 @@ import {
   Undo2,
   AlertTriangle,
   Loader2,
+  Download,
 } from 'lucide-react';
 
 
@@ -75,7 +76,7 @@ export function OrderHistoryView({
   const fetchHistory = useCallback(async () => {
     setError(null);
     try {
-      const result = await getOrderHistory();
+      const result = await getOrderHistory({ limit: 250 });
       if (!result.success) {
         setError(result.error.message);
       } else {
@@ -261,6 +262,60 @@ export function OrderHistoryView({
       currency: 'EUR',
     }).format(price);
 
+  const handleExportCsv = () => {
+    if (filteredOrders.length === 0) return;
+
+    const escapeCsvField = (val: string | number | null | undefined) => {
+      const str = String(val ?? '').replace(/\r?\n|\r/g, ' ');
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      'Pedido',
+      'Mesa / Servico',
+      'Data / Hora',
+      'Estado',
+      'Qtd Artigos',
+      'Artigos',
+      'Notas / Observacoes',
+      'Total (EUR)',
+    ];
+
+    const rows = filteredOrders.map((order) => {
+      const totalItemsCount = order.items.reduce((acc, item) => acc + item.quantity, 0);
+      const itemsSummary = order.items
+        .map((i) => `${i.quantity}x ${i.productName}${i.notes ? ` (${i.notes})` : ''}`)
+        .join(' | ');
+      const serviceLabel = order.tableNumber === 0 ? 'Take-Away' : `Mesa ${order.tableNumber}`;
+      const statusLabel = order.status === 'completed' ? 'Concluido' : order.status === 'cancelled' ? 'Cancelado' : order.status;
+
+      return [
+        `#${order.orderNumber}`,
+        serviceLabel,
+        formatDateTime(order.createdAt),
+        statusLabel,
+        totalItemsCount,
+        itemsSummary,
+        order.customerNotes ?? '',
+        order.total.toFixed(2).replace('.', ','),
+      ]
+        .map(escapeCsvField)
+        .join(';');
+    });
+
+    const csvContent = '\uFEFF' + [headers.map(escapeCsvField).join(';'), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.setAttribute('download', `gulas-historico-pedidos-${dateStamp}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
 
   // Global Loaded Metrics
   const completedCount = orders.filter((o) => o.status === 'completed').length;
@@ -300,6 +355,17 @@ export function OrderHistoryView({
             </span>
           )}
 
+
+          <button
+            type="button"
+            disabled={filteredOrders.length === 0}
+            onClick={handleExportCsv}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#E5DED6] hover:bg-[#EAE5DF] text-[#35271F] text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+            aria-label="Exportar pedidos filtrados para CSV"
+          >
+            <Download className="w-4 h-4 text-[#4C453F]" />
+            <span>Exportar CSV</span>
+          </button>
 
           <button
             type="button"
@@ -773,6 +839,7 @@ export function OrderHistoryView({
       <OrderHistoryDetailModal
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}
+        onReopen={(order) => void handleReopenExecute(order)}
       />
     </div>
   );

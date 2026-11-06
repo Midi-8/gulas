@@ -7,7 +7,13 @@ import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency, mockTables } from '@/data/mockRestaurant';
 import { X, Trash2, Plus, Minus, Utensils, ShoppingBag, User, Phone } from 'lucide-react';
 
-export const CartDrawer: React.FC = () => {
+interface CartDrawerProps {
+  isRestaurantOpen?: boolean;
+}
+
+export const CartDrawer: React.FC<CartDrawerProps> = ({
+  isRestaurantOpen = true,
+}) => {
   const {
     items,
     isCartOpen,
@@ -42,6 +48,13 @@ export const CartDrawer: React.FC = () => {
   const handleConfirmOrder = async () => {
     if (isSubmitting) return;
     if (items.length === 0) return;
+
+    if (!isRestaurantOpen) {
+      setErrorMessage(
+        'O restaurante encontra-se encerrado de momento e não está a aceitar pedidos.'
+      );
+      return;
+    }
 
     if (orderType === 'takeaway') {
       if (!customerName.trim()) {
@@ -393,6 +406,12 @@ export const CartDrawer: React.FC = () => {
               />
             </div>
 
+            {!isRestaurantOpen && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-900">
+                O restaurante encontra-se temporariamente encerrado. Podes consultar o teu carrinho, mas a submissão de pedidos está pausada.
+              </div>
+            )}
+
             {errorMessage && (
               <p className="text-xs text-rose-800 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
                 {errorMessage}
@@ -421,14 +440,16 @@ export const CartDrawer: React.FC = () => {
 
             <button
               onClick={handleConfirmOrder}
-              disabled={isSubmitting}
-              className="w-full py-3 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] disabled:bg-[#EAE5DF] text-[#F5F4F1] disabled:text-[#A89F95] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99] cursor-pointer"
+              disabled={isSubmitting || !isRestaurantOpen}
+              className="w-full py-3 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] disabled:bg-[#EAE5DF] text-[#F5F4F1] disabled:text-[#A89F95] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>A enviar pedido...</span>
                 </div>
+              ) : !isRestaurantOpen ? (
+                <span>Restaurante Encerrado</span>
               ) : (
                 <span>Confirmar Pedido</span>
               )}

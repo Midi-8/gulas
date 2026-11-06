@@ -4,7 +4,7 @@ import React from 'react';
 import { useCart } from '@/context/CartContext';
 import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency, mockRestaurant } from '@/data/mockRestaurant';
-import { CheckCircle2, UtensilsCrossed, X } from 'lucide-react';
+import { CheckCircle2, Clock, UtensilsCrossed, X } from 'lucide-react';
 
 export const OrderConfirmationModal: React.FC = () => {
   const {
@@ -70,11 +70,21 @@ export const OrderConfirmationModal: React.FC = () => {
           </div>
 
           {/* Progress tracker */}
-          <div className="pt-0.5">
-            <div className="flex items-center justify-between mb-1.5">
+          <div className="pt-0.5 space-y-2">
+            <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-[#35271F]">Estado:</span>
               <span className="text-[10px] font-bold text-[#5E4939] bg-[#EAE5DF] px-2 py-0.5 rounded border border-[#E5DED6]">
                 A aguardar preparação
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#FFFFFF] border border-[#E5DED6]">
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#4C453F]">
+                <Clock className="w-3.5 h-3.5 text-[#C09573]" />
+                Tempo estimado:
+              </span>
+              <span className="text-[11px] font-black text-[#35271F]">
+                ~15–20 min
               </span>
             </div>
 

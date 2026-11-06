@@ -45,8 +45,10 @@ import {
   X,
   Maximize,
   Minimize,
+  QrCode,
 } from 'lucide-react';
 import { QuickStockDrawer } from '@/components/admin/stock/QuickStockDrawer';
+import { TableQrCodesModal } from '@/components/admin/qrcodes/TableQrCodesModal';
 import {
   getRestaurantStockList,
   toggleRestaurantOpenStatus,
@@ -151,6 +153,7 @@ export function OrderDashboard({
   );
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -720,6 +723,22 @@ export function OrderDashboard({
             )}
           </button>
 
+          {/* Table & Take-Away QR Code Center Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setIsQrModalOpen(true)}
+            className={clsx(
+              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold shadow-xs transition-all sm:text-sm',
+              isDarkMode
+                ? 'border-[#2A313E] bg-[#161922] text-zinc-200 hover:bg-[#202530] hover:border-amber-500/40'
+                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+            )}
+            aria-label="Abrir centro de QR Codes das mesas e take-away"
+          >
+            <QrCode className="h-4 w-4 text-[#C09573]" />
+            <span>QR Mesas</span>
+          </button>
+
           {lastRefreshedAt && (
             <span
               className={clsx(
@@ -1106,6 +1125,14 @@ export function OrderDashboard({
         onStockChanged={() => {
           refreshStockCount();
         }}
+      />
+
+      {/* Centro de QR Codes (Mesas & Take-Away) */}
+      <TableQrCodesModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        restaurantName={restaurantName}
+        restaurantSlug={restaurantSlug}
       />
 
       {/* Talão Térmico 80mm para Impressora de Cozinha */}

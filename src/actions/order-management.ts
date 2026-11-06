@@ -64,6 +64,7 @@ interface RawOrderItemRow {
   unit_price: number;
   notes: string | null;
   products?: {
+    unit_quantity?: string | null;
     categories?: {
       slug: string;
     } | null;
@@ -83,12 +84,35 @@ interface RawOrderRow {
   order_items: RawOrderItemRow[] | null;
 }
 
+const SIZE_VARIANT_LABELS = new Set(['normal', 'familiar', '20cl', '33cl']);
+
+function formatOrderItemProductName(
+  rawName: string,
+  unitQuantity?: string | null
+): string {
+  const cleanName = String(rawName || '').trim();
+  const cleanUnit = unitQuantity ? String(unitQuantity).trim() : '';
+
+  if (
+    cleanUnit &&
+    SIZE_VARIANT_LABELS.has(cleanUnit.toLowerCase()) &&
+    !cleanName.toLowerCase().includes(`(${cleanUnit.toLowerCase()})`)
+  ) {
+    return `${cleanName} (${cleanUnit})`;
+  }
+
+  return cleanName;
+}
+
 function mapRawOrderToManagedOrder(row: RawOrderRow): ManagedOrder {
   const items: ManagedOrderItem[] = Array.isArray(row.order_items)
     ? row.order_items.map((item) => ({
       id: String(item.id),
       productId: item.product_id ? String(item.product_id) : null,
-      productName: String(item.product_name),
+      productName: formatOrderItemProductName(
+        item.product_name,
+        item.products?.unit_quantity
+      ),
       quantity: Number(item.quantity),
       unitPrice: Number(item.unit_price),
       notes: item.notes ? String(item.notes) : null,
@@ -128,6 +152,7 @@ const ORDER_SELECT = `
     unit_price,
     notes,
     products (
+      unit_quantity,
       categories (
         slug
       )
@@ -507,9 +532,10 @@ export async function updateOrderStatus(
   }
 }
 
-export async function getOrderHistory(
-  options?: { limit?: number }
-): Promise<OrderManagementActionResult<ManagedOrder[]>> {
+export async function getOrderHistory(options?: {
+  limit?: number;
+  period?: 'all' | 'today' | '7days' | '30days';
+}): Promise<OrderManagementActionResult<ManagedOrder[]>> {
   try {
     const staff = await getAuthenticatedStaff();
 
@@ -535,16 +561,33 @@ export async function getOrderHistory(
       };
     }
 
-    const limit = Math.min(Math.max(Number(options?.limit) || 50, 1), 100);
+    const limit = Math.min(Math.max(Number(options?.limit) || 250, 1), 500);
     const historyStatuses: OrderStatus[] = ['completed', 'cancelled'];
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('orders')
       .select(ORDER_SELECT)
       .eq('restaurant_id', staff.restaurant.id)
       .in('status', historyStatuses)
       .order('created_at', { ascending: false })
       .limit(limit);
+
+    if (options?.period && options.period !== 'all') {
+      const now = new Date();
+      let startDate: Date | null = null;
+      if (options.period === 'today') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (options.period === '7days') {
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (options.period === '30days') {
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      }
+      if (startDate) {
+        query = query.gte('created_at', startDate.toISOString());
+      }
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error(

@@ -17,7 +17,7 @@ export default async function AdminOrderHistoryPage() {
   }
 
   // Pre-fetch initial order history on the server
-  const historyResult = await getOrderHistory({ limit: 50 });
+  const historyResult = await getOrderHistory({ limit: 250 });
   const initialOrders = historyResult.success ? historyResult.data : [];
 
   return (

@@ -227,9 +227,23 @@ export const ActiveOrderDetailModal: React.FC = () => {
           {/* Stepper com 4 Etapas */}
           {!isCancelled && (
             <div className="p-4 rounded-xl bg-[#F5F4F1] border border-[#E5DED6] space-y-4">
-              <h3 className="text-xs font-bold text-[#35271F] uppercase tracking-wider">
-                Estado do Pedido
-              </h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xs font-bold text-[#35271F] uppercase tracking-wider">
+                  Estado do Pedido
+                </h3>
+                {currentStatus !== 'completed' && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-black text-[#5E4939] bg-[#FFFFFF] px-2.5 py-1 rounded-full border border-[#E5DED6] shadow-2xs">
+                    <Clock className="w-3 h-3 text-[#C09573]" />
+                    {currentStatus === 'ready'
+                      ? activeOrder.tableNumber === 0
+                        ? 'Pronto a levantar no balcão!'
+                        : 'Pronto a servir à mesa!'
+                      : currentStatus === 'preparing'
+                      ? 'Estimativa: ~10–15 min'
+                      : 'Estimativa: ~15–20 min'}
+                  </span>
+                )}
+              </div>
 
               <div className="space-y-4 relative">
                 {STEPS.map((step, idx) => {

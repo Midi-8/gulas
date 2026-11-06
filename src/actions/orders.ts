@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createOrderSchema } from '@/lib/validations/order';
 
@@ -176,6 +177,38 @@ export async function createOrder(
   const { restaurantSlug, tableNumber, customerNotes, items } =
     validationResult.data;
 
+  // 1.5. Proteção Anti-Spam / Rate-Limiting por sessão (máx. 3 pedidos em 45 segundos)
+  let cookieStore: Awaited<ReturnType<typeof cookies>> | null = null;
+  let recentTimestamps: number[] = [];
+  const nowMs = Date.now();
+
+  try {
+    cookieStore = await cookies();
+    const rawRateCookie = cookieStore.get('gulas_order_rl')?.value;
+    if (rawRateCookie) {
+      const parsed = JSON.parse(rawRateCookie);
+      if (Array.isArray(parsed)) {
+        recentTimestamps = parsed.filter(
+          (ts): ts is number =>
+            typeof ts === 'number' && nowMs - ts < 45 * 1000
+        );
+      }
+    }
+
+    if (recentTimestamps.length >= 3) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message:
+            'Atingiste o limite de pedidos seguidos. Por favor aguarda alguns segundos antes de submeter um novo pedido.',
+        },
+      };
+    }
+  } catch {
+    // Se cookies() não estiver acessível num contexto isolado, prossegue normalmente
+  }
+
 
   // 2. Obter cliente Supabase server-side existente (sem service_role)
   const supabase = await createServerSupabaseClient();
@@ -272,6 +305,21 @@ export async function createOrder(
           message: 'Erro ao gerar credencial de acompanhamento do pedido.',
         },
       };
+    }
+
+    // 7. Registar timestamp de rate-limit no cookie após sucesso
+    if (cookieStore) {
+      try {
+        const updatedTimestamps = [...recentTimestamps, Date.now()];
+        cookieStore.set('gulas_order_rl', JSON.stringify(updatedTimestamps), {
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 60,
+          path: '/',
+        });
+      } catch {
+        // Ignorar falha de escrita de cookie
+      }
     }
 
 
