@@ -38,7 +38,7 @@ const STEPS: StepDef[] = [
   {
     key: 'ready',
     title: 'Pronto / A Caminho',
-    description: 'A ser entregue à mesa',
+    description: 'A ser servido à mesa ou pronto no balcão',
     icon: UtensilsCrossed,
   },
   {
@@ -72,12 +72,10 @@ export const ActiveOrderDetailModal: React.FC = () => {
     closeDetailModal,
   } = useActiveOrderTracker();
 
-  // Garante apenas a exibição de pedidos ativos confirmados
   const displayOrders = useMemo(() => {
     return activeOrders;
   }, [activeOrders]);
 
-  // Pedido selecionado atualmente
   const activeOrder =
     displayOrders.find((o) => o.id === selectedOrderId) ||
     displayOrders[displayOrders.length - 1] ||
@@ -89,7 +87,6 @@ export const ActiveOrderDetailModal: React.FC = () => {
 
   const currentStatus = activeOrder.status || 'pending';
 
-  // Determina o índice da etapa ativa (0 a 3)
   let currentStepIndex = 0;
   if (currentStatus === 'preparing') {
     currentStepIndex = 1;
@@ -113,34 +110,34 @@ export const ActiveOrderDetailModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#35271F]/40 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/50 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={closeDetailModal}
     >
       <div
-        className="w-full max-w-md bg-[#FFFFFF] border border-[#E5DED6] rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 text-[#35271F] overflow-hidden"
+        className="w-full max-w-md bg-white border border-zinc-200 rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 text-zinc-900 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabeçalho */}
-        <div className="p-4 sm:p-5 border-b border-[#E5DED6] flex items-center justify-between bg-[#FFFFFF] shrink-0">
+        <div className="p-4 sm:p-5 border-b border-zinc-200 flex items-center justify-between bg-white shrink-0">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-[#5E4939] uppercase tracking-wide">
+              <span className="text-xs font-black text-zinc-950 uppercase tracking-wide">
                 {displayOrders.length > 1
                   ? `${displayOrders.length} Pedidos Ativos`
                   : orderIdentifier}
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EAE5DF] text-[#4C453F] border border-[#E5DED6]">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-zinc-100 text-zinc-700 border border-zinc-200">
                 {tableDisplay}
               </span>
             </div>
-            <p className="text-xs text-[#78716C] mt-0.5">
+            <p className="text-xs text-zinc-500 mt-0.5">
               Acompanhamento em tempo real
             </p>
           </div>
 
           <button
             onClick={closeDetailModal}
-            className="w-8 h-8 rounded-full bg-[#EAE5DF] text-[#4C453F] hover:bg-[#E5DED6] flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Fechar detalhes"
           >
             <X className="w-4 h-4" />
@@ -149,8 +146,8 @@ export const ActiveOrderDetailModal: React.FC = () => {
 
         {/* Barra de Tabs para Múltiplos Pedidos */}
         {displayOrders.length > 1 && (
-          <div className="px-4 sm:px-5 pt-3 pb-1 border-b border-[#E5DED6] bg-[#FAF8F5] shrink-0">
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-2">
+          <div className="px-4 sm:px-5 pt-3 pb-1 border-b border-zinc-200 bg-zinc-50 shrink-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2">
               {displayOrders.map((ord, idx) => {
                 const isSelected = ord.id === activeOrder.id;
                 const ordTime = formatTime(ord.createdAt);
@@ -162,16 +159,16 @@ export const ActiveOrderDetailModal: React.FC = () => {
                     onClick={() => setSelectedOrderId(ord.id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#5E4939] text-[#F5F4F1] border-[#5E4939] shadow-xs'
-                        : 'bg-[#FFFFFF] text-[#4C453F] border-[#E5DED6] hover:bg-[#EAE5DF]'
+                        ? 'bg-zinc-900 text-white border-zinc-900 shadow-2xs'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-100'
                     }`}
                   >
-                    <Receipt className="w-3 h-3 text-[#C09573]" />
+                    <Receipt className="w-3 h-3 text-orange-500" />
                     <span>Pedido {ordNum}</span>
                     {ordTime && (
                       <span
                         className={`text-[10px] ${
-                          isSelected ? 'text-[#C09573]' : 'text-[#78716C]'
+                          isSelected ? 'text-orange-400' : 'text-zinc-400'
                         }`}
                       >
                         {ordTime}
@@ -185,20 +182,20 @@ export const ActiveOrderDetailModal: React.FC = () => {
         )}
 
         {/* Corpo com Scroll */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-5 bg-[#FFFFFF]">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-5 bg-white">
           {/* Identificação do Pedido Selecionado */}
-          <div className="flex items-center justify-between pb-1 border-b border-[#E5DED6]">
+          <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
             <div>
-              <h2 className="text-sm font-black text-[#35271F]">
+              <h2 className="text-sm font-black text-zinc-950">
                 {orderIdentifier}
               </h2>
               {orderTimeDisplay && (
-                <p className="text-[11px] text-[#78716C]">
+                <p className="text-[11px] text-zinc-500">
                   Submetido às {orderTimeDisplay}
                 </p>
               )}
             </div>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-[#F5F4F1] border border-[#E5DED6] text-[#5E4939]">
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-900">
               {currentStatus === 'preparing'
                 ? 'Em preparação'
                 : currentStatus === 'ready'
@@ -211,7 +208,6 @@ export const ActiveOrderDetailModal: React.FC = () => {
             </span>
           </div>
 
-          {/* Alerta de Cancelamento se aplicável */}
           {isCancelled && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-900">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
@@ -226,14 +222,14 @@ export const ActiveOrderDetailModal: React.FC = () => {
 
           {/* Stepper com 4 Etapas */}
           {!isCancelled && (
-            <div className="p-4 rounded-xl bg-[#F5F4F1] border border-[#E5DED6] space-y-4">
+            <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-4">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-xs font-bold text-[#35271F] uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
                   Estado do Pedido
                 </h3>
                 {currentStatus !== 'completed' && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-black text-[#5E4939] bg-[#FFFFFF] px-2.5 py-1 rounded-full border border-[#E5DED6] shadow-2xs">
-                    <Clock className="w-3 h-3 text-[#C09573]" />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-black text-zinc-900 bg-white px-2.5 py-1 rounded-full border border-zinc-200 shadow-2xs">
+                    <Clock className="w-3 h-3 text-orange-600" />
                     {currentStatus === 'ready'
                       ? activeOrder.tableNumber === 0
                         ? 'Pronto a levantar no balcão!'
@@ -256,59 +252,56 @@ export const ActiveOrderDetailModal: React.FC = () => {
 
                   return (
                     <div key={step.key} className="relative flex items-start gap-3.5">
-                      {/* Linha vertical conectora */}
                       {!isLast && (
                         <span
                           className={`absolute left-4 top-8 -bottom-4 w-0.5 transition-colors duration-300 ${
-                            isDone ? 'bg-[#5E4939]' : 'bg-[#E5DED6]'
+                            isDone ? 'bg-zinc-900' : 'bg-zinc-200'
                           }`}
                           aria-hidden="true"
                         />
                       )}
 
-                      {/* Marcador do Passo */}
                       <div className="relative z-10 shrink-0">
                         {isDone ? (
-                          <div className="w-8 h-8 rounded-full bg-[#5E4939] text-[#C09573] flex items-center justify-center shadow-xs">
+                          <div className="w-8 h-8 rounded-full bg-zinc-900 text-emerald-400 flex items-center justify-center shadow-2xs">
                             <Check className="w-4 h-4 stroke-[2.5]" />
                           </div>
                         ) : isCurrent ? (
-                          <div className="w-8 h-8 rounded-full bg-[#5E4939] text-[#C09573] flex items-center justify-center ring-4 ring-[#C09573]/25 shadow-xs">
+                          <div className="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center ring-4 ring-orange-500/20 shadow-2xs">
                             <StepIcon className="w-4 h-4 stroke-[2.2]" />
                           </div>
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-[#EAE5DF] border border-[#E5DED6] text-[#A89F95] flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center">
                             <StepIcon className="w-3.5 h-3.5" />
                           </div>
                         )}
                       </div>
 
-                      {/* Conteúdo Textual */}
                       <div className="pt-1 min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
                           <p
                             className={`text-xs font-bold ${
                               isDone || isCurrent
-                                ? 'text-[#35271F]'
-                                : 'text-[#78716C]'
+                                ? 'text-zinc-950'
+                                : 'text-zinc-500'
                             }`}
                           >
                             {step.title}
                           </p>
                           {isCurrent && (
-                            <span className="text-[10px] font-bold text-[#C09573] bg-[#FFFFFF] px-2 py-0.5 rounded-full border border-[#E5DED6]">
+                            <span className="text-[10px] font-bold text-orange-600 bg-white px-2 py-0.5 rounded-full border border-orange-200">
                               Em curso
                             </span>
                           )}
                           {isDone && (
-                            <span className="text-[10px] font-semibold text-[#5E4939]">
+                            <span className="text-[10px] font-semibold text-emerald-700">
                               Concluído
                             </span>
                           )}
                         </div>
                         <p
                           className={`text-[11px] mt-0.5 ${
-                            isPending ? 'text-[#A89F95]' : 'text-[#4C453F]'
+                            isPending ? 'text-zinc-400' : 'text-zinc-600'
                           }`}
                         >
                           {step.description}
@@ -324,16 +317,16 @@ export const ActiveOrderDetailModal: React.FC = () => {
           {/* Resumo dos Artigos do Pedido Selecionado */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-[#35271F] uppercase tracking-wider flex items-center gap-1.5">
-                <Utensils className="w-3.5 h-3.5 text-[#C09573]" />
+              <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Utensils className="w-3.5 h-3.5 text-orange-600" />
                 Artigos deste Pedido
               </h3>
-              <span className="text-[11px] text-[#78716C]">
+              <span className="text-[11px] text-zinc-500">
                 {activeOrder.items?.reduce((acc, i) => acc + i.quantity, 0) || 0} artigos
               </span>
             </div>
 
-            <div className="rounded-xl border border-[#E5DED6] bg-[#FFFFFF] divide-y divide-[#E5DED6]">
+            <div className="rounded-2xl border border-zinc-200 bg-white divide-y divide-zinc-100">
               {activeOrder.items && activeOrder.items.length > 0 ? (
                 activeOrder.items.map((item, idx) => (
                   <div
@@ -342,64 +335,63 @@ export const ActiveOrderDetailModal: React.FC = () => {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-[#5E4939] shrink-0">
+                        <span className="font-bold text-orange-600 shrink-0">
                           {item.quantity}x
                         </span>
-                        <span className="font-medium text-[#35271F] truncate">
+                        <span className="font-semibold text-zinc-900 truncate">
                           {item.productName}
                         </span>
                       </div>
                       {item.notes && (
-                        <p className="text-[10px] text-[#78716C] italic mt-0.5 pl-5">
+                        <p className="text-[10px] text-zinc-500 italic mt-0.5 pl-5">
                           &ldquo;{item.notes}&rdquo;
                         </p>
                       )}
                     </div>
-                    <span className="font-semibold text-[#4C453F] shrink-0">
+                    <span className="font-bold font-mono text-zinc-900 shrink-0">
                       {formatCurrency(item.unitPrice * item.quantity)}
                     </span>
                   </div>
                 ))
               ) : (
-                <p className="p-3 text-xs text-[#78716C] italic">
+                <p className="p-3 text-xs text-zinc-500 italic">
                   A carregar resumo dos artigos...
                 </p>
               )}
             </div>
 
             {/* Total e Subtotal deste Pedido */}
-            <div className="p-3 rounded-xl bg-[#F5F4F1] border border-[#E5DED6] space-y-1 text-xs">
+            <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1 text-xs">
               {activeOrder.subtotal !== undefined &&
                 activeOrder.subtotal > 0 &&
                 activeOrder.subtotal !== activeOrder.total && (
-                  <div className="flex justify-between text-[#78716C]">
+                  <div className="flex justify-between text-zinc-500">
                     <span>Subtotal</span>
-                    <span>{formatCurrency(activeOrder.subtotal)}</span>
+                    <span className="font-mono">{formatCurrency(activeOrder.subtotal)}</span>
                   </div>
                 )}
-              <div className="flex justify-between font-black text-sm text-[#35271F] pt-0.5">
+              <div className="flex justify-between font-black text-sm text-zinc-950 pt-0.5">
                 <span>Total deste Pedido</span>
-                <span className="text-[#C09573]">
+                <span className="text-orange-600 font-mono">
                   {formatCurrency(activeOrder.total || 0)}
                 </span>
               </div>
             </div>
 
-            {/* Observações Gerais se houver */}
             {activeOrder.customerNotes && (
-              <div className="p-2.5 rounded-lg bg-[#FAF8F5] border border-[#E5DED6] text-[11px] text-[#4C453F]">
-                <span className="font-bold text-[#35271F]">Notas: </span>
+              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 text-[11px] text-zinc-600">
+                <span className="font-bold text-zinc-900">Notas: </span>
                 {activeOrder.customerNotes}
               </div>
             )}
           </div>
         </div>
 
-        {/* Rodapé: Botão "Continuar a ver o menu" */}
-        <div className="p-4 sm:p-5 border-t border-[#E5DED6] bg-[#FFFFFF] shrink-0">
+        {/* Rodapé */}
+        <div className="p-4 sm:p-5 border-t border-zinc-200 bg-white shrink-0">
           <button
             onClick={closeDetailModal}
-            className="w-full py-3 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] font-bold text-xs sm:text-sm transition-all shadow-xs active:scale-[0.99] cursor-pointer"
+            className="w-full py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs sm:text-sm transition-all shadow-xs active:scale-[0.99] cursor-pointer"
           >
             Continuar a ver o menu
           </button>

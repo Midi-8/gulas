@@ -18,7 +18,6 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeBtnRef = useRef<HTMLButtonElement | null>(null);
 
-  // Mantém a categoria ativa centrada no scroll horizontal
   useEffect(() => {
     if (activeBtnRef.current && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
@@ -33,7 +32,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
     onSelectCategory(categoryId);
     const element = document.getElementById(`section-${categoryId}`);
     if (element) {
-      const yOffset = -90; // compensação da altura da barra adesiva
+      const yOffset = -90;
       const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -42,7 +41,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   return (
     <nav
       aria-label="Categorias do menu"
-      className="sticky top-0 z-30 bg-[#F5F4F1]/90 backdrop-blur-sm border-b border-[#E5DED6] py-2.5 transition-all"
+      className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-zinc-200/80 py-2.5 transition-all"
     >
       <div className="max-w-4xl mx-auto px-4">
         <div
@@ -57,10 +56,10 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                 ref={isActive ? activeBtnRef : null}
                 onClick={() => handleCategoryClick(category.id)}
                 className={clsx(
-                  'whitespace-nowrap px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer active:scale-95 border',
+                  'whitespace-nowrap px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer active:scale-95 border',
                   isActive
-                    ? 'bg-[#5E4939] text-[#F5F4F1] border-[#5E4939] shadow-xs'
-                    : 'bg-[#FFFFFF] text-[#4C453F] border-[#E5DED6] hover:border-[#C09573]/60 hover:text-[#35271F] hover:bg-[#EAE5DF]/60'
+                    ? 'bg-zinc-900 text-white border-zinc-900 shadow-2xs'
+                    : 'bg-zinc-100/80 text-zinc-600 border-zinc-200/80 hover:border-zinc-300 hover:text-zinc-950 hover:bg-zinc-100'
                 )}
               >
                 {category.name}

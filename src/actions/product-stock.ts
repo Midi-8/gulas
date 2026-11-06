@@ -18,6 +18,7 @@ export interface ProductStockItem {
   categoryId: string;
   categoryName: string;
   categorySlug: string;
+  unitQuantity?: string | null;
   imageUrl?: string | null;
   displayOrder: number;
 }
@@ -174,6 +175,7 @@ export async function getRestaurantStockList(): Promise<ProductStockActionResult
         is_available,
         display_order,
         category_id,
+        unit_quantity,
         image_url,
         categories (
           id,
@@ -206,6 +208,7 @@ export async function getRestaurantStockList(): Promise<ProductStockActionResult
         categoryId: row.category_id,
         categoryName: category?.name || 'Geral',
         categorySlug: category?.slug || 'geral',
+        unitQuantity: row.unit_quantity,
         imageUrl: row.image_url,
         displayOrder: row.display_order,
       };

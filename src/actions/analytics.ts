@@ -348,12 +348,33 @@ function extractTopNoteTerms(texts: string[]): NoteTermMetric[] {
     .slice(0, 15);
 }
 
+function isTechnicalSupplementItem(item: RawAnalyticsOrderItem): boolean {
+  const catSlug = item.products?.categories?.slug?.toLowerCase() || '';
+  if (catSlug.startsWith('ingredientes-extra')) return true;
+  if (item.notes && /^ref\s*:/i.test(item.notes.trim())) return true;
+  if (item.product_name.toLowerCase().includes('caixa take away')) return true;
+  return false;
+}
+
+function cleanItemNoteForNlp(rawNote: string): string {
+  return rawNote
+    .split('|')
+    .map((segment) => segment.trim())
+    .filter(
+      (segment) =>
+        segment.length > 0 && !/^(tamanho|extras|ref)\s*:/i.test(segment)
+    )
+    .join(' ');
+}
+
 function computeMarketBasket(orders: RawAnalyticsOrder[]): MarketBasketCombo[] {
   const itemFrequencies: Record<string, number> = {};
   const pairFrequencies: Record<string, { count: number; revenueSum: number }> = {};
 
   for (const order of orders) {
-    const items = order.order_items || [];
+    const items = (order.order_items || []).filter(
+      (i) => !isTechnicalSupplementItem(i)
+    );
     if (items.length < 2) continue;
 
     const uniqueProductNames = Array.from(
@@ -570,7 +591,14 @@ export async function getAnalyticsSummary(
 
       for (const item of order.order_items || []) {
         if (item.notes) {
-          noteTexts.push(item.notes);
+          const cleanedItemNote = cleanItemNoteForNlp(item.notes);
+          if (cleanedItemNote) {
+            noteTexts.push(cleanedItemNote);
+          }
+        }
+
+        if (isTechnicalSupplementItem(item)) {
+          continue;
         }
 
         const prodKey = item.product_id || item.product_name || 'artigo-gerico';

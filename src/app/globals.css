@@ -1,23 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  /* Gulas Brand Colors (Nova Identidade Visual Oficial) */
-  --gulas-bg-main: #F5F4F1;        /* Fundo Principal (Branco Quente) */
-  --gulas-bg-alt: #EAE5DF;         /* Fundo Alternativo / Superfícies Suaves */
-  --gulas-card: #FFFFFF;           /* Superfícies de Cartões / Containers */
-  --gulas-border: #E5DED6;         /* Bordas e Divisórias Suaves */
-  --gulas-charcoal: #0C0F14;       /* Preto Carvão (Contraste / Topbar / Rodapé) */
+  /* Gulas Modern Clean Design System (Alabaster, Carbon & Terracotta) */
+  --gulas-bg-main: #F8FAFC;        /* Fundo Principal Limpo e Moderno */
+  --gulas-bg-alt: #F1F5F9;         /* Superfícies Secundárias Suaves */
+  --gulas-card: #FFFFFF;           /* Superfícies de Cartões Puros */
+  --gulas-border: #E2E8F0;         /* Bordas Subtis e Modernas */
+  --gulas-charcoal: #09090B;       /* Preto Obsidiana */
   
-  --gulas-primary: #5E4939;        /* Identidade Principal (Castanho Escuro) */
-  --gulas-primary-deep: #4C392D;   /* Identidade Profunda (Castanho Profundo) */
-  --gulas-primary-hover: #453426;  /* Hover do Botão Principal */
+  --gulas-primary: #18181B;        /* Ação Principal (Carbon / Zinc-900) */
+  --gulas-primary-deep: #09090B;   /* Profundo (Zinc-950) */
+  --gulas-primary-hover: #27272A;  /* Hover do Botão Principal (Zinc-800) */
   
-  --gulas-title: #35271F;          /* Texto Principal (Títulos) */
-  --gulas-body: #4C453F;           /* Texto Corrido / Corpo */
-  --gulas-text-on-dark: #F5F4F1;   /* Texto em Fundos Escuros */
+  --gulas-title: #0F172A;          /* Texto Principal (Títulos) */
+  --gulas-body: #475569;           /* Texto Corrido / Corpo */
+  --gulas-text-on-dark: #FFFFFF;   /* Texto em Fundos Escuros */
   
-  --gulas-caramel: #C09573;        /* Cor de Destaque / Acento (Caramelo) */
-  --gulas-caramel-hover: #A77B59;  /* Hover de Destaque (Caramelo Escuro) */
+  --gulas-caramel: #EA580C;        /* Cor de Destaque Moderna (Terracotta / Orange-600) */
+  --gulas-caramel-hover: #C2410C;  /* Hover de Destaque */
 
   /* Mapeamento retrocompatível para transição suave de classes legadas */
   --gulas-cream: var(--gulas-bg-main);

@@ -4,6 +4,7 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect } from 'react';
 import { ManagedOrder, getOrderHistory, reopenCompletedOrder } from '@/actions/order-management';
 import { OrderStatusBadge } from '../orders/OrderStatusBadge';
+import { ThermalReceipt } from '../orders/ThermalReceipt';
 import { OrderHistoryDetailModal } from './OrderHistoryDetailModal';
 import {
   RotateCcw,
@@ -171,10 +172,20 @@ export function OrderHistoryView({
 
 
     return orders.filter((order) => {
-      // 1. Search Query (order number, space/hash tolerant)
+      // 1. Search Query (order number, customer name/notes, or product name)
       if (cleanQuery) {
         const orderNumStr = String(order.orderNumber);
-        if (!orderNumStr.includes(cleanQuery)) {
+        const matchesOrderNum = orderNumStr.includes(cleanQuery);
+        const matchesNotes = Boolean(
+          order.customerNotes?.toLowerCase().includes(cleanQuery)
+        );
+        const matchesItem = order.items.some(
+          (i) =>
+            i.productName.toLowerCase().includes(cleanQuery) ||
+            Boolean(i.notes?.toLowerCase().includes(cleanQuery))
+        );
+
+        if (!matchesOrderNum && !matchesNotes && !matchesItem) {
           return false;
         }
       }
@@ -445,7 +456,7 @@ export function OrderHistoryView({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar pedido (ex: 8)..."
+              placeholder="Pesquisar por n.º pedido, nome do cliente ou artigo..."
               className="w-full pl-9 pr-9 py-2 bg-[#F5F4F1] border border-[#E5DED6] rounded-xl text-xs sm:text-sm text-[#35271F] placeholder-[#A89F95] focus:outline-none focus:border-[#C09573] focus:bg-[#FFFFFF] transition-all"
             />
             {searchQuery && (
@@ -841,6 +852,9 @@ export function OrderHistoryView({
         onClose={() => setSelectedOrder(null)}
         onReopen={(order) => void handleReopenExecute(order)}
       />
+
+      {/* Talão Térmico 80mm fora do contentor transformado do modal */}
+      <ThermalReceipt order={selectedOrder} restaurantName={restaurantName} />
     </div>
   );
 }

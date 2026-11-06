@@ -31,17 +31,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
   const [prevProductId, setPrevProductId] = useState<string | null>(null);
 
+  // Inicializa sempre em 1 unidade para evitar duplicar acidentalmente a quantidade já no carrinho
   if (product && product.id !== prevProductId) {
     setPrevProductId(product.id);
-    const existing = items.find((i) => i.product.id === product.id);
-    setQuantity(existing ? existing.quantity : 1);
-    setNotes(existing?.notes || '');
+    setQuantity(1);
+    setNotes('');
     setSelectedExtraIds([]);
   }
 
   if (!isOpen || !product) return null;
 
-  // Procura variantes de tamanho (ex: Pizzas Clássicas com tamanho "Normal" e "Familiar")
+  const existingInCart = items.find((i) => i.product.id === product.id);
+
+  // Procura variantes de tamanho (ex: Pizzas Clássicas Normal vs Familiar, Cerveja 20cl vs 33cl)
   const sizeVariants =
     product.unitQuantity && allProducts.length > 0
       ? allProducts.filter(
@@ -122,7 +124,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
     addItem(product, quantity, combinedNotes || undefined);
 
-    // Adiciona também os suplementos selecionados ao carrinho para faturação atómica exata
     selectedExtrasProducts.forEach((extraProd) => {
       addItem(
         extraProd,
@@ -137,23 +138,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const totalPrice = (product.price + extrasUnitTotal) * quantity;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#35271F]/40 animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/50 backdrop-blur-xs animate-in fade-in duration-200"
+      onClick={onClose}
+    >
       <div
-        className="relative w-full max-w-lg bg-[#FFFFFF] rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-250 border border-[#E5DED6] text-[#35271F]"
+        className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-250 border border-zinc-200 text-zinc-900"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF] border border-[#E5DED6] flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
+          className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-white/95 text-zinc-900 hover:bg-zinc-100 border border-zinc-200 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
           aria-label="Fechar"
         >
           <X className="w-4 h-4" />
         </button>
 
-        {/* Hero Image (if available) */}
+        {/* Hero Image */}
         {product.imageUrl && (
-          <div className="relative h-48 sm:h-56 w-full bg-[#EAE5DF] shrink-0 border-b border-[#E5DED6]">
+          <div className="relative h-48 sm:h-56 w-full bg-zinc-100 shrink-0 border-b border-zinc-100">
             <Image
               src={product.imageUrl}
               alt={product.name}
@@ -166,33 +170,36 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         )}
 
         {/* Scrollable Content */}
-        <div className="p-5 overflow-y-auto space-y-3.5 flex-1">
+        <div className="p-5 overflow-y-auto space-y-4 flex-1">
           {/* Badges */}
-          {((product.badges && product.badges.length > 0) || product.unitQuantity || product.prepTimeMinutes) && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {product.badges?.map((badgeKey) => (
-                <Badge key={badgeKey} badgeType={badgeKey} size="md" />
-              ))}
-              {product.unitQuantity && (
-                <span className="text-xs text-zinc-600 font-semibold px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                  {product.unitQuantity}
-                </span>
-              )}
-              {product.prepTimeMinutes && (
-                <span className="inline-flex items-center gap-1 text-xs text-zinc-500 font-medium">
-                  <Clock className="w-3 h-3" />
-                  {product.prepTimeMinutes} min
-                </span>
-              )}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {product.badges?.map((badgeKey) => (
+              <Badge key={badgeKey} badgeType={badgeKey} size="md" />
+            ))}
+            {product.unitQuantity && (
+              <span className="text-xs text-zinc-700 font-bold px-2.5 py-0.5 rounded-full bg-zinc-100 border border-zinc-200">
+                {product.unitQuantity}
+              </span>
+            )}
+            {product.prepTimeMinutes && (
+              <span className="inline-flex items-center gap-1 text-xs text-zinc-500 font-medium">
+                <Clock className="w-3 h-3" />
+                {product.prepTimeMinutes} min
+              </span>
+            )}
+            {existingInCart && (
+              <span className="text-xs text-orange-700 font-bold px-2.5 py-0.5 rounded-full bg-orange-50 border border-orange-200">
+                Já no pedido: {existingInCart.quantity}×
+              </span>
+            )}
+          </div>
 
           {/* Title & Price */}
-          <div className="flex items-start justify-between gap-3 pt-1">
-            <h2 className="text-lg sm:text-xl font-black text-[#141619] tracking-tight">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-lg sm:text-xl font-black text-zinc-950 tracking-tight">
               {product.name}
             </h2>
-            <span className="text-lg sm:text-xl font-black text-[#15803D] shrink-0">
+            <span className="text-lg sm:text-xl font-black font-mono text-orange-600 shrink-0">
               {formatCurrency(product.price)}
             </span>
           </div>
@@ -204,13 +211,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </p>
           )}
 
-          {/* Seletor de Tamanho (Normal vs Familiar) para Pizzas com variantes */}
+          {/* Seletor de Tamanho (Normal vs Familiar / 20cl vs 33cl) */}
           {sizeVariants.length > 1 && onSelectVariant && (
-            <div className="space-y-1.5 pt-1">
-              <span className="text-xs font-bold text-[#141619] block">
-                Escolhe o tamanho:
+            <div className="space-y-2 pt-1">
+              <span className="text-xs font-bold text-zinc-900 block">
+                Escolhe o tamanho / formato:
               </span>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 {sizeVariants.map((variant) => {
                   const isSelected = variant.id === product.id;
                   const variantIsFamiliar = variant.unitQuantity
@@ -222,10 +229,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       key={variant.id}
                       type="button"
                       onClick={() => onSelectVariant(variant)}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                         isSelected
-                          ? 'bg-[#5E4939] text-[#F5F4F1] border-[#5E4939] shadow-xs'
-                          : 'bg-[#F5F4F1] text-[#35271F] border-[#E5DED6] hover:border-[#C09573]'
+                          ? 'bg-zinc-900 text-white border-zinc-900 shadow-xs'
+                          : 'bg-zinc-50 text-zinc-900 border-zinc-200 hover:border-zinc-400'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-1">
@@ -234,7 +241,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         </span>
                         <span
                           className={`text-xs font-mono font-bold ${
-                            isSelected ? 'text-[#C09573]' : 'text-[#5E4939]'
+                            isSelected ? 'text-orange-400' : 'text-zinc-900'
                           }`}
                         >
                           {formatCurrency(variant.price)}
@@ -243,7 +250,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       {variantIsFamiliar && (
                         <span
                           className={`text-[10px] mt-0.5 font-semibold ${
-                            isSelected ? 'text-[#EAE5DF]' : 'text-amber-800'
+                            isSelected ? 'text-zinc-300' : 'text-amber-700'
                           }`}
                         >
                           Exclusivo Take-Away
@@ -258,7 +265,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Aviso de Pizza Tamanho Familiar exclusivo Take-Away */}
           {isFamiliar && (
-            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2 text-xs text-amber-900 font-semibold">
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2 text-xs text-amber-900 font-semibold">
               <ShoppingBag className="w-4 h-4 text-amber-700 shrink-0" />
               <span>
                 Tamanho <strong>Familiar</strong> exclusivo para <strong>Take-Away</strong>.
@@ -268,7 +275,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Included sides note */}
           {product.includesNotes && (
-            <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center gap-2 text-xs text-emerald-800 font-semibold">
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center gap-2 text-xs text-emerald-800 font-semibold">
               <Info className="w-4 h-4 text-emerald-700 shrink-0" />
               <span>{product.includesNotes}</span>
             </div>
@@ -276,7 +283,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Customization Note */}
           {product.customizationNote && (
-            <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center gap-2 text-xs text-zinc-600">
+            <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center gap-2 text-xs text-zinc-600">
               <Info className="w-4 h-4 text-zinc-400 shrink-0" />
               <span>{product.customizationNote}</span>
             </div>
@@ -284,7 +291,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Allergens warning */}
           {product.allergens && product.allergens.length > 0 && (
-            <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-200 flex items-start gap-2 text-xs text-zinc-600">
+            <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 flex items-start gap-2 text-xs text-zinc-600">
               <AlertCircle className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-zinc-800">Alergénios: </span>
@@ -293,15 +300,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
           )}
 
-          {/* Ingredientes Extra Selecionáveis (Pizzas, Panuozzos, Burgers e Pregos) */}
+          {/* Ingredientes Extra Selecionáveis */}
           {availableExtras.length > 0 && (
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-2 pt-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#141619]">
+                <span className="text-xs font-bold text-zinc-900">
                   Adicionar Ingredientes Extra (opcional)
                 </span>
                 {selectedExtraIds.length > 0 && (
-                  <span className="text-[11px] font-bold text-[#C09573]">
+                  <span className="text-[11px] font-bold text-orange-600">
                     +{formatCurrency(extrasUnitTotal)}
                   </span>
                 )}
@@ -316,16 +323,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       onClick={() => toggleExtra(extra.id)}
                       className={`w-full p-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 cursor-pointer ${
                         isChecked
-                          ? 'bg-[#EAE5DF] border-[#5E4939] text-[#35271F]'
-                          : 'bg-[#F5F4F1] border-[#E5DED6] text-[#4C453F] hover:border-[#C09573]'
+                          ? 'bg-zinc-900 border-zinc-900 text-white'
+                          : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-zinc-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <span
                           className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 transition-colors ${
                             isChecked
-                              ? 'bg-[#5E4939] border-[#5E4939] text-[#F5F4F1]'
-                              : 'bg-white border-[#C09573]/60'
+                              ? 'bg-orange-500 border-orange-500 text-white'
+                              : 'bg-white border-zinc-300'
                           }`}
                         >
                           {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
@@ -334,7 +341,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           {extra.name}
                         </span>
                       </div>
-                      <span className="text-xs font-mono font-bold text-[#5E4939] shrink-0">
+                      <span
+                        className={`text-xs font-mono font-bold shrink-0 ${
+                          isChecked ? 'text-orange-300' : 'text-zinc-900'
+                        }`}
+                      >
                         +{formatCurrency(extra.price)}
                       </span>
                     </button>
@@ -345,9 +356,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           )}
 
           {/* Special instructions */}
-          <div className="space-y-1 pt-1">
-            <label htmlFor="product-notes" className="text-xs font-bold text-[#141619] block">
-              Observações (opcional)
+          <div className="space-y-1.5 pt-1">
+            <label htmlFor="product-notes" className="text-xs font-bold text-zinc-900 block">
+              Observações para a cozinha (opcional)
             </label>
             <textarea
               id="product-notes"
@@ -355,29 +366,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: sem cebola, sem molho picante, bem passado..."
-              className="w-full px-3 py-2 rounded-xl bg-[#F5F4F1] border border-[#E5DED6] text-xs sm:text-sm text-[#35271F] placeholder-[#A89F95] focus:outline-none focus:border-[#C09573] focus:bg-white transition-colors resize-none"
+              className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors resize-none"
             />
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-[#F5F4F1] border-t border-[#E5DED6] flex items-center justify-between gap-3">
+        <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-between gap-3">
           {/* Quantity Controls */}
-          <div className="flex items-center gap-2 bg-[#FFFFFF] border border-[#E5DED6] rounded-xl p-1 shrink-0 shadow-2xs">
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-xl p-1 shrink-0 shadow-2xs">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               disabled={quantity <= 1}
-              className="w-7 h-7 rounded-lg bg-[#EAE5DF] hover:bg-[#E5DED6] disabled:opacity-40 text-[#35271F] flex items-center justify-center transition-colors active:scale-90 cursor-pointer"
+              className="w-8 h-8 rounded-lg bg-zinc-100 hover:bg-zinc-200 disabled:opacity-40 text-zinc-900 flex items-center justify-center transition-colors active:scale-90 cursor-pointer"
               aria-label="Diminuir"
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
-            <span className="text-xs sm:text-sm font-bold text-[#35271F] w-5 text-center">
+            <span className="text-xs sm:text-sm font-bold text-zinc-900 w-5 text-center">
               {quantity}
             </span>
             <button
               onClick={() => setQuantity((q) => q + 1)}
-              className="w-7 h-7 rounded-lg bg-[#EAE5DF] hover:bg-[#E5DED6] text-[#35271F] flex items-center justify-center transition-colors active:scale-90 cursor-pointer"
+              className="w-8 h-8 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-900 flex items-center justify-center transition-colors active:scale-90 cursor-pointer"
               aria-label="Aumentar"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -388,10 +399,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <button
             onClick={handleAddToCart}
             disabled={!product.available}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] disabled:bg-[#EAE5DF] text-[#F5F4F1] disabled:text-[#A89F95] font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-xs active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
+            className="flex-1 py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-200 text-white disabled:text-zinc-400 font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-xs active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
           >
             <span>{product.available ? 'Adicionar ao pedido' : 'Temporariamente Esgotado'}</span>
-            {product.available && <span>{formatCurrency(totalPrice)}</span>}
+            {product.available && <span className="text-orange-400 font-mono">{formatCurrency(totalPrice)}</span>}
           </button>
         </div>
       </div>

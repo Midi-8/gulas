@@ -221,7 +221,7 @@ export function TableQrCodesModal({
                 onChange={(e) => setTableCount(Number(e.target.value))}
                 className="font-black text-[#35271F] bg-transparent focus:outline-none cursor-pointer"
               >
-                {[6, 8, 10, 12, 15, 20, 25, 30].map((n) => (
+                {[6, 8, 10, 12, 15, 20].map((n) => (
                   <option key={n} value={n}>
                     {n}
                   </option>
@@ -336,3 +336,4 @@ export function TableQrCodesModal({
     </div>
   );
 }
+

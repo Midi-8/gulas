@@ -37,6 +37,16 @@ export const mockTables: Table[] = [
   { id: 'tbl_8', restaurantId: RESTAURANT_ID, number: 8, name: 'Mesa 8 (Central)', active: true },
   { id: 'tbl_9', restaurantId: RESTAURANT_ID, number: 9, name: 'Mesa 9 (Grupo)', active: true },
   { id: 'tbl_10', restaurantId: RESTAURANT_ID, number: 10, name: 'Mesa 10 (Reservado)', active: true },
+  { id: 'tbl_11', restaurantId: RESTAURANT_ID, number: 11, name: 'Mesa 11', active: true },
+  { id: 'tbl_12', restaurantId: RESTAURANT_ID, number: 12, name: 'Mesa 12', active: true },
+  { id: 'tbl_13', restaurantId: RESTAURANT_ID, number: 13, name: 'Mesa 13', active: true },
+  { id: 'tbl_14', restaurantId: RESTAURANT_ID, number: 14, name: 'Mesa 14', active: true },
+  { id: 'tbl_15', restaurantId: RESTAURANT_ID, number: 15, name: 'Mesa 15', active: true },
+  { id: 'tbl_16', restaurantId: RESTAURANT_ID, number: 16, name: 'Mesa 16', active: true },
+  { id: 'tbl_17', restaurantId: RESTAURANT_ID, number: 17, name: 'Mesa 17', active: true },
+  { id: 'tbl_18', restaurantId: RESTAURANT_ID, number: 18, name: 'Mesa 18', active: true },
+  { id: 'tbl_19', restaurantId: RESTAURANT_ID, number: 19, name: 'Mesa 19', active: true },
+  { id: 'tbl_20', restaurantId: RESTAURANT_ID, number: 20, name: 'Mesa 20', active: true },
 ];
 
 export function formatCurrency(amount: number): string {

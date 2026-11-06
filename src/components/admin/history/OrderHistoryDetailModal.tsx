@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { ManagedOrder } from '@/actions/order-management';
 import { OrderStatusBadge } from '../orders/OrderStatusBadge';
 import { OrderItemsList } from '../orders/OrderItemsList';
-import { ThermalReceipt } from '../orders/ThermalReceipt';
 import { X, Calendar, Clock, MessageSquare, Undo2, Printer } from 'lucide-react';
 
 interface OrderHistoryDetailModalProps {
@@ -181,7 +180,6 @@ export function OrderHistoryDetailModal({
           </div>
         </div>
       </div>
-      <ThermalReceipt order={order} />
     </div>
   );
 }

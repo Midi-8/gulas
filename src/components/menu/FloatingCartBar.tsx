@@ -3,7 +3,7 @@
 import React from 'react';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/data/mockRestaurant';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, ArrowRight } from 'lucide-react';
 
 export const FloatingCartBar: React.FC = () => {
   const { itemCount, total, setIsCartOpen } = useCart();
@@ -15,22 +15,23 @@ export const FloatingCartBar: React.FC = () => {
       <div className="w-full max-w-md pointer-events-auto">
         <button
           onClick={() => setIsCartOpen(true)}
-          className="w-full py-3 px-4 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] font-bold shadow-lg shadow-[#5E4939]/20 flex items-center justify-between transition-all active:scale-[0.99] cursor-pointer border border-[#C09573]/30"
+          className="w-full py-3.5 px-4 rounded-2xl bg-zinc-950 hover:bg-zinc-900 text-white font-bold shadow-xl shadow-zinc-950/25 flex items-center justify-between transition-all active:scale-[0.99] cursor-pointer border border-zinc-800"
         >
           <div className="flex items-center gap-2.5">
-            <ShoppingBag className="w-4 h-4 text-[#C09573]" />
-            <span className="text-xs sm:text-sm font-bold">
-              {itemCount} {itemCount === 1 ? 'artigo' : 'artigos'}
+            <span className="w-6 h-6 rounded-full bg-orange-600 text-white text-xs font-black flex items-center justify-center">
+              {itemCount}
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+              <ShoppingBag className="w-4 h-4 text-orange-400" />
+              <span>Ver o teu pedido</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-extrabold tracking-tight text-[#C09573]">
+            <span className="text-xs sm:text-sm font-black font-mono tracking-tight text-orange-400">
               {formatCurrency(total)}
             </span>
-            <span className="text-xs opacity-90 underline underline-offset-2">
-              Ver pedido
-            </span>
+            <ArrowRight className="w-4 h-4 text-zinc-400" />
           </div>
         </button>
       </div>

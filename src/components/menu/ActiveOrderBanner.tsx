@@ -26,13 +26,9 @@ const subscribeStorage = (callback: () => void) => {
   };
 };
 
-// FORA DO COMPONENTE (Constante imutável em cache na memória do módulo):
 const EMPTY_ORDER_IDS: string[] = [];
-
-// Snapshot seguro para SSR (devolve sempre a mesma referência estática):
 const getServerSnapshot = () => EMPTY_ORDER_IDS;
 
-// Snapshot de Leitura Local (Garantir cache de referência):
 let cachedRawValue: string | null = null;
 let cachedParsedIds: string[] = EMPTY_ORDER_IDS;
 
@@ -49,7 +45,6 @@ const getStoredOrderIds = (): string[] => {
       return EMPTY_ORDER_IDS;
     }
 
-    // Se o valor bruto no localStorage não mudou, devolve a mesma referência em cache:
     if (raw === cachedRawValue) {
       return cachedParsedIds;
     }
@@ -84,25 +79,20 @@ export const ActiveOrderBanner: React.FC = () => {
   } = useActiveOrderTracker();
   const { itemCount, selectedTableNumber } = useCart();
 
-  // Subscrição a eventos de storage para forçar sincronização
   React.useSyncExternalStore(
     subscribeStorage,
     getStoredOrderIds,
     getServerSnapshot
   );
 
-  // IMPEDE O DESFASAMENTO DE HIDRATAÇÃO (SSR vs Client):
   if (!isClient) {
     return null;
   }
 
-  // 2. SALVAGUARDA DE PEDIDOS CONFIRMADOS:
-  // Se a lista de pedidos ativos confirmados for vazia e não houver aviso de conclusão temporário:
   if (activeOrders.length === 0 && !completionNotice) {
     return null;
   }
 
-  // Se estiver a exibir a mensagem de conclusão após finalização (ex.: 8 segundos)
   if (completionNotice) {
     return (
       <aside
@@ -112,18 +102,18 @@ export const ActiveOrderBanner: React.FC = () => {
         }`}
       >
         <div className="w-full pointer-events-auto">
-          <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[#FFFFFF] border border-[#E5DED6] shadow-sm text-[#35271F]">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white border border-zinc-200 shadow-lg text-zinc-900">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-full bg-[#EAE5DF] flex items-center justify-center shrink-0 border border-[#E5DED6]">
-                <Sparkles className="w-3.5 h-3.5 text-[#C09573]" />
+              <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-200">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
               </div>
-              <p className="text-xs font-semibold text-[#35271F] truncate">
+              <p className="text-xs font-semibold text-zinc-900 truncate">
                 {completionNotice}
               </p>
             </div>
             <button
               onClick={() => openDetailModal()}
-              className="text-[11px] font-bold text-[#5E4939] hover:text-[#453426] underline underline-offset-2 shrink-0 cursor-pointer"
+              className="text-[11px] font-bold text-orange-600 hover:text-orange-700 underline underline-offset-2 shrink-0 cursor-pointer"
             >
               Ver
             </button>
@@ -136,7 +126,6 @@ export const ActiveOrderBanner: React.FC = () => {
   const ordersCount = activeOrders.length;
   const isMultiOrder = ordersCount > 1;
 
-  // Determina o pedido mais recente ou de maior prioridade operacional
   const hasReady = activeOrders.some((o) => o.status === 'ready');
   const hasPreparing = activeOrders.some((o) => o.status === 'preparing');
   const primaryOrder =
@@ -178,8 +167,8 @@ export const ActiveOrderBanner: React.FC = () => {
       break;
     case 'ready':
       statusText = isMultiOrder
-        ? 'Pedido pronto • A caminho da mesa'
-        : 'Pronto • A caminho da mesa';
+        ? 'Pedido pronto • A caminho / Balcão'
+        : 'Pronto • A caminho / Balcão';
       StatusIcon = UtensilsCrossed;
       isPulsing = true;
       break;
@@ -212,47 +201,43 @@ export const ActiveOrderBanner: React.FC = () => {
       <div className="w-full pointer-events-auto">
         <button
           onClick={() => openDetailModal()}
-          className="w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[#FFFFFF] hover:bg-[#FAF8F5] border border-[#E5DED6] shadow-sm text-[#35271F] transition-all cursor-pointer group active:scale-[0.99]"
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white hover:bg-zinc-50 border border-zinc-200 shadow-lg text-zinc-900 transition-all cursor-pointer group active:scale-[0.99]"
           aria-label="Acompanhar estado dos pedidos em tempo real"
         >
-          {/* Lado Esquerdo: Ícone + Ponto Indicador Caramelo */}
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative flex items-center justify-center shrink-0">
-              <div className="w-7 h-7 rounded-full bg-[#EAE5DF] flex items-center justify-center border border-[#E5DED6] text-[#5E4939]">
-                <StatusIcon className="w-3.5 h-3.5 text-[#5E4939]" />
+              <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-white">
+                <StatusIcon className="w-4 h-4 text-orange-400" />
               </div>
-              {/* Ponto indicador pulsante em Caramelo (#C09573) */}
               {isPulsing && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C09573] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#C09573]" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
                 </span>
               )}
             </div>
 
-            {/* Texto Central */}
             <div className="text-left min-w-0">
               <div className="flex items-center gap-1.5 truncate">
-                <span className="font-bold text-xs text-[#35271F]">
+                <span className="font-bold text-xs text-zinc-950">
                   {tableLabel}
                 </span>
-                <span className="text-xs text-[#4C453F]">•</span>
+                <span className="text-xs text-zinc-300">•</span>
                 {isMultiOrder ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-[#5E4939] truncate">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-900 truncate">
                     <span>{ordersCount} Pedidos ativos</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#C09573]/15 text-[#C09573] font-black border border-[#C09573]/30">
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-orange-50 text-orange-700 font-black border border-orange-200">
                       Multi
                     </span>
                   </span>
                 ) : (
-                  <span className="text-xs font-semibold text-[#4C453F] truncate">
+                  <span className="text-xs font-semibold text-zinc-700 truncate">
                     {statusText}
                   </span>
                 )}
               </div>
 
-              {/* Subtítulo informativo */}
-              <p className="text-[10px] text-[#78716C] truncate mt-0.2">
+              <p className="text-[10px] text-zinc-500 truncate mt-0.5">
                 {isMultiOrder
                   ? statusText
                   : primaryOrder?.orderNumber
@@ -262,10 +247,9 @@ export const ActiveOrderBanner: React.FC = () => {
             </div>
           </div>
 
-          {/* Lado Direito: Ação Ver Detalhes */}
-          <div className="flex items-center gap-1 text-[#5E4939] group-hover:text-[#453426] shrink-0 text-xs font-bold">
+          <div className="flex items-center gap-1 text-orange-600 group-hover:text-orange-700 shrink-0 text-xs font-bold">
             <span className="underline underline-offset-2 text-[11px]">
-              Ver detalhes
+              Ver estado
             </span>
             <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
           </div>

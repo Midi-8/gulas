@@ -290,7 +290,18 @@ export async function getTableByNumber(
     throw new Error(`Falha ao verificar mesa: ${error.message}`);
   }
 
-  if (!data) return null;
+  if (!data) {
+    if (Number.isInteger(tableNumber) && tableNumber >= 1 && tableNumber <= 20) {
+      return {
+        id: `tbl_${tableNumber}`,
+        restaurantId,
+        number: tableNumber,
+        name: `Mesa ${tableNumber}`,
+        active: true,
+      };
+    }
+    return null;
+  }
 
   return mapTableFromRow(data);
 }

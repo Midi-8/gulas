@@ -39,53 +39,53 @@ export const Badge: React.FC<BadgeProps> = ({
   const effectiveVariant = variant || (badgeType as string) || 'secondary';
 
   const baseStyles =
-    'inline-flex items-center gap-1 font-semibold rounded-md tracking-tight transition-colors';
+    'inline-flex items-center gap-1 font-semibold rounded-full tracking-tight transition-colors';
 
   const sizeStyles = {
-    sm: 'text-[10px] px-1.5 py-0.5 leading-none',
-    md: 'text-xs px-2 py-0.5 leading-tight',
+    sm: 'text-[10px] px-2 py-0.5 leading-none',
+    md: 'text-xs px-2.5 py-0.5 leading-tight',
   };
 
   const variantStyles: Record<string, string> = {
     novidade:
-      'bg-[#5E4939] text-[#F5F4F1] font-bold tracking-wide uppercase',
+      'bg-zinc-900 text-white font-bold tracking-wide uppercase shadow-2xs',
     picante:
-      'bg-red-50 text-red-700 border border-red-200/80',
+      'bg-rose-50 text-rose-700 border border-rose-200',
     vegetariano:
-      'bg-emerald-50 text-emerald-800 border border-emerald-200/80',
+      'bg-emerald-50 text-emerald-700 border border-emerald-200',
     vegan:
-      'bg-teal-50 text-teal-800 border border-teal-200/80',
+      'bg-teal-50 text-teal-700 border border-teal-200',
     especialidade:
-      'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/40 font-bold',
+      'bg-orange-50 text-orange-700 border border-orange-200 font-bold',
     house_special:
-      'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/40 font-bold',
+      'bg-orange-50 text-orange-700 border border-orange-200 font-bold',
     popular:
-      'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6] font-medium',
+      'bg-zinc-100 text-zinc-800 border border-zinc-200 font-medium',
     promocao:
-      'bg-[#5E4939] text-[#F5F4F1] font-bold tracking-wide uppercase',
+      'bg-orange-600 text-white font-bold tracking-wide uppercase',
     extra:
-      'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6] font-medium',
+      'bg-zinc-100 text-zinc-700 border border-zinc-200 font-medium',
     acompanhamento:
-      'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6] font-medium',
+      'bg-zinc-100 text-zinc-700 border border-zinc-200 font-medium',
     primary:
-      'bg-[#C09573]/15 text-[#5E4939] border border-[#C09573]/30',
+      'bg-orange-50 text-orange-700 border border-orange-200',
     secondary:
-      'bg-[#EAE5DF] text-[#35271F] border border-[#E5DED6]',
+      'bg-zinc-100 text-zinc-800 border border-zinc-200',
     muted:
-      'bg-[#EAE5DF] text-[#4C453F]',
+      'bg-zinc-100 text-zinc-600',
   };
 
   const renderDefaultIcon = () => {
     switch (effectiveVariant) {
       case 'picante':
-        return <Flame className="w-2.5 h-2.5 text-red-600" />;
+        return <Flame className="w-2.5 h-2.5 text-rose-600" />;
       case 'vegetariano':
-        return <Leaf className="w-2.5 h-2.5 text-emerald-700" />;
+        return <Leaf className="w-2.5 h-2.5 text-emerald-600" />;
       case 'vegan':
-        return <Leaf className="w-2.5 h-2.5 text-teal-700" />;
+        return <Leaf className="w-2.5 h-2.5 text-teal-600" />;
       case 'especialidade':
       case 'house_special':
-        return <Sparkles className="w-2.5 h-2.5 text-[#C09573]" />;
+        return <Sparkles className="w-2.5 h-2.5 text-orange-600" />;
       default:
         return null;
     }

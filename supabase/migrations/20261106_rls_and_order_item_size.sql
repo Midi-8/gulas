@@ -26,6 +26,16 @@ WITH CHECK (
     )
 );
 
+-- 1.5. Garantir suporte a Mesas 1 a 20 na tabela public.tables
+INSERT INTO public.tables (restaurant_id, number, name, is_active)
+SELECT
+    'b0000000-0000-4000-8000-000000000001'::uuid,
+    gs.num,
+    'Mesa ' || gs.num,
+    true
+FROM generate_series(1, 20) AS gs(num)
+ON CONFLICT (restaurant_id, number) DO NOTHING;
+
 -- 2. Atualizar create_order_atomic para incluir unit_quantity no product_name quando aplicável
 CREATE OR REPLACE FUNCTION public.create_order_atomic(
     p_restaurant_slug TEXT,
@@ -266,3 +276,4 @@ END;
 $$;
 
 COMMIT;
+

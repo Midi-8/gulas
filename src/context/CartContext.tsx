@@ -18,6 +18,7 @@ interface CartContextType {
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   updateNotes: (productId: string, notes: string) => void;
+  syncCatalogProducts: (catalog: Product[]) => void;
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
@@ -179,11 +180,24 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
       if (existingIndex > -1) {
         const updated = [...prev];
         const currentItem = updated[existingIndex];
+        const incomingNote = notes?.trim();
+        const existingNote = currentItem.notes?.trim();
+
+        let mergedNotes = currentItem.notes;
+        if (incomingNote) {
+          if (!existingNote) {
+            mergedNotes = incomingNote;
+          } else if (
+            !existingNote.toLowerCase().includes(incomingNote.toLowerCase())
+          ) {
+            mergedNotes = `${existingNote} | ${incomingNote}`;
+          }
+        }
 
         updated[existingIndex] = {
           ...currentItem,
           quantity: currentItem.quantity + quantity,
-          notes: notes !== undefined ? notes : currentItem.notes,
+          notes: mergedNotes,
         };
 
         return updated;
@@ -221,6 +235,36 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
       )
     );
   };
+
+  const syncCatalogProducts = React.useCallback((catalog: Product[]) => {
+    if (!catalog || catalog.length === 0) return;
+    const byId = new Map(catalog.map((p) => [p.id, p]));
+    setItems((prev) => {
+      let changed = false;
+      const next = prev.map((item) => {
+        const fresh = byId.get(item.product.id);
+        if (
+          fresh &&
+          (fresh.available !== item.product.available ||
+            fresh.price !== item.product.price ||
+            fresh.name !== item.product.name)
+        ) {
+          changed = true;
+          return {
+            ...item,
+            product: {
+              ...item.product,
+              available: fresh.available,
+              price: fresh.price,
+              name: fresh.name,
+            },
+          };
+        }
+        return item;
+      });
+      return changed ? next : prev;
+    });
+  }, []);
 
   const clearCart = () => {
     setItems([]);
@@ -441,6 +485,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
         removeItem,
         updateQuantity,
         updateNotes,
+        syncCatalogProducts,
         clearCart,
         itemCount,
         subtotal,
