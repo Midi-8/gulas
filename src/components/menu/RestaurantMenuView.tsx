@@ -308,8 +308,10 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
       {/* Product Detail Modal */}
       <ProductDetailModal
         product={selectedProduct}
+        allProducts={menuProducts}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
+        onSelectVariant={(variant) => setSelectedProduct(variant)}
       />
 
       {/* Order Confirmation & Status Tracker Modal */}

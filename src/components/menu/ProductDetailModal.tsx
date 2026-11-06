@@ -10,16 +10,20 @@ import { Badge } from '@/components/ui/Badge';
 
 interface ProductDetailModalProps {
   product: Product | null;
+  allProducts?: Product[];
   isOpen: boolean;
   onClose: () => void;
+  onSelectVariant?: (variant: Product) => void;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   product,
+  allProducts = [],
   isOpen,
   onClose,
+  onSelectVariant,
 }) => {
-  const { addItem, items } = useCart();
+  const { addItem, items, selectedTableNumber, isTableLocked, setSelectedTableNumber } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [prevProductId, setPrevProductId] = useState<string | null>(null);
@@ -33,7 +37,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   if (!isOpen || !product) return null;
 
+  // Procura variantes de tamanho (ex: Pizzas Clássicas com tamanho "Normal" e "Familiar")
+  const sizeVariants =
+    product.unitQuantity && allProducts.length > 0
+      ? allProducts.filter(
+          (p) =>
+            p.categoryId === product.categoryId &&
+            p.name.trim().toLowerCase() === product.name.trim().toLowerCase() &&
+            Boolean(p.unitQuantity)
+        )
+      : [];
+
+  const isFamiliar = Boolean(
+    product.unitQuantity?.toLowerCase().includes('familiar')
+  );
+
   const handleAddToCart = () => {
+    if (isFamiliar && !isTableLocked && selectedTableNumber === null) {
+      setSelectedTableNumber(0);
+    }
     addItem(product, quantity, notes.trim() || undefined);
     onClose();
   };
@@ -108,8 +130,60 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </p>
           )}
 
+          {/* Seletor de Tamanho (Normal vs Familiar) para Pizzas com variantes */}
+          {sizeVariants.length > 1 && onSelectVariant && (
+            <div className="space-y-1.5 pt-1">
+              <span className="text-xs font-bold text-[#141619] block">
+                Escolhe o tamanho:
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {sizeVariants.map((variant) => {
+                  const isSelected = variant.id === product.id;
+                  const variantIsFamiliar = variant.unitQuantity
+                    ?.toLowerCase()
+                    .includes('familiar');
+
+                  return (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      onClick={() => onSelectVariant(variant)}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-[#5E4939] text-[#F5F4F1] border-[#5E4939] shadow-xs'
+                          : 'bg-[#F5F4F1] text-[#35271F] border-[#E5DED6] hover:border-[#C09573]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-black">
+                          {variant.unitQuantity}
+                        </span>
+                        <span
+                          className={`text-xs font-mono font-bold ${
+                            isSelected ? 'text-[#C09573]' : 'text-[#5E4939]'
+                          }`}
+                        >
+                          {formatCurrency(variant.price)}
+                        </span>
+                      </div>
+                      {variantIsFamiliar && (
+                        <span
+                          className={`text-[10px] mt-0.5 font-semibold ${
+                            isSelected ? 'text-[#EAE5DF]' : 'text-amber-800'
+                          }`}
+                        >
+                          Exclusivo Take-Away
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Aviso de Pizza Tamanho Familiar exclusivo Take-Away */}
-          {product.unitQuantity?.toLowerCase().includes('familiar') && (
+          {isFamiliar && (
             <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2 text-xs text-amber-900 font-semibold">
               <ShoppingBag className="w-4 h-4 text-amber-700 shrink-0" />
               <span>
