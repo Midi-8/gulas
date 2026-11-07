@@ -113,7 +113,7 @@ export const ActiveOrderBanner: React.FC = () => {
             </div>
             <button
               onClick={() => openDetailModal()}
-              className="text-[11px] font-bold text-orange-600 hover:text-orange-700 underline underline-offset-2 shrink-0 cursor-pointer"
+              className="text-[11px] font-semibold text-zinc-900 hover:text-zinc-600 underline underline-offset-2 shrink-0 cursor-pointer"
             >
               Ver
             </button>
@@ -186,10 +186,14 @@ export const ActiveOrderBanner: React.FC = () => {
 
   const tableLabel =
     primaryOrder?.tableNumber === 0
-      ? '🛍️ Take-Away'
+      ? 'Take-Away'
       : primaryOrder?.tableName ||
         (primaryOrder?.tableNumber ? `Mesa ${primaryOrder.tableNumber}` : '') ||
-        (selectedTableNumber === 0 ? '🛍️ Take-Away' : selectedTableNumber ? `Mesa ${selectedTableNumber}` : 'O teu pedido');
+        (selectedTableNumber === 0
+          ? 'Take-Away'
+          : selectedTableNumber
+          ? `Mesa ${selectedTableNumber}`
+          : 'O teu pedido');
 
   return (
     <aside
@@ -207,37 +211,42 @@ export const ActiveOrderBanner: React.FC = () => {
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative flex items-center justify-center shrink-0">
               <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-white">
-                <StatusIcon className="w-4 h-4 text-orange-400" />
+                <StatusIcon className="w-4 h-4 text-white" />
               </div>
               {isPulsing && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
+                  <span
+                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                      currentStatus === 'ready' ? 'bg-emerald-500' : 'bg-zinc-600'
+                    }`}
+                  />
+                  <span
+                    className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                      currentStatus === 'ready' ? 'bg-emerald-500' : 'bg-zinc-700'
+                    }`}
+                  />
                 </span>
               )}
             </div>
 
             <div className="text-left min-w-0">
               <div className="flex items-center gap-1.5 truncate">
-                <span className="font-bold text-xs text-zinc-950">
+                <span className="font-semibold text-xs text-zinc-900">
                   {tableLabel}
                 </span>
-                <span className="text-xs text-zinc-300">•</span>
+                <span className="text-xs text-zinc-300">·</span>
                 {isMultiOrder ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-900 truncate">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-900 truncate">
                     <span>{ordersCount} Pedidos ativos</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-orange-50 text-orange-700 font-black border border-orange-200">
-                      Multi
-                    </span>
                   </span>
                 ) : (
-                  <span className="text-xs font-semibold text-zinc-700 truncate">
+                  <span className="text-xs font-medium text-zinc-600 truncate">
                     {statusText}
                   </span>
                 )}
               </div>
 
-              <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+              <p className="text-[10px] text-zinc-400 truncate mt-0.5">
                 {isMultiOrder
                   ? statusText
                   : primaryOrder?.orderNumber
@@ -247,9 +256,9 @@ export const ActiveOrderBanner: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-1 text-orange-600 group-hover:text-orange-700 shrink-0 text-xs font-bold">
+          <div className="flex items-center gap-1 text-zinc-900 group-hover:text-zinc-600 shrink-0 text-xs font-semibold">
             <span className="underline underline-offset-2 text-[11px]">
-              Ver estado
+              Estado
             </span>
             <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
           </div>

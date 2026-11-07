@@ -56,37 +56,37 @@ export function OrderHistoryDetailModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="history-order-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#35271F]/40 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E5DED6] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-zinc-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-[#E5DED6] flex items-start justify-between bg-[#F5F4F1]">
+        <div className="p-5 border-b border-zinc-200/80 flex items-start justify-between bg-zinc-50">
           <div>
             <div className="flex items-center gap-2">
               <span
                 id="history-order-modal-title"
-                className="text-2xl font-black text-[#35271F] tracking-tight"
+                className="text-2xl font-bold text-zinc-900 tracking-tight"
               >
                 #{order.orderNumber}
               </span>
               {order.tableNumber === 0 ? (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-emerald-700 text-white text-xs font-bold uppercase">
-                  🛍️ Take-Away
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold uppercase">
+                  Take-Away
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#5E4939] text-[#F5F4F1] text-xs font-bold uppercase">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-zinc-900 text-white text-xs font-semibold uppercase">
                   Mesa {order.tableNumber}
                 </span>
               )}
               <OrderStatusBadge status={order.status} size="sm" />
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-[#78716C] font-medium mt-1.5">
-              <Calendar className="w-3.5 h-3.5 text-[#A89F95]" />
+            <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1.5">
+              <Calendar className="w-3.5 h-3.5 text-zinc-400" />
               <span>{formatDateTime(order.createdAt)}</span>
             </div>
           </div>
@@ -94,7 +94,7 @@ export function OrderHistoryDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-[#EAE5DF] text-[#4C453F] hover:bg-[#E5DED6] focus-visible:ring-2 focus-visible:ring-[#35271F] focus-visible:outline-none flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-zinc-200/70 text-zinc-600 hover:bg-zinc-200 focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Fechar modal"
           >
             <X className="w-4 h-4" />
@@ -108,7 +108,7 @@ export function OrderHistoryDetailModal({
             <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 flex items-start gap-2.5 text-xs text-amber-950 font-medium">
               <MessageSquare className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
-                <strong className="font-bold text-amber-900">
+                <strong className="font-semibold text-amber-900">
                   Nota do cliente:{' '}
                 </strong>
                 <span>{order.customerNotes}</span>
@@ -118,33 +118,33 @@ export function OrderHistoryDetailModal({
 
           {/* Items Section */}
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C] block mb-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-2">
               Artigos do Pedido ({order.items.reduce((acc, i) => acc + i.quantity, 0)})
             </span>
-            <div className="bg-[#F5F4F1] rounded-xl p-3 border border-[#E5DED6]">
+            <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-200/80">
               <OrderItemsList items={order.items} />
             </div>
           </div>
 
           {/* Timestamp details */}
-          <div className="p-3 bg-[#F5F4F1] rounded-xl border border-[#E5DED6] flex items-center justify-between text-xs text-[#4C453F]">
+          <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-200/80 flex items-center justify-between text-xs text-zinc-600">
             <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#A89F95]" />
+              <Clock className="w-3.5 h-3.5 text-zinc-400" />
               Concluído / Atualizado em:
             </span>
-            <span className="font-medium text-[#35271F]">
+            <span className="font-medium text-zinc-900">
               {formatDateTime(order.updatedAt)}
             </span>
           </div>
         </div>
 
         {/* Footer Financials */}
-        <div className="p-5 bg-[#F5F4F1] border-t border-[#E5DED6] flex items-center justify-between gap-3">
+        <div className="p-5 bg-zinc-50 border-t border-zinc-200/80 flex items-center justify-between gap-3">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#78716C] block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block">
               Subtotal: {formatPrice(order.subtotal)}
             </span>
-            <span className="text-xl font-black text-[#35271F] tracking-tight">
+            <span className="text-xl font-bold text-zinc-900 tracking-tight tabular-nums">
               Total: {formatPrice(order.total)}
             </span>
           </div>
@@ -153,17 +153,17 @@ export function OrderHistoryDetailModal({
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#EAE5DF] hover:bg-[#E5DED6] text-[#35271F] text-xs font-bold border border-[#E5DED6] transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-900 text-xs font-semibold border border-zinc-200 transition-all cursor-pointer"
               title="Imprimir talão (80mm)"
             >
-              <Printer className="w-3.5 h-3.5 text-[#5E4939]" />
+              <Printer className="w-3.5 h-3.5 text-zinc-600" />
               <span>Imprimir</span>
             </button>
             {order.status === 'completed' && onReopen && (
               <button
                 type="button"
                 onClick={() => onReopen(order)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:outline-none transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:outline-none transition-all cursor-pointer"
                 aria-label={`Desfazer conclusão do pedido ${order.orderNumber}`}
               >
                 <Undo2 className="w-4 h-4" />
@@ -173,7 +173,7 @@ export function OrderHistoryDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs font-bold focus-visible:ring-2 focus-visible:ring-[#35271F] focus-visible:outline-none transition-all cursor-pointer shadow-xs"
+              className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none transition-all cursor-pointer"
             >
               Fechar
             </button>

@@ -112,14 +112,14 @@ export function TableQrCodesModal({
           <style>
             @page { size: A4 portrait; margin: 12mm; }
             * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-            body { margin: 0; padding: 0; color: #35271F; background: #fff; }
+            body { margin: 0; padding: 0; color: #18181B; background: #fff; }
             .grid {
               display: grid;
               grid-template-columns: repeat(3, 1fr);
               gap: 12px;
             }
             .qr-card {
-              border: 1.5px dashed #C09573;
+              border: 1.5px dashed #A1A1AA;
               border-radius: 16px;
               padding: 16px 12px;
               text-align: center;
@@ -134,13 +134,13 @@ export function TableQrCodesModal({
               font-weight: 800;
               text-transform: uppercase;
               letter-spacing: 0.12em;
-              color: #78716C;
+              color: #71717A;
               margin-bottom: 6px;
             }
             .badge {
               display: inline-block;
-              background: #35271F;
-              color: #F5F4F1;
+              background: #18181B;
+              color: #FAFAFA;
               font-size: 16px;
               font-weight: 900;
               padding: 4px 14px;
@@ -160,7 +160,7 @@ export function TableQrCodesModal({
             .instruction {
               font-size: 11px;
               font-weight: 600;
-              color: #4C453F;
+              color: #52525B;
               line-height: 1.35;
               max-width: 190px;
               margin-bottom: 6px;
@@ -168,7 +168,7 @@ export function TableQrCodesModal({
             .url {
               font-size: 8.5px;
               font-family: monospace;
-              color: #A89F95;
+              color: #A1A1AA;
               word-break: break-all;
             }
           </style>
@@ -190,36 +190,36 @@ export function TableQrCodesModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl bg-[#FFFFFF] rounded-2xl border border-[#E5DED6] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-4xl bg-white rounded-2xl border border-zinc-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 bg-[#F5F4F1] border-b border-[#E5DED6]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 bg-zinc-50 border-b border-zinc-200/80">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#35271F] text-[#F5F4F1] flex items-center justify-center shrink-0">
-              <QrCode className="w-5 h-5 text-[#C09573]" />
+            <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center shrink-0">
+              <QrCode className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-[#35271F] tracking-tight">
+              <h2 className="text-base font-bold text-zinc-900 tracking-tight">
                 Centro de QR Codes — Mesas &amp; Take-Away
               </h2>
-              <p className="text-xs text-[#78716C] font-medium">
+              <p className="text-xs text-zinc-500">
                 Links diretos com pré-seleção automática de mesa para {restaurantName}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto">
-            <label className="flex items-center gap-1.5 text-xs font-bold text-[#4C453F] bg-white border border-[#E5DED6] rounded-xl px-3 py-2">
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-xl px-3 py-2">
               <span>N.º Mesas:</span>
               <select
                 value={tableCount}
                 onChange={(e) => setTableCount(Number(e.target.value))}
-                className="font-black text-[#35271F] bg-transparent focus:outline-none cursor-pointer"
+                className="font-bold text-zinc-900 bg-transparent focus:outline-none cursor-pointer"
               >
                 {[6, 8, 10, 12, 15, 20].map((n) => (
                   <option key={n} value={n}>
@@ -232,16 +232,16 @@ export function TableQrCodesModal({
             <button
               type="button"
               onClick={handlePrintAll}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1] text-xs font-bold transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold transition-all cursor-pointer"
             >
-              <Printer className="w-3.5 h-3.5 text-[#C09573]" />
+              <Printer className="w-3.5 h-3.5" />
               <span>Imprimir Folha A4</span>
             </button>
 
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-[#78716C] hover:text-[#35271F] hover:bg-[#EAE5DF] transition-colors cursor-pointer"
+              className="p-2 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer"
               aria-label="Fechar"
             >
               <X className="w-5 h-5" />
@@ -250,7 +250,7 @@ export function TableQrCodesModal({
         </div>
 
         {/* Body Grid */}
-        <div className="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 bg-[#FAF9F6]">
+        <div className="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 bg-[#FAFAFA]">
           {targets.map((target) => {
             const fullUrl = `${origin}${target.path}`;
             const isCopied = copiedId === target.id;
@@ -258,20 +258,20 @@ export function TableQrCodesModal({
             return (
               <div
                 key={target.id}
-                className="bg-white rounded-2xl border border-[#E5DED6] p-4 flex flex-col items-center text-center shadow-2xs hover:border-[#C09573] transition-all"
+                className="bg-white rounded-2xl border border-zinc-200/80 p-4 flex flex-col items-center text-center hover:border-zinc-400 transition-all"
               >
                 <div className="flex items-center justify-between w-full mb-2">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black ${
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${
                       target.isTakeAway
-                        ? 'bg-emerald-100 text-emerald-900'
-                        : 'bg-[#EAE5DF] text-[#35271F]'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/70'
+                        : 'bg-zinc-100 text-zinc-900'
                     }`}
                   >
                     {target.isTakeAway ? (
                       <ShoppingBag className="w-3.5 h-3.5 text-emerald-700" />
                     ) : (
-                      <Utensils className="w-3.5 h-3.5 text-[#5E4939]" />
+                      <Utensils className="w-3.5 h-3.5 text-zinc-600" />
                     )}
                     {target.label}
                   </span>
@@ -280,7 +280,7 @@ export function TableQrCodesModal({
                     href={target.path}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#78716C] hover:text-[#35271F] transition-colors"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
                     title="Abrir link num novo separador"
                   >
                     <span>Testar</span>
@@ -289,7 +289,7 @@ export function TableQrCodesModal({
                 </div>
 
                 {/* QR SVG */}
-                <div className="w-36 h-36 my-2 p-2 rounded-xl bg-white border border-[#F0ECE6] flex items-center justify-center">
+                <div className="w-36 h-36 my-2 p-2 rounded-xl bg-white border border-zinc-200/70 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={getQrImageUrl(fullUrl)}
@@ -299,21 +299,21 @@ export function TableQrCodesModal({
                   />
                 </div>
 
-                <p className="text-[11px] text-[#78716C] font-medium mb-2">
+                <p className="text-[11px] text-zinc-500 mb-2">
                   {target.subtitle}
                 </p>
 
-                <code className="w-full text-[10px] font-mono text-[#4C453F] bg-[#F5F4F1] px-2 py-1 rounded-lg truncate mb-3 border border-[#E5DED6]/60">
+                <code className="w-full text-[10px] font-mono text-zinc-600 bg-zinc-50 px-2 py-1 rounded-lg truncate mb-3 border border-zinc-200/60">
                   {target.path}
                 </code>
 
                 <button
                   type="button"
                   onClick={() => void handleCopy(target.id, fullUrl)}
-                  className={`w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     isCopied
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-[#F5F4F1] hover:bg-[#EAE5DF] text-[#35271F]'
+                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900'
                   }`}
                 >
                   {isCopied ? (
@@ -323,7 +323,7 @@ export function TableQrCodesModal({
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5 text-[#5E4939]" />
+                      <Copy className="w-3.5 h-3.5 text-zinc-600" />
                       <span>Copiar URL Completo</span>
                     </>
                   )}
@@ -336,4 +336,3 @@ export function TableQrCodesModal({
     </div>
   );
 }
-

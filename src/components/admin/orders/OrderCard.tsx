@@ -4,7 +4,16 @@ import { ValidNextStatus } from '@/lib/validations/order-management';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { OrderItemsList } from './OrderItemsList';
 import { OrderStatusActions } from './OrderStatusActions';
-import { Clock, MessageSquare, AlertTriangle, Sparkles, X, Timer, ShoppingBag, Printer } from 'lucide-react';
+import {
+  Clock,
+  MessageSquare,
+  AlertTriangle,
+  Sparkles,
+  X,
+  Timer,
+  ShoppingBag,
+  Printer,
+} from 'lucide-react';
 import { useOrderTimer } from '@/hooks/useOrderTimer';
 
 interface OrderCardProps {
@@ -23,20 +32,20 @@ function getTimerStyles(minutes: number, isDarkMode: boolean) {
     return {
       badge: isDarkMode
         ? 'bg-zinc-800/80 text-zinc-300 border-zinc-700'
-        : 'bg-[#F5F4F1] text-[#4C453F] border-[#E5DED6]',
+        : 'bg-zinc-100 text-zinc-600 border-zinc-200',
     };
   }
   if (minutes < 20) {
     return {
       badge: isDarkMode
         ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-        : 'bg-amber-100 text-amber-900 border-amber-300',
+        : 'bg-amber-50 text-amber-800 border-amber-200',
     };
   }
   return {
     badge: isDarkMode
-      ? 'bg-rose-500/25 text-rose-300 border-rose-500/50 animate-pulse ring-1 ring-rose-500/40'
-      : 'bg-rose-100 text-rose-900 border-rose-300 animate-pulse ring-1 ring-rose-400/50',
+      ? 'bg-rose-500/25 text-rose-300 border-rose-500/50 animate-pulse'
+      : 'bg-rose-50 text-rose-800 border-rose-200 animate-pulse',
   };
 }
 
@@ -53,7 +62,6 @@ export function OrderCard({
   const elapsedMinutes = useOrderTimer(order.createdAt);
   const timerStyles = getTimerStyles(elapsedMinutes, isDarkMode);
 
-  // Format order creation time (HH:mm)
   const formatTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -69,22 +77,22 @@ export function OrderCard({
   return (
     <article
       aria-labelledby={`order-card-title-${order.id}`}
-      className={`rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-sm ${
+      className={`rounded-2xl border transition-all flex flex-col justify-between overflow-hidden ${
         isDarkMode
           ? isNew
-            ? 'bg-[#1C2029] border-amber-500/60 ring-2 ring-amber-500/40 animate-in fade-in zoom-in-98 duration-300'
+            ? 'bg-zinc-900 border-amber-500/60 ring-2 ring-amber-500/30 animate-in fade-in zoom-in-98 duration-300'
             : order.status === 'pending'
-            ? 'bg-[#1C2029] border-amber-500/40'
+            ? 'bg-zinc-900 border-amber-500/40'
             : order.status === 'ready'
-            ? 'bg-[#1C2029] border-emerald-500/40'
-            : 'bg-[#1C2029] border-[#2A313E]'
+            ? 'bg-zinc-900 border-emerald-500/40'
+            : 'bg-zinc-900 border-zinc-800'
           : isNew
-          ? 'bg-[#FFFFFF] border-amber-400 ring-2 ring-amber-400/40 animate-in fade-in zoom-in-98 duration-300'
+          ? 'bg-white border-amber-400 ring-2 ring-amber-400/25 animate-in fade-in zoom-in-98 duration-300'
           : order.status === 'pending'
-          ? 'bg-[#FFFFFF] border-amber-300'
+          ? 'bg-white border-amber-300'
           : order.status === 'ready'
-          ? 'bg-[#FFFFFF] border-emerald-300'
-          : 'bg-[#FFFFFF] border-[#E5DED6]'
+          ? 'bg-white border-emerald-300'
+          : 'bg-white border-zinc-200/80'
       }`}
     >
       {/* Top Card Header */}
@@ -94,8 +102,8 @@ export function OrderCard({
             <div className="flex items-center gap-2 flex-wrap">
               <span
                 id={`order-card-title-${order.id}`}
-                className={`text-2xl sm:text-3xl font-black font-mono tracking-tight leading-none ${
-                  isDarkMode ? 'text-white' : 'text-[#35271F]'
+                className={`text-2xl sm:text-3xl font-bold font-mono tracking-tight leading-none ${
+                  isDarkMode ? 'text-white' : 'text-zinc-900'
                 }`}
               >
                 #{order.orderNumber}
@@ -103,10 +111,10 @@ export function OrderCard({
 
               {order.tableNumber === 0 ? (
                 <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs sm:text-sm font-black uppercase tracking-wider border ${
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border ${
                     isDarkMode
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-emerald-700 text-white border-emerald-800'
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                   }`}
                 >
                   <ShoppingBag className="w-3.5 h-3.5" />
@@ -114,10 +122,10 @@ export function OrderCard({
                 </span>
               ) : (
                 <span
-                  className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs sm:text-sm font-black uppercase tracking-wider border ${
+                  className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border ${
                     isDarkMode
-                      ? 'bg-[#2A313E] text-amber-300 border-[#3E4758]'
-                      : 'bg-[#5E4939] text-[#F5F4F1] border-[#4C392D]'
+                      ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
+                      : 'bg-zinc-900 text-white border-zinc-900'
                   }`}
                 >
                   Mesa {order.tableNumber}
@@ -125,8 +133,8 @@ export function OrderCard({
               )}
 
               {isNew && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-xs font-black border border-amber-500/40 animate-pulse">
-                  <Sparkles className="w-3 h-3 text-amber-400" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-500 text-xs font-bold border border-amber-500/30 animate-pulse">
+                  <Sparkles className="w-3 h-3" />
                   NOVO
                 </span>
               )}
@@ -134,7 +142,7 @@ export function OrderCard({
 
             <div
               className={`flex items-center gap-1.5 text-xs font-medium mt-1.5 ${
-                isDarkMode ? 'text-zinc-400' : 'text-[#78716C]'
+                isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
@@ -150,8 +158,8 @@ export function OrderCard({
                   onClick={() => onPrintOrder(order)}
                   className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
                     isDarkMode
-                      ? 'bg-zinc-800/80 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white'
-                      : 'bg-[#F5F4F1] border-[#E5DED6] text-[#4C453F] hover:bg-[#EAE5DF] hover:text-[#35271F]'
+                      ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white'
+                      : 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900'
                   }`}
                   title="Imprimir talão de cozinha (80mm)"
                   aria-label={`Imprimir talão do pedido ${order.orderNumber}`}
@@ -160,9 +168,8 @@ export function OrderCard({
                 </button>
               )}
 
-              {/* Temporizador visual de SLA por pedido */}
               <span
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-mono font-bold ${timerStyles.badge}`}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-mono font-semibold ${timerStyles.badge}`}
                 title="Tempo decorrido desde a receção do pedido"
               >
                 <Timer className="w-3.5 h-3.5" />
@@ -179,8 +186,8 @@ export function OrderCard({
           <div
             className={`mt-3 p-2.5 rounded-xl border flex items-start gap-2 text-xs font-medium leading-relaxed ${
               isDarkMode
-                ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-                : 'bg-amber-50 border-amber-200 text-amber-950'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                : 'bg-amber-50/80 border-amber-200 text-amber-900'
             }`}
           >
             <MessageSquare className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -197,21 +204,21 @@ export function OrderCard({
           </div>
         )}
 
-        {/* Card Error Notification (Dismissable) */}
+        {/* Card Error Notification */}
         {error && (
           <div
             role="alert"
-            className="mt-2.5 p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-between gap-2 text-xs text-rose-300 font-medium animate-in fade-in duration-150"
+            className="mt-2.5 p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-between gap-2 text-xs text-rose-500 font-medium"
           >
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
               <span>{error}</span>
             </div>
             {onClearError && (
               <button
                 type="button"
                 onClick={onClearError}
-                className="text-rose-400 hover:text-rose-200 p-0.5 rounded transition-colors cursor-pointer"
+                className="p-0.5 rounded transition-colors cursor-pointer"
                 aria-label="Dispensar aviso de erro"
               >
                 <X className="w-3.5 h-3.5" />
@@ -224,18 +231,18 @@ export function OrderCard({
       {/* Middle: Items List */}
       <div
         className={`px-4 sm:px-5 py-2 border-t flex-1 ${
-          isDarkMode ? 'border-[#2A313E]/60' : 'border-[#E5DED6]'
+          isDarkMode ? 'border-zinc-800' : 'border-zinc-100'
         }`}
       >
         <OrderItemsList items={order.items} isDarkMode={isDarkMode} />
       </div>
 
-      {/* Bottom Footer: Touch-first Action Button */}
+      {/* Bottom Footer: Action Button */}
       <div
         className={`p-3 sm:p-4 rounded-b-2xl border-t ${
           isDarkMode
-            ? 'bg-[#14171E] border-[#2A313E]'
-            : 'bg-[#F5F4F1] border-[#E5DED6]'
+            ? 'bg-zinc-950/60 border-zinc-800'
+            : 'bg-zinc-50 border-zinc-200/80'
         }`}
       >
         <OrderStatusActions

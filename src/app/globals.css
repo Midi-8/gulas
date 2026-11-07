@@ -1,23 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  /* Gulas Modern Clean Design System (Alabaster, Carbon & Terracotta) */
-  --gulas-bg-main: #F8FAFC;        /* Fundo Principal Limpo e Moderno */
-  --gulas-bg-alt: #F1F5F9;         /* Superfícies Secundárias Suaves */
+  /* Gulas Minimalist Editorial Design System */
+  --gulas-bg-main: #FAFAFA;        /* Fundo Principal Minimalista */
+  --gulas-bg-alt: #F4F4F5;         /* Superfícies Secundárias Suaves */
   --gulas-card: #FFFFFF;           /* Superfícies de Cartões Puros */
-  --gulas-border: #E2E8F0;         /* Bordas Subtis e Modernas */
+  --gulas-border: #E4E4E7;         /* Bordas Subtis e Estruturadas */
   --gulas-charcoal: #09090B;       /* Preto Obsidiana */
   
   --gulas-primary: #18181B;        /* Ação Principal (Carbon / Zinc-900) */
   --gulas-primary-deep: #09090B;   /* Profundo (Zinc-950) */
   --gulas-primary-hover: #27272A;  /* Hover do Botão Principal (Zinc-800) */
   
-  --gulas-title: #0F172A;          /* Texto Principal (Títulos) */
-  --gulas-body: #475569;           /* Texto Corrido / Corpo */
+  --gulas-title: #09090B;          /* Texto Principal (Títulos) */
+  --gulas-body: #52525B;           /* Texto Corrido / Corpo */
   --gulas-text-on-dark: #FFFFFF;   /* Texto em Fundos Escuros */
   
-  --gulas-caramel: #EA580C;        /* Cor de Destaque Moderna (Terracotta / Orange-600) */
-  --gulas-caramel-hover: #C2410C;  /* Hover de Destaque */
+  --gulas-caramel: #18181B;        /* Destaque Minimalista Monocromático */
+  --gulas-caramel-hover: #27272A;  /* Hover de Destaque */
 
   /* Mapeamento retrocompatível para transição suave de classes legadas */
   --gulas-cream: var(--gulas-bg-main);
@@ -27,13 +27,13 @@
 
   --gulas-green: var(--gulas-primary);
   --gulas-green-hover: var(--gulas-primary-hover);
-  --gulas-green-subtle: #F9F6F0;
+  --gulas-green-subtle: #F4F4F5;
   --gulas-green-border: var(--gulas-border);
 
   --gulas-gray-100: var(--gulas-bg-alt);
   --gulas-gray-200: var(--gulas-border);
-  --gulas-gray-300: #DDD5CB;
-  --gulas-gray-400: #A89F95;
+  --gulas-gray-300: #D4D4D8;
+  --gulas-gray-400: #A1A1AA;
   --gulas-gray-500: var(--gulas-body);
   --gulas-gray-600: var(--gulas-body);
   --gulas-gray-700: var(--gulas-primary-deep);

@@ -3,6 +3,7 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useTransition,
@@ -17,6 +18,7 @@ import { ValidNextStatus } from '@/lib/validations/order-management';
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
 import { useKdsAlerts } from '@/hooks/useKdsAlerts';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
+import { createClient } from '@/lib/supabase/client';
 import { OrderCard } from './OrderCard';
 import { ThermalReceipt } from './ThermalReceipt';
 import ConsolidatedItems from '@/components/admin/kds/ConsolidatedItems';
@@ -27,6 +29,7 @@ import {
   BellOff,
   BellRing,
   Boxes,
+  Check,
   Clock,
   Coffee,
   CookingPot,
@@ -34,18 +37,21 @@ import {
   Inbox,
   LayoutGrid,
   Loader2,
+  Map,
+  Maximize,
+  Minimize,
   Moon,
   Power,
+  Printer,
+  QrCode,
   Radio,
   RotateCcw,
+  ShoppingBag,
   Sun,
   SunDim,
   Undo2,
   UtensilsCrossed,
   X,
-  Maximize,
-  Minimize,
-  QrCode,
 } from 'lucide-react';
 import { QuickStockDrawer } from '@/components/admin/stock/QuickStockDrawer';
 import { TableQrCodesModal } from '@/components/admin/qrcodes/TableQrCodesModal';
@@ -63,28 +69,38 @@ interface OrderDashboardProps {
 }
 
 type SectionFilter = 'all' | 'bar' | 'kitchen';
+type KdsViewMode = 'orders' | 'tables';
+
+interface TableServiceCall {
+  id: string;
+  tableNumber: number;
+  type: 'bill_card' | 'bill_cash' | 'call_staff';
+  label: string;
+  nif?: string | null;
+  createdAt: string;
+}
 
 const SECTION_FILTERS: Array<{
   key: SectionFilter;
   label: string;
   icon: React.ReactNode;
 }> = [
-    {
-      key: 'all',
-      label: 'Todos',
-      icon: <LayoutGrid className="w-3.5 h-3.5" />,
-    },
-    {
-      key: 'bar',
-      label: 'Bar / Copa',
-      icon: <Coffee className="w-3.5 h-3.5" />,
-    },
-    {
-      key: 'kitchen',
-      label: 'Cozinha',
-      icon: <CookingPot className="w-3.5 h-3.5" />,
-    },
-  ];
+  {
+    key: 'all',
+    label: 'Todos',
+    icon: <LayoutGrid className="w-3.5 h-3.5" />,
+  },
+  {
+    key: 'bar',
+    label: 'Bar / Copa',
+    icon: <Coffee className="w-3.5 h-3.5" />,
+  },
+  {
+    key: 'kitchen',
+    label: 'Cozinha',
+    icon: <CookingPot className="w-3.5 h-3.5" />,
+  },
+];
 
 export function OrderDashboard({
   restaurantId,
@@ -99,9 +115,12 @@ export function OrderDashboard({
   );
   const [isTogglingOpen, setIsTogglingOpen] = useState(false);
   const [printingOrder, setPrintingOrder] = useState<ManagedOrder | null>(null);
+  const [autoPrintOnAccept, setAutoPrintOnAccept] = useState(false);
+  const [viewMode, setViewMode] = useState<KdsViewMode>('orders');
+  const [tableCalls, setTableCalls] = useState<TableServiceCall[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
-  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
+  const [, setLastRefreshedAt] = useState<Date | null>(null);
   const [updatingMap, setUpdatingMap] = useState<Record<string, boolean>>({});
   const [orderErrorMap, setOrderErrorMap] = useState<
     Record<string, string | null>
@@ -116,18 +135,20 @@ export function OrderDashboard({
     releaseWakeLock,
   } = useScreenWakeLock(true);
   const [a11yAnnouncement, setA11yAnnouncement] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('gulas_kds_dark_mode');
-      if (saved === 'false') {
-        queueMicrotask(() => {
-          setIsDarkMode(false);
-        });
+      const savedDark = localStorage.getItem('gulas_kds_dark_mode');
+      if (savedDark === 'true') {
+        queueMicrotask(() => setIsDarkMode(true));
+      }
+      const savedAutoPrint = localStorage.getItem('gulas_kds_autoprint');
+      if (savedAutoPrint === 'true') {
+        queueMicrotask(() => setAutoPrintOnAccept(true));
       }
     } catch {
-      // Ignorar indisponibilidade de localStorage
+      // Ignorar
     }
   }, []);
 
@@ -136,6 +157,18 @@ export function OrderDashboard({
       const next = !prev;
       try {
         localStorage.setItem('gulas_kds_dark_mode', String(next));
+      } catch {
+        // Ignorar
+      }
+      return next;
+    });
+  };
+
+  const toggleAutoPrint = () => {
+    setAutoPrintOnAccept((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('gulas_kds_autoprint', String(next));
       } catch {
         // Ignorar
       }
@@ -177,7 +210,7 @@ export function OrderDashboard({
         }
       }
     } catch {
-      // Ignorar exceções de permissão do browser
+      // Ignorar
     }
   };
 
@@ -193,7 +226,7 @@ export function OrderDashboard({
         setOutOfStockCount(outCount);
       }
     } catch {
-      // Ignorar erros de rede silenciosamente
+      // Ignorar
     }
   }, []);
 
@@ -210,6 +243,34 @@ export function OrderDashboard({
     deactivateAlerts,
     triggerNewOrderAlert,
   } = useKdsAlerts();
+
+  // Subscrição em tempo real para Chamadas de Mesa ("Pedir a Conta" / "Chamar Staff")
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel(`table-service-${restaurantSlug || 'gulas'}`)
+      .on(
+        'broadcast',
+        { event: 'table_call' },
+        (msg) => {
+          const call = msg?.payload as TableServiceCall | undefined;
+          if (!call || !call.tableNumber) return;
+
+          setTableCalls((prev) => [
+            call,
+            ...prev.filter((c) => c.id !== call.id),
+          ]);
+          triggerNewOrderAlert();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [restaurantSlug, triggerNewOrderAlert]);
 
   interface UndoOrderState {
     orderId: string;
@@ -232,11 +293,9 @@ export function OrderDashboard({
       if (highlightTimerRef.current) {
         clearTimeout(highlightTimerRef.current);
       }
-
       if (announcementTimerRef.current) {
         clearTimeout(announcementTimerRef.current);
       }
-
       if (undoTimerRef.current) {
         clearTimeout(undoTimerRef.current);
       }
@@ -274,11 +333,9 @@ export function OrderDashboard({
         highlightTimerRef.current = setTimeout(() => {
           setNewOrderIds((previous) => {
             const next = new Set(previous);
-
             newlyAdded.forEach((id) => {
               next.delete(id);
             });
-
             return next;
           });
         }, 10000);
@@ -327,7 +384,7 @@ export function OrderDashboard({
     onNewOrder: handleNewOrder,
   });
 
-  // Fallback Polling Automático: Se o canal WebSocket Realtime cair, sincroniza a cada 10s
+  // Fallback Polling Automático se o WebSocket cair
   useEffect(() => {
     if (isConnected) return;
 
@@ -414,6 +471,10 @@ export function OrderDashboard({
         return next;
       });
 
+      if (nextStatus === 'accepted' && autoPrintOnAccept) {
+        handlePrintOrder(result.data);
+      }
+
       if (nextStatus === 'completed' || nextStatus === 'cancelled') {
         setOrders((previous) =>
           previous.filter((order) => order.id !== orderId)
@@ -451,6 +512,13 @@ export function OrderDashboard({
       }));
     } finally {
       setUpdatingMap((previous) => ({ ...previous, [orderId]: false }));
+    }
+  };
+
+  const handleCloseAllTableOrders = async (tableNum: number) => {
+    const tableOrders = orders.filter((o) => o.tableNumber === tableNum);
+    for (const ord of tableOrders) {
+      await handleUpdateStatus(ord.id, 'completed');
     }
   };
 
@@ -518,13 +586,35 @@ export function OrderDashboard({
     return hasKitchenItem;
   });
 
+  // Dados estruturados para a Vista de Mapa de Mesas (0 = Take-Away, 1..20 = Mesas)
+  const tablesOverview = useMemo(() => {
+    const slots = [0, ...Array.from({ length: 20 }, (_, i) => i + 1)];
+    return slots.map((tableNumber) => {
+      const activeForTable = orders.filter((o) => o.tableNumber === tableNumber);
+      const totalBill = activeForTable.reduce((sum, o) => sum + o.total, 0);
+      const hasReady = activeForTable.some((o) => o.status === 'ready');
+      const hasPending = activeForTable.some((o) => o.status === 'pending');
+      const hasCall = tableCalls.some((c) => c.tableNumber === tableNumber);
+
+      return {
+        tableNumber,
+        label: tableNumber === 0 ? 'Take-Away / Balcão' : `Mesa ${tableNumber}`,
+        orders: activeForTable,
+        totalBill,
+        hasReady,
+        hasPending,
+        hasCall,
+      };
+    });
+  }, [orders, tableCalls]);
+
   return (
     <div
       className={clsx(
         'space-y-6 pb-12 transition-colors duration-300 rounded-3xl min-h-screen',
         isDarkMode
-          ? 'dark bg-[#0E1117] text-zinc-100 p-3 sm:p-6 shadow-2xl'
-          : 'bg-transparent text-[#35271F]'
+          ? 'dark bg-zinc-950 text-zinc-100 p-4 sm:p-6 shadow-xl'
+          : 'bg-transparent text-zinc-900'
       )}
     >
       <div
@@ -536,240 +626,254 @@ export function OrderDashboard({
         {a11yAnnouncement}
       </div>
 
+      {/* Alertas ao Vivo de Assistência na Mesa ("Pedir a Conta" / "Chamar Staff") */}
+      {tableCalls.length > 0 && (
+        <div className="space-y-2">
+          {tableCalls.map((call) => (
+            <div
+              key={call.id}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-900 text-white border border-zinc-800 shadow-lg animate-in slide-in-from-top-2 duration-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0">
+                  <BellRing className="w-4 h-4 animate-bounce" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2 py-0.5 rounded-md bg-white text-zinc-900 text-xs font-bold">
+                      Mesa {call.tableNumber}
+                    </span>
+                    <span className="text-sm font-bold text-white">
+                      {call.label}
+                    </span>
+                    {call.nif && (
+                      <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-zinc-800 text-amber-300 border border-zinc-700">
+                        NIF: {call.nif}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Solicitado pelo cliente na mesa às{' '}
+                    {new Date(call.createdAt).toLocaleTimeString('pt-PT', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setTableCalls((prev) => prev.filter((c) => c.id !== call.id))
+                }
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-zinc-100 text-zinc-900 text-xs font-semibold transition-colors cursor-pointer shrink-0"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Marcar Atendido</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Top Header & Operational Controls */}
       <div
         className={clsx(
-          'flex flex-col justify-between gap-4 border-b pb-4 md:flex-row md:items-center',
-          isDarkMode ? 'border-[#2A313E]' : 'border-gulas-gray-200'
+          'flex flex-col justify-between gap-4 border-b pb-4 xl:flex-row xl:items-center',
+          isDarkMode ? 'border-zinc-800' : 'border-zinc-200/80'
         )}
       >
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1
               className={clsx(
-                'text-2xl font-black tracking-tight sm:text-3xl',
-                isDarkMode ? 'text-white' : 'text-gulas-dark'
+                'text-xl font-bold tracking-tight sm:text-2xl',
+                isDarkMode ? 'text-white' : 'text-zinc-900'
               )}
             >
-              Monitor de Cozinha (KDS)
+              Monitor de Operação (KDS)
             </h1>
 
-            <span
-              className={clsx(
-                'hidden rounded-md px-2 py-0.5 font-mono text-xs sm:inline-flex',
-                isDarkMode
-                  ? 'bg-[#1C2029] text-amber-300 border border-[#2A313E]'
-                  : 'bg-gulas-gray-100 text-gulas-gray-600'
-              )}
-            >
-              /{restaurantSlug}
-            </span>
-
             <div
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold transition-all ${isConnected
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all ${
+                isConnected
                   ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
                   : 'border-zinc-200 bg-zinc-100 text-zinc-600'
-                }`}
-              title={
-                isConnected
-                  ? 'Sincronização em tempo real ativa'
-                  : 'A ligar ao canal em tempo real...'
-              }
+              }`}
             >
               <span
-                className={`h-2 w-2 rounded-full ${isConnected ? 'animate-pulse bg-emerald-500' : 'bg-zinc-400'
-                  }`}
+                className={`h-1.5 w-1.5 rounded-full ${
+                  isConnected ? 'animate-pulse bg-emerald-500' : 'bg-zinc-400'
+                }`}
               />
-
               <span className="hidden sm:inline">
-                {isConnected ? 'Tempo Real Ativo' : 'A Conectar...'}
+                {isConnected ? 'Tempo Real' : 'A Sincronizar...'}
               </span>
-
               <Radio className="h-3 w-3 sm:hidden" />
             </div>
 
-            {/* Wake Lock Screen Indicator & Control for Kitchen Tablet */}
-            {isWakeLockSupported ? (
-              isWakeLockActive ? (
+            {/* Wake Lock */}
+            {isWakeLockSupported &&
+              (isWakeLockActive ? (
                 <button
                   type="button"
                   onClick={() => void releaseWakeLock()}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-900 transition-all hover:bg-amber-100"
-                  title="Ecrã do tablet mantido sempre ligado na cozinha. Clique para libertar."
-                  aria-label="Ecrã do tablet mantido sempre ligado. Clique para permitir suspensão"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-xs font-medium text-zinc-700 transition-all hover:bg-zinc-50"
+                  title="Ecrã mantido ligado"
                 >
-                  <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  <Sun className="h-3.5 w-3.5 text-amber-600" />
-                  <span className="hidden sm:inline">Ecrã Ligado</span>
+                  <Sun className="h-3.5 w-3.5 text-amber-500" />
+                  <span className="hidden sm:inline">Ecrã Ativo</span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => void requestWakeLock()}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-200"
-                  title="O ecrã pode suspender por inatividade. Clique para manter ligado."
-                  aria-label="Manter ecrã do tablet sempre ligado"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-500 transition-all hover:bg-zinc-200"
                 >
-                  <span className="h-2 w-2 rounded-full bg-zinc-400" />
-                  <SunDim className="h-3.5 w-3.5 text-zinc-500" />
+                  <SunDim className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">
-                    {wakeLockStatus === 'error' ? 'Tentar Ecrã Ligado' : 'Manter Ecrã Ligado'}
+                    {wakeLockStatus === 'error' ? 'Tentar Ecrã' : 'Fixar Ecrã'}
                   </span>
                 </button>
-              )
-            ) : (
-              <span
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs font-medium text-zinc-400"
-                title="Screen Wake Lock não suportado neste browser. Configure a suspensão nas definições do tablet."
-              >
-                <SunDim className="h-3.5 w-3.5 text-zinc-400" />
-                <span>Wake Lock N/D</span>
-              </span>
-            )}
+              ))}
 
-            {/* Dark Mode Kitchen Tablet Toggle — Imediatamente ao lado do Ecrã Ligado */}
+            {/* Dark Mode Toggle */}
             <button
               type="button"
               onClick={toggleDarkMode}
               className={clsx(
-                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold transition-all shadow-2xs',
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all',
                 isDarkMode
-                  ? 'border-amber-400/40 bg-zinc-800 text-amber-300 hover:bg-zinc-700'
-                  : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+                  ? 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
+                  : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100'
               )}
-              title={isDarkMode ? 'Mudar para Modo Claro' : 'Ativar Modo Noturno de Cozinha'}
-              aria-label="Comutar tema do monitor KDS"
             >
               {isDarkMode ? (
                 <Sun className="h-3.5 w-3.5 text-amber-400" />
               ) : (
-                <Moon className="h-3.5 w-3.5 text-zinc-600" />
+                <Moon className="h-3.5 w-3.5 text-zinc-500" />
               )}
-              <span>{isDarkMode ? 'Modo Claro' : 'Modo Cozinha'}</span>
+              <span>{isDarkMode ? 'Modo Claro' : 'Modo Escuro'}</span>
             </button>
 
-            {/* Ecrã Inteiro (Fullscreen API) para Monitores de Cozinha */}
+            {/* Auto-Print 80mm Toggle (Bloco 3) */}
+            <button
+              type="button"
+              onClick={toggleAutoPrint}
+              className={clsx(
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all',
+                autoPrintOnAccept
+                  ? 'border-zinc-900 bg-zinc-900 text-white'
+                  : isDarkMode
+                  ? 'border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100'
+              )}
+              title="Imprimir automaticamente o talão térmico (80mm) sempre que um pedido for aceite"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>Auto-Print: {autoPrintOnAccept ? 'ON' : 'OFF'}</span>
+            </button>
+
+            {/* Fullscreen Toggle */}
             <button
               type="button"
               onClick={toggleFullscreen}
               className={clsx(
-                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold transition-all shadow-2xs',
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all',
                 isFullscreen
-                  ? 'border-indigo-400/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30'
+                  ? 'border-zinc-900 bg-zinc-900 text-white'
                   : isDarkMode
-                  ? 'border-[#2A313E] bg-[#1C2029] text-zinc-300 hover:bg-[#2A313E]'
-                  : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+                  ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                  : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100'
               )}
-              title={isFullscreen ? 'Sair do Modo Ecrã Inteiro (Esc)' : 'Expandir para Ecrã Inteiro na Cozinha'}
-              aria-label="Alternar ecrã inteiro"
             >
               {isFullscreen ? (
-                <Minimize className="h-3.5 w-3.5 text-indigo-400" />
+                <Minimize className="h-3.5 w-3.5" />
               ) : (
-                <Maximize className="h-3.5 w-3.5 text-zinc-400" />
+                <Maximize className="h-3.5 w-3.5" />
               )}
-              <span>{isFullscreen ? 'Sair Ecrã Inteiro' : 'Ecrã Inteiro'}</span>
+              <span className="hidden sm:inline">
+                {isFullscreen ? 'Sair Ecrã Inteiro' : 'Ecrã Inteiro'}
+              </span>
             </button>
           </div>
 
-          <p className="mt-0.5 text-xs text-gulas-gray-500 sm:text-sm">
-            Monitor de Cozinha e Sala (KDS) &bull; {restaurantName}
+          <p
+            className={clsx(
+              'mt-1 text-xs',
+              isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
+            )}
+          >
+            Cozinha, Copa e Sala em Tempo Real &middot; {restaurantName}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
-          {/* Controlo de Receção de Pedidos (Aberto / Encerrado) */}
+        <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto">
+          {/* Receção Aberta / Encerrada */}
           <button
             type="button"
             disabled={isTogglingOpen}
             onClick={handleToggleRestaurantOpen}
             className={clsx(
-              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold shadow-xs transition-all sm:text-sm disabled:opacity-60',
+              'inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all disabled:opacity-60',
               isRestaurantOpen
                 ? isDarkMode
                   ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
-                  : 'border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
-                : 'border-rose-500/50 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                : 'border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100'
             )}
-            title={
-              isRestaurantOpen
-                ? 'O restaurante está a aceitar pedidos digitais. Clique para pausar/encerrar.'
-                : 'A receção de pedidos está encerrada. Clique para reabrir.'
-            }
           >
-            <Power className="h-4 w-4" />
+            <Power className="h-3.5 w-3.5" />
             <span>
               {isRestaurantOpen ? 'Receção: Aberta' : 'Receção: Encerrada'}
             </span>
           </button>
 
-          {/* Quick Stock Management Trigger Button */}
+          {/* Gestor de Menu, Preços & Stock */}
           <button
             type="button"
             onClick={() => setIsStockDrawerOpen(true)}
             className={clsx(
-              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold shadow-xs transition-all sm:text-sm',
+              'inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
               isDarkMode
-                ? 'border-[#2A313E] bg-[#161922] text-zinc-200 hover:bg-[#202530] hover:border-amber-500/40'
-                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+                ? 'border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800'
+                : 'border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50'
             )}
-            aria-label="Gerir stock e artigos esgotados"
           >
-            <Boxes className="h-4 w-4 text-[#C09573]" />
-            <span>Gerir Stock / Esgotados</span>
+            <Boxes className="h-3.5 w-3.5 text-zinc-500" />
+            <span>Menu, Preços & Stock</span>
             {outOfStockCount > 0 && (
-              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-amber-400 border border-amber-500/40">
+              <span className="rounded-full bg-rose-50 px-1.5 py-0.5 text-[10px] font-mono font-bold text-rose-700 border border-rose-200">
                 {outOfStockCount} esgotados
               </span>
             )}
           </button>
 
-          {/* Table & Take-Away QR Code Center Trigger Button */}
+          {/* QR Mesas */}
           <button
             type="button"
             onClick={() => setIsQrModalOpen(true)}
             className={clsx(
-              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold shadow-xs transition-all sm:text-sm',
+              'inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
               isDarkMode
-                ? 'border-[#2A313E] bg-[#161922] text-zinc-200 hover:bg-[#202530] hover:border-amber-500/40'
-                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+                ? 'border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800'
+                : 'border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50'
             )}
-            aria-label="Abrir centro de QR Codes das mesas e take-away"
           >
-            <QrCode className="h-4 w-4 text-[#C09573]" />
+            <QrCode className="h-3.5 w-3.5 text-zinc-500" />
             <span>QR Mesas</span>
           </button>
-
-          {lastRefreshedAt && (
-            <span
-              className={clsx(
-                'hidden text-xs sm:inline-block font-mono',
-                isDarkMode ? 'text-zinc-500' : 'text-gulas-gray-400'
-              )}
-            >
-              Atualizado:{' '}
-              {lastRefreshedAt.toLocaleTimeString('pt-PT', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })}
-            </span>
-          )}
 
           {alertsState === 'idle' ? (
             <button
               type="button"
               id="kds-alerts-activate-btn"
               onClick={activateAlerts}
-              className={clsx(
-                'inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold shadow-xs transition-all sm:text-sm',
-                isDarkMode
-                  ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                  : 'bg-[#5E4939] hover:bg-[#453426] text-[#F5F4F1]'
-              )}
-              aria-label="Ativar alertas sonoros e de vibração para pedidos novos"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 px-3.5 py-2 text-xs font-semibold text-white transition-all"
             >
-              <Bell className="h-4 w-4" />
-              <span>Ativar alertas</span>
+              <Bell className="h-3.5 w-3.5" />
+              <span>Ativar Som</span>
             </button>
           ) : (
             <button
@@ -777,16 +881,14 @@ export function OrderDashboard({
               id="kds-alerts-deactivate-btn"
               onClick={deactivateAlerts}
               className={clsx(
-                'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold shadow-xs transition-all sm:text-sm',
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all',
                 isDarkMode
-                  ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
-                  : 'border-[#C09573] bg-[#EAE5DF] text-[#5E4939] hover:bg-[#E5DED6]'
+                  ? 'border-zinc-700 bg-zinc-800 text-zinc-200'
+                  : 'border-zinc-200 bg-zinc-100 text-zinc-800'
               )}
-              aria-label="Alertas ativos. Clique para desativar"
-              aria-pressed
             >
-              <BellOff className="h-4 w-4 text-emerald-400" />
-              <span>Alertas ativos</span>
+              <BellOff className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Som Ativo</span>
             </button>
           )}
 
@@ -795,15 +897,14 @@ export function OrderDashboard({
             disabled={isLoading || isRefreshing}
             onClick={handleManualRefresh}
             className={clsx(
-              'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold shadow-xs transition-all sm:text-sm disabled:cursor-not-allowed disabled:opacity-50',
+              'inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all disabled:opacity-50',
               isDarkMode
-                ? 'border-[#2A313E] bg-[#161922] text-zinc-200 hover:bg-[#202530]'
-                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+                ? 'border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800'
+                : 'border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50'
             )}
-            aria-label="Atualizar lista de pedidos"
           >
             <RotateCcw
-              className={`h-4 w-4 text-zinc-400 ${
+              className={`h-3.5 w-3.5 text-zinc-400 ${
                 isLoading || isRefreshing ? 'animate-spin' : ''
               }`}
             />
@@ -812,261 +913,367 @@ export function OrderDashboard({
         </div>
       </div>
 
+      {/* KPI Cards Minimalistas */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {/* Total Ativos */}
         <div
           className={clsx(
-            'flex items-center justify-between rounded-2xl border p-4 shadow-xs sm:p-5 transition-all',
+            'flex items-center justify-between rounded-2xl border p-4 transition-all',
             isDarkMode
-              ? 'bg-[#161922] border-[#2A313E] text-white'
-              : 'bg-[#FFFFFF] border-[#E5DED6] text-[#35271F]'
+              ? 'bg-zinc-900 border-zinc-800 text-white'
+              : 'bg-white border-zinc-200/80 text-zinc-900'
           )}
         >
           <div>
             <span
               className={clsx(
-                'text-[11px] sm:text-xs font-bold uppercase tracking-wider',
-                isDarkMode ? 'text-zinc-400' : 'text-[#78716C]'
+                'text-[11px] font-semibold uppercase tracking-wider',
+                isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
               )}
             >
               Total Ativos
             </span>
-            <p className="mt-0.5 text-2xl font-black font-mono sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-bold font-mono sm:text-3xl">
               {totalActiveCount}
             </p>
           </div>
-
           <div
             className={clsx(
-              'flex h-11 w-11 items-center justify-center rounded-xl',
+              'flex h-10 w-10 items-center justify-center rounded-xl',
               isDarkMode
-                ? 'bg-[#222734] text-zinc-300'
-                : 'bg-[#EAE5DF] text-[#5E4939]'
+                ? 'bg-zinc-800 text-zinc-300'
+                : 'bg-zinc-100 text-zinc-700'
             )}
           >
-            <UtensilsCrossed className="h-5 w-5" />
+            <UtensilsCrossed className="h-4 w-4" />
           </div>
         </div>
 
-        {/* A Aguardar */}
         <div
           className={clsx(
-            'flex items-center justify-between rounded-2xl border p-4 shadow-xs sm:p-5 transition-all',
+            'flex items-center justify-between rounded-2xl border p-4 transition-all',
             isDarkMode
-              ? 'bg-[#161922] border-amber-500/35 text-white'
-              : 'bg-[#FFFFFF] border-amber-200 text-[#35271F]'
+              ? 'bg-zinc-900 border-zinc-800 text-white'
+              : 'bg-white border-zinc-200/80 text-zinc-900'
           )}
         >
           <div>
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-500">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-600">
               A Aguardar
             </span>
-            <p className="mt-0.5 text-2xl font-black font-mono text-amber-400 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-bold font-mono sm:text-3xl">
               {pendingCount}
             </p>
           </div>
-
           <div
             className={clsx(
-              'flex h-11 w-11 items-center justify-center rounded-xl',
+              'flex h-10 w-10 items-center justify-center rounded-xl',
               isDarkMode
                 ? 'bg-amber-500/15 text-amber-400'
                 : 'bg-amber-50 text-amber-600'
             )}
           >
-            <Clock className="h-5 w-5" />
+            <Clock className="h-4 w-4" />
           </div>
         </div>
 
-        {/* Em Preparação */}
         <div
           className={clsx(
-            'flex items-center justify-between rounded-2xl border p-4 shadow-xs sm:p-5 transition-all',
+            'flex items-center justify-between rounded-2xl border p-4 transition-all',
             isDarkMode
-              ? 'bg-[#161922] border-blue-500/35 text-white'
-              : 'bg-[#FFFFFF] border-blue-200 text-[#35271F]'
+              ? 'bg-zinc-900 border-zinc-800 text-white'
+              : 'bg-white border-zinc-200/80 text-zinc-900'
           )}
         >
           <div>
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-500">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
               Em Preparação
             </span>
-            <p className="mt-0.5 text-2xl font-black font-mono text-blue-400 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-bold font-mono sm:text-3xl">
               {preparingCount}
             </p>
           </div>
-
           <div
             className={clsx(
-              'flex h-11 w-11 items-center justify-center rounded-xl',
+              'flex h-10 w-10 items-center justify-center rounded-xl',
               isDarkMode
-                ? 'bg-blue-500/15 text-blue-400'
-                : 'bg-blue-50 text-blue-600'
+                ? 'bg-zinc-800 text-zinc-300'
+                : 'bg-zinc-100 text-zinc-700'
             )}
           >
-            <Flame className="h-5 w-5" />
+            <Flame className="h-4 w-4" />
           </div>
         </div>
 
-        {/* Prontos p/ Entrega */}
         <div
           className={clsx(
-            'flex items-center justify-between rounded-2xl border p-4 shadow-xs sm:p-5 transition-all',
+            'flex items-center justify-between rounded-2xl border p-4 transition-all',
             isDarkMode
-              ? 'bg-[#161922] border-emerald-500/35 text-white'
-              : 'bg-[#FFFFFF] border-emerald-200 text-[#35271F]'
+              ? 'bg-zinc-900 border-zinc-800 text-white'
+              : 'bg-white border-zinc-200/80 text-zinc-900'
           )}
         >
           <div>
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-500">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
               Prontos (Pass)
             </span>
-            <p className="mt-0.5 text-2xl font-black font-mono text-emerald-400 sm:text-3xl">
+            <p className="mt-0.5 text-2xl font-bold font-mono sm:text-3xl">
               {readyCount}
             </p>
           </div>
-
           <div
             className={clsx(
-              'flex h-11 w-11 items-center justify-center rounded-xl',
+              'flex h-10 w-10 items-center justify-center rounded-xl',
               isDarkMode
                 ? 'bg-emerald-500/15 text-emerald-400'
                 : 'bg-emerald-50 text-emerald-600'
             )}
           >
-            <BellRing className="h-5 w-5" />
+            <BellRing className="h-4 w-4" />
           </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span
-          className={clsx(
-            'mr-1 text-xs font-bold uppercase tracking-wider',
-            isDarkMode ? 'text-zinc-400' : 'text-[#78716C]'
-          )}
-        >
-          Secção:
-        </span>
-
-        {SECTION_FILTERS.map(({ key, label, icon }) => (
+      {/* Barra de Modo de Vista (Comandas vs Mapa de Mesas) & Filtro de Secção */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-200/70 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
           <button
-            key={key}
             type="button"
-            onClick={() => setSectionFilter(key)}
+            onClick={() => setViewMode('orders')}
             className={clsx(
-              'inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold transition-all sm:text-sm',
-              sectionFilter === key
-                ? 'border-amber-500 bg-amber-600 text-white shadow-xs'
-                : isDarkMode
-                ? 'border-[#2A313E] bg-[#161922] text-zinc-300 hover:bg-[#222734]'
-                : 'border-[#E5DED6] bg-[#FFFFFF] text-[#35271F] hover:bg-[#EAE5DF]'
+              'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+              viewMode === 'orders'
+                ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-2xs'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             )}
           >
-            {icon}
-            <span>{label}</span>
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Comandas ({totalActiveCount})</span>
           </button>
-        ))}
+          <button
+            type="button"
+            onClick={() => setViewMode('tables')}
+            className={clsx(
+              'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+              viewMode === 'tables'
+                ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-2xs'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+            )}
+          >
+            <Map className="w-3.5 h-3.5" />
+            <span>Mapa de Sala (1–20)</span>
+          </button>
+        </div>
+
+        {viewMode === 'orders' && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {SECTION_FILTERS.map(({ key, label, icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSectionFilter(key)}
+                className={clsx(
+                  'inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all',
+                  sectionFilter === key
+                    ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900'
+                    : isDarkMode
+                    ? 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800'
+                    : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100'
+                )}
+              >
+                {icon}
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      <ConsolidatedItems orders={filteredOrders} isDarkMode={isDarkMode} />
+      {/* Vista 1: Mapa de Sala ao Vivo (Bloco 3) */}
+      {viewMode === 'tables' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5">
+          {tablesOverview.map((slot) => {
+            const isOccupied = slot.orders.length > 0;
+            return (
+              <div
+                key={slot.tableNumber}
+                className={clsx(
+                  'rounded-2xl border p-4 flex flex-col justify-between gap-3 transition-all',
+                  isOccupied
+                    ? slot.hasReady
+                      ? isDarkMode
+                        ? 'bg-zinc-900 border-emerald-500/50'
+                        : 'bg-white border-emerald-400 shadow-xs'
+                      : isDarkMode
+                      ? 'bg-zinc-900 border-amber-500/40'
+                      : 'bg-white border-zinc-900/30 shadow-xs'
+                    : isDarkMode
+                    ? 'bg-zinc-900/40 border-zinc-800/60 opacity-65'
+                    : 'bg-white/60 border-zinc-200/70 opacity-75'
+                )}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-bold">
+                      {slot.tableNumber === 0 ? (
+                        <ShoppingBag className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <UtensilsCrossed className="w-3.5 h-3.5 text-zinc-400" />
+                      )}
+                      {slot.label}
+                    </span>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center space-y-3 py-20 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gulas-green" />
-          <p className="text-sm font-bold text-gulas-dark">
-            Carregando pedidos...
-          </p>
-          <p className="text-xs text-gulas-gray-500">
-            A sincronizar dados da cozinha e sala
-          </p>
-        </div>
-      ) : dashboardError ? (
-        <div
-          role="alert"
-          className="mx-auto max-w-lg space-y-3 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center sm:p-8"
-        >
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-            <AlertCircle className="h-6 w-6" />
-          </div>
-          <h3 className="text-base font-bold text-rose-950">
-            Não foi possível carregar os pedidos
-          </h3>
-          <p className="text-xs text-rose-700">{dashboardError}</p>
-          <button
-            type="button"
-            onClick={fetchOrders}
-            className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-800"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Tentar Novamente</span>
-          </button>
-        </div>
-      ) : filteredOrders.length === 0 ? (
-        <div
-          className={clsx(
-            'mx-auto max-w-lg space-y-3 rounded-2xl border p-10 text-center shadow-xs sm:p-14 transition-colors',
-            isDarkMode
-              ? 'bg-[#161922] border-[#2A313E] text-zinc-100'
-              : 'bg-white border-gulas-gray-200 text-gulas-dark'
-          )}
-        >
-          <div
-            className={clsx(
-              'mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border',
-              isDarkMode
-                ? 'bg-[#202530] border-[#2A313E] text-amber-400'
-                : 'bg-gulas-cream border-gulas-gray-200 text-gulas-gray-400'
-            )}
-          >
-            <Inbox className="h-8 w-8" />
-          </div>
-          <h3 className="text-lg font-black tracking-tight">
-            {sectionFilter === 'all'
-              ? 'Não existem pedidos ativos na bancada.'
-              : `Não existem pedidos para ${
-                  sectionFilter === 'bar' ? 'Bar / Copa' : 'Cozinha'
-                }.`}
-          </h3>
-          <p
-            className={clsx(
-              'mx-auto max-w-xs text-xs leading-relaxed sm:text-sm',
-              isDarkMode ? 'text-zinc-400' : 'text-gulas-gray-500'
-            )}
-          >
-            Assim que os clientes submeterem pedidos a partir do menu digital,
-            eles surgirão aqui em tempo real.
-          </p>
-          <button
-            type="button"
-            onClick={handleManualRefresh}
-            className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-500 px-4 py-2 text-xs font-bold text-white transition-all shadow-xs"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Verificar Novos Pedidos</span>
-          </button>
+                    {isOccupied ? (
+                      <span
+                        className={clsx(
+                          'px-2 py-0.5 rounded-full text-[10px] font-semibold',
+                          slot.hasReady
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-800 border border-amber-200'
+                        )}
+                      >
+                        {slot.hasReady ? 'Pronto a Servir' : `${slot.orders.length} Ativo(s)`}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-medium text-zinc-400">
+                        Livre
+                      </span>
+                    )}
+                  </div>
+
+                  {isOccupied && (
+                    <div className="space-y-1 pt-1 border-t border-zinc-100 dark:border-zinc-800">
+                      <div className="flex flex-wrap gap-1">
+                        {slot.orders.map((o) => (
+                          <span
+                            key={o.id}
+                            className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono font-semibold"
+                          >
+                            #{o.orderNumber}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-baseline justify-between pt-1">
+                        <span className="text-[11px] text-zinc-500">
+                          Conta ativa:
+                        </span>
+                        <span className="text-sm font-bold font-mono">
+                          {slot.totalBill.toFixed(2)} €
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {isOccupied && (
+                  <button
+                    type="button"
+                    onClick={() => void handleCloseAllTableOrders(slot.tableNumber)}
+                    className="w-full py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Concluir / Fechar Mesa</span>
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5">
-          {filteredOrders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              isNew={newOrderIds.has(order.id)}
-              isDarkMode={isDarkMode}
-              isUpdating={Boolean(updatingMap[order.id])}
-              error={orderErrorMap[order.id]}
-              onClearError={() =>
-                setOrderErrorMap((previous) => ({
-                  ...previous,
-                  [order.id]: null,
-                }))
-              }
-              onUpdateStatus={handleUpdateStatus}
-              onPrintOrder={handlePrintOrder}
-            />
-          ))}
-        </div>
+        <>
+          <ConsolidatedItems orders={filteredOrders} isDarkMode={isDarkMode} />
+
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center space-y-3 py-20 text-center">
+              <Loader2 className="h-7 w-7 animate-spin text-zinc-900 dark:text-white" />
+              <p className="text-sm font-semibold">A sincronizar pedidos...</p>
+            </div>
+          ) : dashboardError ? (
+            <div
+              role="alert"
+              className="mx-auto max-w-lg space-y-3 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center sm:p-8"
+            >
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <h3 className="text-sm font-bold text-rose-950">
+                Não foi possível carregar os pedidos
+              </h3>
+              <p className="text-xs text-rose-700">{dashboardError}</p>
+              <button
+                type="button"
+                onClick={fetchOrders}
+                className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-zinc-800"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Tentar Novamente</span>
+              </button>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div
+              className={clsx(
+                'mx-auto max-w-lg space-y-3 rounded-2xl border p-10 text-center sm:p-14 transition-colors',
+                isDarkMode
+                  ? 'bg-zinc-900 border-zinc-800 text-zinc-100'
+                  : 'bg-white border-zinc-200/80 text-zinc-900'
+              )}
+            >
+              <div
+                className={clsx(
+                  'mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border',
+                  isDarkMode
+                    ? 'bg-zinc-800 border-zinc-700 text-zinc-400'
+                    : 'bg-zinc-50 border-zinc-200 text-zinc-400'
+                )}
+              >
+                <Inbox className="h-6 w-6" />
+              </div>
+              <h3 className="text-base font-bold tracking-tight">
+                {sectionFilter === 'all'
+                  ? 'Sem pedidos ativos na bancada'
+                  : `Sem pedidos ativos para ${
+                      sectionFilter === 'bar' ? 'Bar / Copa' : 'Cozinha'
+                    }`}
+              </h3>
+              <p
+                className={clsx(
+                  'mx-auto max-w-xs text-xs leading-relaxed',
+                  isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
+                )}
+              >
+                Os novos pedidos submetidos pelos clientes surgirão aqui automaticamente em tempo real.
+              </p>
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Sincronizar Agora</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5">
+              {filteredOrders.map((order) => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  isNew={newOrderIds.has(order.id)}
+                  isDarkMode={isDarkMode}
+                  isUpdating={Boolean(updatingMap[order.id])}
+                  error={orderErrorMap[order.id]}
+                  onClearError={() =>
+                    setOrderErrorMap((previous) => ({
+                      ...previous,
+                      [order.id]: null,
+                    }))
+                  }
+                  onUpdateStatus={handleUpdateStatus}
+                  onPrintOrder={handlePrintOrder}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* Undo Toast for completed orders */}
@@ -1074,11 +1281,11 @@ export function OrderDashboard({
         <aside
           role="status"
           aria-label="Aviso de pedido concluído com opção de desfazer"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl bg-[#35271F] px-4 py-3 text-[#F5F4F1] shadow-xl border border-[#E5DED6]/30 animate-in slide-in-from-bottom-5 fade-in duration-200"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl bg-zinc-900 px-4 py-3 text-white shadow-xl border border-zinc-800 animate-in slide-in-from-bottom-5 fade-in duration-200"
         >
           <div className="flex items-center gap-2 text-xs sm:text-sm">
-            <span className="h-2 w-2 rounded-full bg-[#C09573]" />
-            <span className="font-semibold text-[#EAE5DF]">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="font-medium text-zinc-200">
               Pedido <strong className="text-white">#{undoOrder.orderNumber}</strong> (
               {undoOrder.tableNumber === 0
                 ? 'Take-Away'
@@ -1087,17 +1294,17 @@ export function OrderDashboard({
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 border-l border-[#E5DED6]/30 pl-2">
+          <div className="flex items-center gap-1.5 border-l border-zinc-700 pl-2">
             <button
               type="button"
               disabled={isUndoing}
               onClick={handleUndo}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#FFFFFF] px-3 py-1.5 text-xs font-bold text-[#35271F] transition-all hover:bg-[#EAE5DF] active:scale-95 disabled:opacity-50 shadow-2xs"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-zinc-900 transition-all hover:bg-zinc-100 active:scale-95 disabled:opacity-50"
             >
               {isUndoing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#35271F]" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Undo2 className="h-3.5 w-3.5 text-[#5E4939]" />
+                <Undo2 className="h-3.5 w-3.5" />
               )}
               <span>Desfazer</span>
             </button>
@@ -1117,13 +1324,13 @@ export function OrderDashboard({
         </aside>
       )}
 
-      {/* Quick Stock Management Drawer */}
+      {/* Quick Stock & Menu Management Drawer */}
       <QuickStockDrawer
         isOpen={isStockDrawerOpen}
         onClose={() => setIsStockDrawerOpen(false)}
         restaurantId={restaurantId}
         onStockChanged={() => {
-          refreshStockCount();
+          void refreshStockCount();
         }}
       />
 

@@ -39,53 +39,52 @@ export const Badge: React.FC<BadgeProps> = ({
   const effectiveVariant = variant || (badgeType as string) || 'secondary';
 
   const baseStyles =
-    'inline-flex items-center gap-1 font-semibold rounded-full tracking-tight transition-colors';
+    'inline-flex items-center gap-1 font-medium rounded-md tracking-tight transition-colors';
 
   const sizeStyles = {
-    sm: 'text-[10px] px-2 py-0.5 leading-none',
-    md: 'text-xs px-2.5 py-0.5 leading-tight',
+    sm: 'text-[10px] px-1.5 py-0.5 leading-none',
+    md: 'text-[11px] px-2 py-0.5 leading-tight',
   };
 
   const variantStyles: Record<string, string> = {
     novidade:
-      'bg-zinc-900 text-white font-bold tracking-wide uppercase shadow-2xs',
+      'bg-zinc-900 text-white font-semibold tracking-wider uppercase',
     picante:
-      'bg-rose-50 text-rose-700 border border-rose-200',
+      'bg-rose-50/80 text-rose-700 border border-rose-200/70',
     vegetariano:
-      'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      'bg-emerald-50/80 text-emerald-700 border border-emerald-200/70',
     vegan:
-      'bg-teal-50 text-teal-700 border border-teal-200',
+      'bg-emerald-50/80 text-emerald-700 border border-emerald-200/70',
     especialidade:
-      'bg-orange-50 text-orange-700 border border-orange-200 font-bold',
+      'bg-zinc-100 text-zinc-800 border border-zinc-200/80 font-semibold',
     house_special:
-      'bg-orange-50 text-orange-700 border border-orange-200 font-bold',
+      'bg-zinc-100 text-zinc-800 border border-zinc-200/80 font-semibold',
     popular:
-      'bg-zinc-100 text-zinc-800 border border-zinc-200 font-medium',
+      'bg-zinc-100 text-zinc-700 border border-zinc-200/80',
     promocao:
-      'bg-orange-600 text-white font-bold tracking-wide uppercase',
+      'bg-zinc-900 text-white font-semibold tracking-wider uppercase',
     extra:
-      'bg-zinc-100 text-zinc-700 border border-zinc-200 font-medium',
+      'bg-zinc-100 text-zinc-600 border border-zinc-200/70',
     acompanhamento:
-      'bg-zinc-100 text-zinc-700 border border-zinc-200 font-medium',
+      'bg-zinc-100 text-zinc-600 border border-zinc-200/70',
     primary:
-      'bg-orange-50 text-orange-700 border border-orange-200',
+      'bg-zinc-900 text-white',
     secondary:
-      'bg-zinc-100 text-zinc-800 border border-zinc-200',
+      'bg-zinc-100 text-zinc-700 border border-zinc-200/80',
     muted:
-      'bg-zinc-100 text-zinc-600',
+      'bg-zinc-100 text-zinc-500',
   };
 
   const renderDefaultIcon = () => {
     switch (effectiveVariant) {
       case 'picante':
-        return <Flame className="w-2.5 h-2.5 text-rose-600" />;
+        return <Flame className="w-2.5 h-2.5 text-rose-500" />;
       case 'vegetariano':
-        return <Leaf className="w-2.5 h-2.5 text-emerald-600" />;
       case 'vegan':
-        return <Leaf className="w-2.5 h-2.5 text-teal-600" />;
+        return <Leaf className="w-2.5 h-2.5 text-emerald-600" />;
       case 'especialidade':
       case 'house_special':
-        return <Sparkles className="w-2.5 h-2.5 text-orange-600" />;
+        return <Sparkles className="w-2.5 h-2.5 text-zinc-700" />;
       default:
         return null;
     }
@@ -94,7 +93,7 @@ export const Badge: React.FC<BadgeProps> = ({
   const renderDefaultLabel = () => {
     switch (effectiveVariant) {
       case 'novidade':
-        return 'NOVIDADE';
+        return 'Novidade';
       case 'picante':
         return 'Picante';
       case 'vegetariano':
@@ -121,7 +120,12 @@ export const Badge: React.FC<BadgeProps> = ({
   return (
     <span
       className={twMerge(
-        clsx(baseStyles, sizeStyles[size], variantStyles[effectiveVariant] || variantStyles.secondary, className)
+        clsx(
+          baseStyles,
+          sizeStyles[size],
+          variantStyles[effectiveVariant] || variantStyles.secondary,
+          className
+        )
       )}
     >
       {renderDefaultIcon()}
