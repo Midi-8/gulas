@@ -15,7 +15,7 @@ CREATE OR REPLACE FUNCTION public.create_order_atomic(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
     -- Variáveis do Restaurante
@@ -177,7 +177,7 @@ BEGIN
     -- ------------------------------------------------------------------------
     -- 7. GERAÇÃO DO TOKEN DE RASTREIO E INSERÇÃO DO PEDIDO
     -- ------------------------------------------------------------------------
-    v_tracking_token := encode(gen_random_bytes(32), 'hex');
+    v_tracking_token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
 
     INSERT INTO public.orders (
         restaurant_id,

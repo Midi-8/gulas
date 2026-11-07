@@ -64,6 +64,10 @@ BEGIN
     END IF;
 END $$;
 
+-- 1.7. Garantir que table_id aceita NULL (para Take-Away) e que tracking_token existe
+ALTER TABLE public.orders ALTER COLUMN table_id DROP NOT NULL;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS tracking_token VARCHAR(64);
+
 -- 2. Atualizar create_order_atomic para incluir unit_quantity no product_name quando aplicável
 CREATE OR REPLACE FUNCTION public.create_order_atomic(
     p_restaurant_slug TEXT,
@@ -74,7 +78,7 @@ CREATE OR REPLACE FUNCTION public.create_order_atomic(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
     v_restaurant RECORD;
@@ -210,7 +214,7 @@ BEGIN
         updated_at = NOW()
     RETURNING last_order_number INTO v_order_number;
 
-    v_tracking_token := encode(gen_random_bytes(32), 'hex');
+    v_tracking_token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
 
     INSERT INTO public.orders (
         restaurant_id,
@@ -302,6 +306,9 @@ BEGIN
     );
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.create_order_atomic(TEXT, INTEGER, TEXT, JSONB) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.create_order_atomic(TEXT, INTEGER, TEXT, JSONB) TO anon, authenticated, service_role;
 
 COMMIT;
 
