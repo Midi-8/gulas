@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Sparkles, Leaf, Zap, Flame, ShieldCheck } from 'lucide-react';
+import { Search, X, Sparkles, Leaf, Zap, Flame } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -10,9 +10,7 @@ export type MenuFilterType =
   | 'especialidade'
   | 'novidade'
   | 'picante'
-  | 'vegetariano'
-  | 'sem_gluten'
-  | 'sem_lactose';
+  | 'vegetariano';
 
 interface SearchBarProps {
   searchQuery: string;
@@ -115,32 +113,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         >
           <Leaf className="w-3 h-3 opacity-70" />
           {t('vegetarian')}
-        </button>
-
-        <button
-          onClick={() => onFilterChange('sem_gluten')}
-          className={clsx(
-            'inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition-all shrink-0 cursor-pointer border',
-            activeFilter === 'sem_gluten'
-              ? 'bg-zinc-900 text-white border-zinc-900 shadow-2xs'
-              : 'text-zinc-600 bg-white border-zinc-200/80 hover:bg-zinc-100 hover:text-zinc-900'
-          )}
-        >
-          <ShieldCheck className="w-3 h-3 opacity-70" />
-          {t('glutenFree')}
-        </button>
-
-        <button
-          onClick={() => onFilterChange('sem_lactose')}
-          className={clsx(
-            'inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition-all shrink-0 cursor-pointer border',
-            activeFilter === 'sem_lactose'
-              ? 'bg-zinc-900 text-white border-zinc-900 shadow-2xs'
-              : 'text-zinc-600 bg-white border-zinc-200/80 hover:bg-zinc-100 hover:text-zinc-900'
-          )}
-        >
-          <ShieldCheck className="w-3 h-3 opacity-70" />
-          {t('lactoseFree')}
         </button>
       </div>
     </div>

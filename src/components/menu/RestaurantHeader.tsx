@@ -49,8 +49,8 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
     try {
       const supabase = createClient();
       const labelMap = {
-        bill_card: 'Pedir a Conta (Multibanco / MB WAY)',
-        bill_cash: 'Pedir a Conta (Dinheiro)',
+        bill_card: 'Pedir a Conta - Multibanco / MB WAY',
+        bill_cash: 'Pedir a Conta - Dinheiro',
         call_staff: 'Chamar Staff à Mesa',
       };
 

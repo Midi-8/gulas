@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ManagedOrderItem } from '@/actions/order-management';
-import { MessageSquareText, Check } from 'lucide-react';
 
 interface OrderItemsListProps {
   items: ManagedOrderItem[];
@@ -10,7 +9,7 @@ interface OrderItemsListProps {
 }
 
 const PLATED_ITEMS_STORAGE_KEY = 'gulas_kds_plated_items_v1';
-const PLATED_ITEMS_TTL_MS = 12 * 60 * 60 * 1000; // 12 horas
+const PLATED_ITEMS_TTL_MS = 12 * 60 * 60 * 1000;
 const PLATED_SYNC_EVENT = 'gulas_kds_plated_sync';
 
 function readPlatedItemsMap(): Record<string, number> {
@@ -19,16 +18,19 @@ function readPlatedItemsMap(): Record<string, number> {
     const raw = localStorage.getItem(PLATED_ITEMS_STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    if (!parsed || typeof parsed !== 'object') return {};
 
     const now = Date.now();
-    const fresh: Record<string, number> = {};
-    for (const [id, ts] of Object.entries(parsed)) {
-      if (typeof ts === 'number' && now - ts < PLATED_ITEMS_TTL_MS) {
-        fresh[id] = ts;
+    const cleaned: Record<string, number> = {};
+    for (const [id, timestamp] of Object.entries(parsed)) {
+      if (
+        typeof timestamp === 'number' &&
+        now - timestamp < PLATED_ITEMS_TTL_MS
+      ) {
+        cleaned[id] = timestamp;
       }
     }
-    return fresh;
+    return cleaned;
   } catch {
     return {};
   }
@@ -38,14 +40,16 @@ function writePlatedItemsMap(map: Record<string, number>) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(PLATED_ITEMS_STORAGE_KEY, JSON.stringify(map));
-    window.dispatchEvent(new CustomEvent(PLATED_SYNC_EVENT));
+    window.dispatchEvent(new Event(PLATED_SYNC_EVENT));
   } catch {
-    // Ignorar falha de armazenamento
+    // Ignore storage quota / privacy errors
   }
 }
 
-export function OrderItemsList({ items, isDarkMode = false }: OrderItemsListProps) {
-  const [checkedItemIds, setCheckedItemIds] = useState<Record<string, number>>({});
+export function OrderItemsList({ items }: OrderItemsListProps) {
+  const [checkedItemIds, setCheckedItemIds] = useState<Record<string, number>>(
+    {}
+  );
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -78,49 +82,48 @@ export function OrderItemsList({ items, isDarkMode = false }: OrderItemsListProp
     } else {
       next[itemId] = Date.now();
     }
-    setCheckedItemIds(next);
     writePlatedItemsMap(next);
+    setCheckedItemIds(next);
   }, []);
 
+  if (!items || items.length === 0) {
+    return (
+      <p className="py-3 text-xs text-zinc-500">Sem artigos registados.</p>
+    );
+  }
+
   return (
-    <ul
-      className={`divide-y py-1 ${
-        isDarkMode ? 'divide-zinc-800/70' : 'divide-zinc-100'
-      }`}
-    >
+    <ul className="space-y-2 py-3">
       {items.map((item) => {
         const isChecked = Boolean(checkedItemIds[item.id]);
 
         return (
-          <li
-            key={item.id}
-            onClick={() => toggleItemChecked(item.id)}
-            className="py-2.5 first:pt-1 last:pb-1 cursor-pointer select-none group"
-            title="Clica para marcar/desmarcar artigo como empratado"
-          >
-            <div className="flex items-start gap-2.5">
-              {/* Quantidade / Checkbox interativa de empratamento */}
+          <li key={item.id}>
+            <button
+              type="button"
+              onClick={() => toggleItemChecked(item.id)}
+              className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                isChecked
+                  ? 'bg-emerald-50/80 border-emerald-200 hover:bg-emerald-100/70'
+                  : 'bg-zinc-50 border-zinc-200/80 hover:bg-zinc-100/80 hover:border-zinc-300'
+              }`}
+              aria-pressed={isChecked}
+            >
               <span
-                className={`inline-flex items-center justify-center w-7 h-7 rounded-lg font-mono text-xs font-bold flex-shrink-0 border transition-colors ${
+                className={`inline-flex items-center justify-center min-w-8 h-7 px-2 rounded-lg border font-mono text-xs font-bold shrink-0 transition-colors ${
                   isChecked
-                    ? 'bg-emerald-500 text-white border-emerald-500'
-                    : isDarkMode
-                    ? 'bg-zinc-800 text-zinc-100 border-zinc-700 group-hover:border-zinc-500'
-                    : 'bg-zinc-900 text-white border-zinc-900 group-hover:bg-zinc-800'
+                    ? 'bg-emerald-600 border-emerald-700 text-white uppercase tracking-wider text-[10px]'
+                    : 'bg-zinc-900 border-zinc-900 text-white'
                 }`}
               >
-                {isChecked ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : `${item.quantity}×`}
+                {isChecked ? 'OK' : `${item.quantity}x`}
               </span>
 
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 pt-0.5">
                 <p
-                  className={`text-sm font-semibold leading-snug transition-opacity ${
+                  className={`text-sm font-semibold leading-snug ${
                     isChecked
-                      ? isDarkMode
-                        ? 'line-through text-zinc-500'
-                        : 'line-through text-zinc-400'
-                      : isDarkMode
-                      ? 'text-zinc-100'
+                      ? 'line-through text-zinc-400'
                       : 'text-zinc-900'
                   }`}
                 >
@@ -128,28 +131,15 @@ export function OrderItemsList({ items, isDarkMode = false }: OrderItemsListProp
                 </p>
 
                 {item.notes && (
-                  <div
-                    className={`mt-1.5 flex items-start gap-1.5 p-2 rounded-lg border text-xs font-medium leading-tight ${
-                      isDarkMode
-                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
-                        : 'bg-amber-50/80 border-amber-200 text-amber-900'
-                    }`}
-                  >
-                    <MessageSquareText className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
-                    <span>
-                      <strong
-                        className={`font-bold uppercase tracking-wider text-[10px] ${
-                          isDarkMode ? 'text-amber-400' : 'text-amber-800'
-                        }`}
-                      >
-                        Obs:
-                      </strong>{' '}
-                      {item.notes}
+                  <div className="mt-2 p-2.5 rounded-xl border border-amber-200/90 bg-amber-50/90 text-amber-950 text-xs font-medium leading-snug">
+                    <span className="inline-block rounded-md bg-amber-700 text-white px-1.5 py-0.5 font-bold uppercase tracking-wider text-[10px] mr-2">
+                      Obs
                     </span>
+                    <span className="whitespace-pre-line">{item.notes}</span>
                   </div>
                 )}
               </div>
-            </div>
+            </button>
           </li>
         );
       })}

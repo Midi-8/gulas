@@ -37,9 +37,15 @@ export interface HourlyMetric {
   avgTurnaroundMinutes: number;
 }
 
+export interface NoteProductBreakdown {
+  productName: string;
+  count: number;
+}
+
 export interface NoteTermMetric {
   term: string;
   count: number;
+  topProducts: NoteProductBreakdown[];
 }
 
 export interface MarketBasketCombo {
@@ -55,6 +61,7 @@ export interface OperationalPreferenceMetric {
   term: string;
   count: number;
   type: 'dietary' | 'preparation' | 'removal' | 'service';
+  topProducts: NoteProductBreakdown[];
 }
 
 export interface MarginLeakageMetric {
@@ -63,6 +70,7 @@ export interface MarginLeakageMetric {
   category: string;
   estimatedCostPerUnit: number;
   totalEstimatedLossEur: number;
+  topProducts: NoteProductBreakdown[];
 }
 
 export interface RunRateMetrics {
@@ -86,6 +94,76 @@ export interface WhatIfBaseline {
   currentRevenue: number;
   currentGrossProfit: number;
   currentMarginPercent: number;
+}
+
+export interface PeriodComparisonMetrics {
+  previousLabel: string;
+  hasComparison: boolean;
+  revenueDeltaPercent: number | null;
+  ordersDeltaPercent: number | null;
+  ticketDeltaPercent: number | null;
+  slaDeltaPoints: number | null;
+  previousRevenue: number;
+  previousOrders: number;
+}
+
+export interface ChannelMetricItem {
+  channel: 'dine_in' | 'takeaway';
+  label: string;
+  orderCount: number;
+  revenue: number;
+  revenueSharePercent: number;
+  averageTicket: number;
+  avgTurnaroundMinutes: number;
+}
+
+export interface ChannelSplitMetrics {
+  dineIn: ChannelMetricItem;
+  takeaway: ChannelMetricItem;
+}
+
+export interface StationPerformanceMetric {
+  station: 'bar' | 'kitchen';
+  label: string;
+  unitsSold: number;
+  revenue: number;
+  profit: number;
+  revenueSharePercent: number;
+  marginPercent: number;
+}
+
+export interface CategoryPerformanceMetric {
+  categoryName: string;
+  categorySlug: string;
+  station: 'bar' | 'kitchen';
+  unitsSold: number;
+  revenue: number;
+  profit: number;
+  marginPercent: number;
+  revenueSharePercent: number;
+}
+
+export interface CancelledProductMetric {
+  productName: string;
+  categoryName: string;
+  cancelledQty: number;
+  lostRevenue: number;
+}
+
+export interface CancellationAnalytics {
+  cancelledOrdersCount: number;
+  cancellationRatePercent: number;
+  lostRevenueEur: number;
+  avgCancelledTicketEur: number;
+  topCancelledProducts: CancelledProductMetric[];
+}
+
+export interface UnsoldProductMetric {
+  productId: string;
+  productName: string;
+  categoryName: string;
+  unitPrice: number;
+  isAvailable: boolean;
 }
 
 export interface AnalyticsSummary {
@@ -115,6 +193,12 @@ export interface AnalyticsSummary {
   totalMarginLeakageEur: number;
   sparklines: SparklineData;
   whatIfBaseline: WhatIfBaseline;
+  periodComparison: PeriodComparisonMetrics;
+  channelSplit: ChannelSplitMetrics;
+  stationSplit: StationPerformanceMetric[];
+  categoryPerformance: CategoryPerformanceMetric[];
+  cancellations: CancellationAnalytics;
+  unsoldProducts: UnsoldProductMetric[];
 }
 
 export type AnalyticsActionResult<T> =
@@ -152,10 +236,29 @@ interface RawAnalyticsOrder {
   order_items: RawAnalyticsOrderItem[] | null;
 }
 
-function getStartDateForPeriod(period: AnalyticsPeriod): string | null {
+interface RawCatalogProductRow {
+  id: string;
+  name: string;
+  price: number;
+  is_available: boolean;
+  categories:
+    | { name: string; slug: string }
+    | Array<{ name: string; slug: string }>
+    | null;
+}
+
+interface PeriodWindows {
+  currentStartMs: number | null;
+  previousStartMs: number | null;
+  previousStartIso: string | null;
+  previousLabel: string;
+  hasComparison: boolean;
+}
+
+function getPeriodWindows(period: AnalyticsPeriod): PeriodWindows {
   const now = new Date();
   if (period === 'today') {
-    const startOfToday = new Date(
+    const currentStart = new Date(
       now.getFullYear(),
       now.getMonth(),
       now.getDate(),
@@ -164,17 +267,82 @@ function getStartDateForPeriod(period: AnalyticsPeriod): string | null {
       0,
       0
     );
-    return startOfToday.toISOString();
+    const previousStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 1,
+      0,
+      0,
+      0,
+      0
+    );
+    return {
+      currentStartMs: currentStart.getTime(),
+      previousStartMs: previousStart.getTime(),
+      previousStartIso: previousStart.toISOString(),
+      previousLabel: 'vs. ontem',
+      hasComparison: true,
+    };
   }
   if (period === '7days') {
-    const d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return d.toISOString();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const currentStart = new Date(now.getTime() - 7 * dayMs);
+    const previousStart = new Date(now.getTime() - 14 * dayMs);
+    return {
+      currentStartMs: currentStart.getTime(),
+      previousStartMs: previousStart.getTime(),
+      previousStartIso: previousStart.toISOString(),
+      previousLabel: 'vs. 7 dias ant.',
+      hasComparison: true,
+    };
   }
   if (period === '30days') {
-    const d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    return d.toISOString();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const currentStart = new Date(now.getTime() - 30 * dayMs);
+    const previousStart = new Date(now.getTime() - 60 * dayMs);
+    return {
+      currentStartMs: currentStart.getTime(),
+      previousStartMs: previousStart.getTime(),
+      previousStartIso: previousStart.toISOString(),
+      previousLabel: 'vs. 30 dias ant.',
+      hasComparison: true,
+    };
   }
-  return null;
+  return {
+    currentStartMs: null,
+    previousStartMs: null,
+    previousStartIso: null,
+    previousLabel: 'Histórico global',
+    hasComparison: false,
+  };
+}
+
+function getStartDateForPeriod(period: AnalyticsPeriod): string | null {
+  const { currentStartMs } = getPeriodWindows(period);
+  return currentStartMs !== null ? new Date(currentStartMs).toISOString() : null;
+}
+
+function computePercentDelta(current: number, previous: number): number | null {
+  if (previous <= 0) return null;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
+}
+
+function resolveStation(categorySlug?: string | null): 'bar' | 'kitchen' {
+  return (categorySlug || '').toLowerCase().includes('bebida') ? 'bar' : 'kitchen';
+}
+
+function resolveItemUnitCost(item: RawAnalyticsOrderItem): number {
+  let unitCost =
+    item.unit_cost !== undefined && item.unit_cost !== null
+      ? Number(item.unit_cost)
+      : null;
+  if (unitCost === null && item.products?.cost !== null && item.products?.cost !== undefined) {
+    unitCost = Number(item.products.cost);
+  }
+  if (unitCost === null || Number.isNaN(unitCost) || unitCost < 0) {
+    return 0;
+  }
+  return Math.round(unitCost * 100) / 100;
 }
 
 const STOPWORDS_PT = new Set([
@@ -239,50 +407,111 @@ const OPERATIONAL_DICTIONARY: Array<{
   { pattern: 'conta separada', term: 'Conta Separada', type: 'service' },
 ];
 
-function extractSemanticNotes(texts: string[]) {
-  const corpus = texts.join(' ').toLowerCase();
+interface AnnotatedNoteEntry {
+  text: string;
+  productName: string;
+}
 
+function sortTopNoteProducts(
+  productCounts: Record<string, number>,
+  limit = 3
+): NoteProductBreakdown[] {
+  return Object.entries(productCounts)
+    .map(([productName, count]) => ({ productName, count }))
+    .sort((a, b) => b.count - a.count || a.productName.localeCompare(b.productName, 'pt-PT'))
+    .slice(0, limit);
+}
+
+function extractSemanticNotes(entries: AnnotatedNoteEntry[]) {
   // 1. Margin Leakages
-  const leakageMap: Record<string, MarginLeakageMetric> = {};
+  const leakageAcc: Record<
+    string,
+    {
+      term: string;
+      count: number;
+      category: string;
+      cost: number;
+      productCounts: Record<string, number>;
+    }
+  > = {};
   let totalLeakageEur = 0;
 
-  for (const item of LEAKAGE_DICTIONARY) {
-    const escaped = item.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
-    const matches = corpus.match(regex);
-    if (matches && matches.length > 0) {
-      const count = matches.length;
-      const totalLoss = Math.round(count * item.cost * 100) / 100;
-      totalLeakageEur += totalLoss;
-      leakageMap[item.term] = {
-        term: item.term,
-        count,
-        category: item.category,
-        estimatedCostPerUnit: item.cost,
-        totalEstimatedLossEur: totalLoss,
-      };
-    }
-  }
-
   // 2. Operational Preferences
-  const operationalMap: Record<string, OperationalPreferenceMetric> = {};
-  for (const item of OPERATIONAL_DICTIONARY) {
-    const escaped = item.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
-    const matches = corpus.match(regex);
-    if (matches && matches.length > 0) {
-      operationalMap[item.term] = {
-        term: item.term,
-        count: matches.length,
-        type: item.type,
-      };
+  const operationalAcc: Record<
+    string,
+    {
+      term: string;
+      count: number;
+      type: 'dietary' | 'preparation' | 'removal' | 'service';
+      productCounts: Record<string, number>;
+    }
+  > = {};
+
+  for (const entry of entries) {
+    const lowerText = entry.text.toLowerCase();
+
+    for (const item of LEAKAGE_DICTIONARY) {
+      const escaped = item.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+      const matches = lowerText.match(regex);
+      if (matches && matches.length > 0) {
+        const hitCount = matches.length;
+        totalLeakageEur += hitCount * item.cost;
+        if (!leakageAcc[item.term]) {
+          leakageAcc[item.term] = {
+            term: item.term,
+            count: 0,
+            category: item.category,
+            cost: item.cost,
+            productCounts: {},
+          };
+        }
+        leakageAcc[item.term].count += hitCount;
+        leakageAcc[item.term].productCounts[entry.productName] =
+          (leakageAcc[item.term].productCounts[entry.productName] ?? 0) + hitCount;
+      }
+    }
+
+    for (const item of OPERATIONAL_DICTIONARY) {
+      const escaped = item.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+      const matches = lowerText.match(regex);
+      if (matches && matches.length > 0) {
+        const hitCount = matches.length;
+        if (!operationalAcc[item.term]) {
+          operationalAcc[item.term] = {
+            term: item.term,
+            count: 0,
+            type: item.type,
+            productCounts: {},
+          };
+        }
+        operationalAcc[item.term].count += hitCount;
+        operationalAcc[item.term].productCounts[entry.productName] =
+          (operationalAcc[item.term].productCounts[entry.productName] ?? 0) + hitCount;
+      }
     }
   }
 
-  const marginLeakages = Object.values(leakageMap).sort((a, b) => b.count - a.count);
-  const operationalPreferences = Object.values(operationalMap).sort(
-    (a, b) => b.count - a.count
-  );
+  const marginLeakages: MarginLeakageMetric[] = Object.values(leakageAcc)
+    .map((l) => ({
+      term: l.term,
+      count: l.count,
+      category: l.category,
+      estimatedCostPerUnit: l.cost,
+      totalEstimatedLossEur: Math.round(l.count * l.cost * 100) / 100,
+      topProducts: sortTopNoteProducts(l.productCounts),
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const operationalPreferences: OperationalPreferenceMetric[] = Object.values(operationalAcc)
+    .map((op) => ({
+      term: op.term,
+      count: op.count,
+      type: op.type,
+      topProducts: sortTopNoteProducts(op.productCounts),
+    }))
+    .sort((a, b) => b.count - a.count);
 
   return {
     marginLeakages,
@@ -291,8 +520,17 @@ function extractSemanticNotes(texts: string[]) {
   };
 }
 
-function extractTopNoteTerms(texts: string[]): NoteTermMetric[] {
-  const termCounts: Record<string, number> = {};
+function extractTopNoteTerms(entries: AnnotatedNoteEntry[]): NoteTermMetric[] {
+  const termAcc: Record<string, { count: number; productCounts: Record<string, number> }> = {};
+
+  const recordTerm = (term: string, productName: string, qty: number) => {
+    if (!termAcc[term]) {
+      termAcc[term] = { count: 0, productCounts: {} };
+    }
+    termAcc[term].count += qty;
+    termAcc[term].productCounts[productName] =
+      (termAcc[term].productCounts[productName] ?? 0) + qty;
+  };
 
   const commonPhrases = [
     'sem cebola',
@@ -313,39 +551,42 @@ function extractTopNoteTerms(texts: string[]): NoteTermMetric[] {
     'queijo extra',
   ];
 
-  const fullCorpus = texts.join(' ').toLowerCase();
+  for (const entry of entries) {
+    if (!entry.text) continue;
+    let remainingText = entry.text.toLowerCase();
 
-  for (const phrase of commonPhrases) {
-    const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
-    const matches = fullCorpus.match(regex);
-    if (matches && matches.length > 0) {
-      termCounts[phrase] = (termCounts[phrase] ?? 0) + matches.length;
+    for (const phrase of commonPhrases) {
+      const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+      const matches = remainingText.match(regex);
+      if (matches && matches.length > 0) {
+        recordTerm(phrase, entry.productName, matches.length);
+        remainingText = remainingText.replace(regex, ' ');
+      }
     }
-  }
 
-  for (const rawText of texts) {
-    if (!rawText) continue;
-
-    const cleaned = rawText
-      .toLowerCase()
+    const cleaned = remainingText
       .replace(/[^\p{L}\p{N}\s]/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
-    const words = cleaned.split(' ');
+    if (!cleaned) continue;
 
-    for (const word of words) {
+    for (const word of cleaned.split(' ')) {
       if (word.length >= 3 && !STOPWORDS_PT.has(word)) {
-        termCounts[word] = (termCounts[word] ?? 0) + 1;
+        recordTerm(word, entry.productName, 1);
       }
     }
   }
 
-  return Object.entries(termCounts)
-    .map(([term, count]) => ({ term, count }))
+  return Object.entries(termAcc)
+    .map(([term, data]) => ({
+      term,
+      count: data.count,
+      topProducts: sortTopNoteProducts(data.productCounts),
+    }))
     .sort((a, b) => b.count - a.count)
-    .slice(0, 15);
+    .slice(0, 12);
 }
 
 function isTechnicalSupplementItem(item: RawAnalyticsOrderItem): boolean {
@@ -459,7 +700,9 @@ export async function getAnalyticsSummary(
       };
     }
 
-    let query = supabase
+    const windows = getPeriodWindows(period);
+
+    let ordersQuery = supabase
       .from('orders')
       .select(`
         id,
@@ -488,19 +731,36 @@ export async function getAnalyticsSummary(
         )
       `)
       .eq('restaurant_id', staff.restaurant.id)
-      .eq('status', 'completed')
+      .in('status', ['completed', 'cancelled'])
       .order('created_at', { ascending: false })
-      .limit(1500);
+      .limit(3000);
 
-    const startDate = getStartDateForPeriod(period);
-    if (startDate) {
-      query = query.gte('created_at', startDate);
+    if (windows.previousStartIso) {
+      ordersQuery = ordersQuery.gte('created_at', windows.previousStartIso);
     }
 
-    const { data: rawOrders, error } = await query;
+    const productsQuery = supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        price,
+        is_available,
+        categories (
+          name,
+          slug
+        )
+      `)
+      .eq('restaurant_id', staff.restaurant.id)
+      .order('display_order', { ascending: true });
 
-    if (error) {
-      console.error('[getAnalyticsSummary] Erro ao consultar Supabase:', error.message);
+    const [ordersResult, productsResult] = await Promise.all([
+      ordersQuery,
+      productsQuery,
+    ]);
+
+    if (ordersResult.error) {
+      console.error('[getAnalyticsSummary] Erro ao consultar Supabase:', ordersResult.error.message);
       return {
         success: false,
         error: {
@@ -510,12 +770,46 @@ export async function getAnalyticsSummary(
       };
     }
 
-    const orders = (rawOrders || []) as unknown as RawAnalyticsOrder[];
+    const allFetchedOrders = (ordersResult.data || []) as unknown as RawAnalyticsOrder[];
+    const catalogProducts = (productsResult.data || []) as unknown as RawCatalogProductRow[];
+
+    const orders: RawAnalyticsOrder[] = [];
+    const cancelledOrders: RawAnalyticsOrder[] = [];
+    const prevCompletedOrders: RawAnalyticsOrder[] = [];
+
+    for (const row of allFetchedOrders) {
+      const createdMs = new Date(row.created_at).getTime();
+      const inCurrentPeriod =
+        windows.currentStartMs === null || createdMs >= windows.currentStartMs;
+
+      if (inCurrentPeriod) {
+        if (row.status === 'completed') {
+          orders.push(row);
+        } else if (row.status === 'cancelled') {
+          cancelledOrders.push(row);
+        }
+      } else if (
+        windows.previousStartMs !== null &&
+        createdMs >= windows.previousStartMs &&
+        row.status === 'completed'
+      ) {
+        prevCompletedOrders.push(row);
+      }
+    }
+
     const totalOrders = orders.length;
 
     let totalRevenue = 0;
     let totalTurnaroundMinutes = 0;
     let slaViolationCount = 0;
+
+    const channelAcc: Record<
+      'dine_in' | 'takeaway',
+      { orderCount: number; revenue: number; turnaroundSum: number }
+    > = {
+      dine_in: { orderCount: 0, revenue: 0, turnaroundSum: 0 },
+      takeaway: { orderCount: 0, revenue: 0, turnaroundSum: 0 },
+    };
 
     const tableMap: Record<
       number,
@@ -544,7 +838,27 @@ export async function getAnalyticsSummary(
       }
     > = {};
 
-    const noteTexts: string[] = [];
+    const categoryMap: Record<
+      string,
+      {
+        categoryName: string;
+        categorySlug: string;
+        station: 'bar' | 'kitchen';
+        unitsSold: number;
+        revenue: number;
+        profit: number;
+      }
+    > = {};
+
+    const stationMap: Record<
+      'bar' | 'kitchen',
+      { unitsSold: number; revenue: number; profit: number }
+    > = {
+      bar: { unitsSold: 0, revenue: 0, profit: 0 },
+      kitchen: { unitsSold: 0, revenue: 0, profit: 0 },
+    };
+
+    const noteEntries: AnnotatedNoteEntry[] = [];
 
     for (const order of orders) {
       const orderTotal = Number(order.total) || 0;
@@ -555,7 +869,22 @@ export async function getAnalyticsSummary(
           .replace(/^\[TAKE-AWAY\][^\n]*\n?(?:Notas:\s*)?/i, '')
           .trim();
         if (cleanedCustomerNote) {
-          noteTexts.push(cleanedCustomerNote);
+          const uniqueMainProductNames = Array.from(
+            new Set(
+              (order.order_items || [])
+                .filter((i) => !isTechnicalSupplementItem(i))
+                .map((i) => (i.product_name || '').trim())
+                .filter(Boolean)
+            )
+          );
+          const attributedProduct =
+            uniqueMainProductNames.length === 1
+              ? uniqueMainProductNames[0]
+              : 'Pedido Geral';
+          noteEntries.push({
+            text: cleanedCustomerNote,
+            productName: attributedProduct,
+          });
         }
       }
 
@@ -581,18 +910,28 @@ export async function getAnalyticsSummary(
       }
 
       const tblNum = Number(order.table_number) || 0;
-      if (!tableMap[tblNum]) {
-        tableMap[tblNum] = { revenue: 0, ordersCount: 0, turnaroundSum: 0 };
+      const channelKey = tblNum === 0 ? 'takeaway' : 'dine_in';
+      channelAcc[channelKey].orderCount += 1;
+      channelAcc[channelKey].revenue += orderTotal;
+      channelAcc[channelKey].turnaroundSum += turnaroundMin;
+
+      if (tblNum > 0) {
+        if (!tableMap[tblNum]) {
+          tableMap[tblNum] = { revenue: 0, ordersCount: 0, turnaroundSum: 0 };
+        }
+        tableMap[tblNum].revenue += orderTotal;
+        tableMap[tblNum].ordersCount += 1;
+        tableMap[tblNum].turnaroundSum += turnaroundMin;
       }
-      tableMap[tblNum].revenue += orderTotal;
-      tableMap[tblNum].ordersCount += 1;
-      tableMap[tblNum].turnaroundSum += turnaroundMin;
 
       for (const item of order.order_items || []) {
         if (item.notes) {
           const cleanedItemNote = cleanItemNoteForNlp(item.notes);
           if (cleanedItemNote) {
-            noteTexts.push(cleanedItemNote);
+            noteEntries.push({
+              text: cleanedItemNote,
+              productName: (item.product_name || 'Artigo').trim(),
+            });
           }
         }
 
@@ -603,30 +942,14 @@ export async function getAnalyticsSummary(
         const prodKey = item.product_id || item.product_name || 'artigo-gerico';
         const qty = Number(item.quantity) || 1;
         const unitPrice = Number(item.unit_price) || 0;
-
-        let unitCost =
-          item.unit_cost !== undefined && item.unit_cost !== null
-            ? Number(item.unit_cost)
-            : null;
-        if (unitCost === null && item.products?.cost !== null && item.products?.cost !== undefined) {
-          unitCost = Number(item.products.cost);
-        }
-        if (unitCost === null || Number.isNaN(unitCost) || unitCost <= 0) {
-          const catSlug = (item.products?.categories?.slug || '').toLowerCase();
-          let ratio = 0.32;
-          if (catSlug.includes('bebida')) {
-            ratio = 0.24;
-          } else if (catSlug.includes('caracoiz') || catSlug.includes('pizza')) {
-            ratio = 0.28;
-          } else if (catSlug.includes('sobremesa') || catSlug.includes('entrada')) {
-            ratio = 0.30;
-          } else if (catSlug.includes('burger') || catSlug.includes('prego') || catSlug.includes('panuozzo')) {
-            ratio = 0.35;
-          }
-          unitCost = Math.round(unitPrice * ratio * 100) / 100;
-        }
+        const unitCost = resolveItemUnitCost(item);
+        const unitMargin = Math.max(0, unitPrice - unitCost);
+        const itemRevenue = unitPrice * qty;
+        const itemProfit = unitMargin * qty;
 
         const categoryName = item.products?.categories?.name || 'Geral';
+        const categorySlug = item.products?.categories?.slug || 'geral';
+        const station = resolveStation(categorySlug);
 
         if (!productMap[prodKey]) {
           productMap[prodKey] = {
@@ -642,10 +965,29 @@ export async function getAnalyticsSummary(
         }
 
         productMap[prodKey].quantitySold += qty;
-        productMap[prodKey].revenue += unitPrice * qty;
-        productMap[prodKey].unitPriceSum += unitPrice * qty;
+        productMap[prodKey].revenue += itemRevenue;
+        productMap[prodKey].unitPriceSum += itemRevenue;
         productMap[prodKey].unitCostSum += unitCost * qty;
         productMap[prodKey].occurrences += qty;
+
+        const catKey = `${station}::${categorySlug}::${categoryName}`;
+        if (!categoryMap[catKey]) {
+          categoryMap[catKey] = {
+            categoryName,
+            categorySlug,
+            station,
+            unitsSold: 0,
+            revenue: 0,
+            profit: 0,
+          };
+        }
+        categoryMap[catKey].unitsSold += qty;
+        categoryMap[catKey].revenue += itemRevenue;
+        categoryMap[catKey].profit += itemProfit;
+
+        stationMap[station].unitsSold += qty;
+        stationMap[station].revenue += itemRevenue;
+        stationMap[station].profit += itemProfit;
       }
     }
 
@@ -821,8 +1163,8 @@ export async function getAnalyticsSummary(
     };
 
     // Semantic NLP & Cost Leakage
-    const semanticNotes = extractSemanticNotes(noteTexts);
-    const topNoteTerms = extractTopNoteTerms(noteTexts);
+    const semanticNotes = extractSemanticNotes(noteEntries);
+    const topNoteTerms = extractTopNoteTerms(noteEntries);
 
     // Cross-Selling / Market Basket Pairs
     const marketBasketCombos = computeMarketBasket(orders);
@@ -892,6 +1234,200 @@ export async function getAnalyticsSummary(
       currentMarginPercent,
     };
 
+    // Comparação com Período Anterior
+    let prevRevenue = 0;
+    let prevTurnaroundViolations = 0;
+    const prevOrdersCount = prevCompletedOrders.length;
+
+    for (const prevOrder of prevCompletedOrders) {
+      prevRevenue += Number(prevOrder.total) || 0;
+      const createdMs = new Date(prevOrder.created_at).getTime();
+      const updatedMs = new Date(prevOrder.updated_at).getTime();
+      const turnaroundMin = Math.max(0, Math.round((updatedMs - createdMs) / 60000));
+      if (turnaroundMin > 20) {
+        prevTurnaroundViolations += 1;
+      }
+    }
+
+    const prevAvgTicket = prevOrdersCount > 0 ? prevRevenue / prevOrdersCount : 0;
+    const prevSlaComplianceRate =
+      prevOrdersCount > 0
+        ? Math.round((100 - (prevTurnaroundViolations / prevOrdersCount) * 100) * 10) / 10
+        : 0;
+
+    const periodComparison: PeriodComparisonMetrics = {
+      previousLabel: windows.previousLabel,
+      hasComparison: windows.hasComparison,
+      revenueDeltaPercent: windows.hasComparison
+        ? computePercentDelta(totalRevenue, prevRevenue)
+        : null,
+      ordersDeltaPercent: windows.hasComparison
+        ? computePercentDelta(totalOrders, prevOrdersCount)
+        : null,
+      ticketDeltaPercent: windows.hasComparison
+        ? computePercentDelta(averageTicket, prevAvgTicket)
+        : null,
+      slaDeltaPoints:
+        windows.hasComparison && prevOrdersCount > 0
+          ? Math.round((slaComplianceRate - prevSlaComplianceRate) * 10) / 10
+          : null,
+      previousRevenue: Math.round(prevRevenue * 100) / 100,
+      previousOrders: prevOrdersCount,
+    };
+
+    // Sala vs. Take-Away
+    const buildChannelMetric = (
+      channel: 'dine_in' | 'takeaway',
+      label: string
+    ): ChannelMetricItem => {
+      const acc = channelAcc[channel];
+      return {
+        channel,
+        label,
+        orderCount: acc.orderCount,
+        revenue: Math.round(acc.revenue * 100) / 100,
+        revenueSharePercent:
+          totalRevenue > 0 ? Math.round((acc.revenue / totalRevenue) * 1000) / 10 : 0,
+        averageTicket:
+          acc.orderCount > 0 ? Math.round((acc.revenue / acc.orderCount) * 100) / 100 : 0,
+        avgTurnaroundMinutes:
+          acc.orderCount > 0
+            ? Math.round((acc.turnaroundSum / acc.orderCount) * 10) / 10
+            : 0,
+      };
+    };
+
+    const channelSplit: ChannelSplitMetrics = {
+      dineIn: buildChannelMetric('dine_in', 'Sala (Mesas)'),
+      takeaway: buildChannelMetric('takeaway', 'Take-Away / Balcão'),
+    };
+
+    // Desempenho por Secção (Bar/Copa vs. Cozinha) e Categoria
+    const totalCategorizedRevenue = Object.values(categoryMap).reduce(
+      (sum, c) => sum + c.revenue,
+      0
+    );
+
+    const stationSplit: StationPerformanceMetric[] = (['kitchen', 'bar'] as const).map(
+      (st) => {
+        const s = stationMap[st];
+        return {
+          station: st,
+          label: st === 'bar' ? 'Bar / Copa' : 'Cozinha',
+          unitsSold: s.unitsSold,
+          revenue: Math.round(s.revenue * 100) / 100,
+          profit: Math.round(s.profit * 100) / 100,
+          revenueSharePercent:
+            totalCategorizedRevenue > 0
+              ? Math.round((s.revenue / totalCategorizedRevenue) * 1000) / 10
+              : 0,
+          marginPercent:
+            s.revenue > 0 ? Math.round((s.profit / s.revenue) * 1000) / 10 : 0,
+        };
+      }
+    );
+
+    const categoryPerformance: CategoryPerformanceMetric[] = Object.values(categoryMap)
+      .map((c) => ({
+        categoryName: c.categoryName,
+        categorySlug: c.categorySlug,
+        station: c.station,
+        unitsSold: c.unitsSold,
+        revenue: Math.round(c.revenue * 100) / 100,
+        profit: Math.round(c.profit * 100) / 100,
+        marginPercent:
+          c.revenue > 0 ? Math.round((c.profit / c.revenue) * 1000) / 10 : 0,
+        revenueSharePercent:
+          totalCategorizedRevenue > 0
+            ? Math.round((c.revenue / totalCategorizedRevenue) * 1000) / 10
+            : 0,
+      }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    // Cancelamentos & Receita Perdida
+    const cancelledOrdersCount = cancelledOrders.length;
+    let lostRevenueEur = 0;
+    const cancelledProductAcc: Record<string, CancelledProductMetric> = {};
+
+    for (const cOrder of cancelledOrders) {
+      lostRevenueEur += Number(cOrder.total) || 0;
+      for (const item of cOrder.order_items || []) {
+        if (isTechnicalSupplementItem(item)) continue;
+        const pName = (item.product_name || 'Artigo').trim();
+        const catName = item.products?.categories?.name || 'Geral';
+        const qty = Number(item.quantity) || 1;
+        const lost = (Number(item.unit_price) || 0) * qty;
+        if (!cancelledProductAcc[pName]) {
+          cancelledProductAcc[pName] = {
+            productName: pName,
+            categoryName: catName,
+            cancelledQty: 0,
+            lostRevenue: 0,
+          };
+        }
+        cancelledProductAcc[pName].cancelledQty += qty;
+        cancelledProductAcc[pName].lostRevenue += lost;
+      }
+    }
+
+    const totalRelevantOrders = totalOrders + cancelledOrdersCount;
+    const cancellations: CancellationAnalytics = {
+      cancelledOrdersCount,
+      cancellationRatePercent:
+        totalRelevantOrders > 0
+          ? Math.round((cancelledOrdersCount / totalRelevantOrders) * 1000) / 10
+          : 0,
+      lostRevenueEur: Math.round(lostRevenueEur * 100) / 100,
+      avgCancelledTicketEur:
+        cancelledOrdersCount > 0
+          ? Math.round((lostRevenueEur / cancelledOrdersCount) * 100) / 100
+          : 0,
+      topCancelledProducts: Object.values(cancelledProductAcc)
+        .map((p) => ({
+          ...p,
+          lostRevenue: Math.round(p.lostRevenue * 100) / 100,
+        }))
+        .sort((a, b) => b.cancelledQty - a.cancelledQty || b.lostRevenue - a.lostRevenue)
+        .slice(0, 6),
+    };
+
+    // Artigos Sem Vendas ("Parados")
+    const soldProductIds = new Set(rawProductList.map((p) => p.productId));
+    const soldProductNames = new Set(
+      rawProductList.map((p) => p.productName.trim().toLowerCase())
+    );
+
+    const unsoldProducts: UnsoldProductMetric[] = [];
+    for (const prod of catalogProducts) {
+      const cat = Array.isArray(prod.categories) ? prod.categories[0] : prod.categories;
+      const catSlug = (cat?.slug || '').toLowerCase();
+      if (
+        catSlug.startsWith('ingredientes-extra') ||
+        prod.name.toLowerCase().includes('caixa take away')
+      ) {
+        continue;
+      }
+      if (
+        soldProductIds.has(prod.id) ||
+        soldProductNames.has(prod.name.trim().toLowerCase())
+      ) {
+        continue;
+      }
+      unsoldProducts.push({
+        productId: prod.id,
+        productName: prod.name,
+        categoryName: cat?.name || 'Geral',
+        unitPrice: Math.round((Number(prod.price) || 0) * 100) / 100,
+        isAvailable: Boolean(prod.is_available),
+      });
+    }
+
+    unsoldProducts.sort((a, b) => {
+      if (a.isAvailable !== b.isAvailable) return a.isAvailable ? -1 : 1;
+      const catCmp = a.categoryName.localeCompare(b.categoryName, 'pt-PT');
+      return catCmp !== 0 ? catCmp : a.productName.localeCompare(b.productName, 'pt-PT');
+    });
+
     return {
       success: true,
       data: {
@@ -920,6 +1456,12 @@ export async function getAnalyticsSummary(
         totalMarginLeakageEur: semanticNotes.totalMarginLeakageEur,
         sparklines,
         whatIfBaseline,
+        periodComparison,
+        channelSplit,
+        stationSplit,
+        categoryPerformance,
+        cancellations,
+        unsoldProducts,
       },
     };
   } catch (err: unknown) {

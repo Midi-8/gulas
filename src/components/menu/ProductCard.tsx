@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { Product } from '@/types/restaurant';
 import { formatCurrency } from '@/data/mockRestaurant';
 import { useCart } from '@/context/CartContext';
@@ -14,19 +13,15 @@ interface ProductCardProps {
   product: Product;
   variants?: Product[];
   onOpenDetails: (product: Product) => void;
-  priority?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   variants,
   onOpenDetails,
-  priority = false,
 }) => {
   const { items, addItem, updateQuantity } = useCart();
   const { t } = useLanguage();
-  const [imageFailed, setImageFailed] = useState(false);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
 
   const hasMultipleVariants = Boolean(variants && variants.length > 1);
@@ -59,8 +54,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         .filter(Boolean)
         .join(' · ')
     : product.unitQuantity;
-
-  const hasValidImage = Boolean(product.imageUrl && !imageFailed);
 
   const triggerHaptic = (ms: number = 12) => {
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
@@ -153,7 +146,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           )}
 
-          {/* Notas técnicas discretas & Alergénios */}
+          {/* Notas técnicas discretas */}
           {(product.customizationNote || product.includesNotes) && (
             <p className="text-[11px] text-zinc-400 font-normal leading-snug line-clamp-1 pt-0.5">
               {[product.includesNotes, product.customizationNote]
@@ -161,14 +154,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 .join(' · ')}
             </p>
           )}
-          {product.allergens && product.allergens.length > 0 && (
-            <p className="text-[10px] text-zinc-400 font-medium leading-snug line-clamp-1">
-              {t('allergensPrefix')}: {product.allergens.join(', ')}
-            </p>
-          )}
         </div>
 
-        {/* Rodapé: Preço e Controlo (quando não tem imagem) */}
+        {/* Rodapé: Preço e Controlo */}
         <div className="mt-3.5 pt-2.5 flex items-center justify-between gap-2">
           <span className="text-sm sm:text-[15px] font-semibold font-mono tabular-nums text-zinc-900 tracking-tight">
             {hasMultipleVariants && minPrice !== maxPrice
@@ -176,104 +164,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               : formatCurrency(product.price)}
           </span>
 
-          {!hasValidImage && (
-            <div>
-              {isAnyVariantAvailable ? (
-                currentQuantity > 0 ? (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-center gap-1 bg-zinc-100 rounded-full p-0.5 border border-zinc-200"
-                  >
-                    <button
-                      type="button"
-                      onClick={handleDecrement}
-                      className="w-7 h-7 rounded-full bg-white text-zinc-900 hover:bg-zinc-200 flex items-center justify-center transition-colors active:scale-90 shadow-2xs cursor-pointer"
-                      aria-label="Diminuir quantidade"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="text-xs font-semibold font-mono text-zinc-900 w-5 text-center">
-                      {currentQuantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleIncrement}
-                      className={clsx(
-                        'w-7 h-7 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 flex items-center justify-center transition-all duration-200 active:scale-75 shadow-2xs cursor-pointer',
-                        isPulsing && 'scale-110 ring-2 ring-zinc-900/20'
-                      )}
-                      aria-label="Aumentar quantidade"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleQuickAdd}
-                    className={clsx(
-                      'w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-900 text-zinc-900 hover:text-white border border-zinc-200/80 hover:border-zinc-900 flex items-center justify-center transition-all duration-200 active:scale-75 cursor-pointer',
-                      isPulsing && 'scale-110 bg-zinc-900 text-white'
-                    )}
-                    aria-label={`Adicionar ${product.name}`}
-                  >
-                    <Plus className="w-4 h-4 stroke-[2]" />
-                  </button>
-                )
-              ) : (
-                <span className="text-[11px] font-medium text-zinc-400 select-none">
-                  {t('unavailable')}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Coluna Direita: Imagem Real (apenas quando existe fotografia do produto) */}
-      {hasValidImage && (
-        <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-100 ring-1 ring-inset ring-black/5 shrink-0 self-center">
-          {!isImageLoaded && (
-            <div className="absolute inset-0 bg-zinc-100 animate-pulse" />
-          )}
-          <Image
-            src={product.imageUrl!}
-            alt={product.name}
-            fill
-            priority={priority}
-            sizes="120px"
-            className={clsx(
-              'object-cover transition-transform duration-500 ease-out group-hover:scale-105',
-              !isImageLoaded ? 'opacity-0' : 'opacity-100',
-              !isAnyVariantAvailable && 'grayscale contrast-75'
-            )}
-            onLoad={() => setIsImageLoaded(true)}
-            onError={() => setImageFailed(true)}
-          />
-
-          {/* Controlo sobreposto no canto inferior direito da imagem */}
-          {isAnyVariantAvailable && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="absolute bottom-1.5 right-1.5"
-            >
-              {currentQuantity > 0 ? (
-                <div className="flex items-center gap-1 bg-white/95 backdrop-blur-xs rounded-full p-0.5 border border-zinc-200 shadow-sm">
+          <div>
+            {isAnyVariantAvailable ? (
+              currentQuantity > 0 ? (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 bg-zinc-100 rounded-full p-0.5 border border-zinc-200"
+                >
                   <button
                     type="button"
                     onClick={handleDecrement}
-                    className="w-6 h-6 rounded-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-7 h-7 rounded-full bg-white text-zinc-900 hover:bg-zinc-200 flex items-center justify-center transition-colors active:scale-90 shadow-2xs cursor-pointer"
                     aria-label="Diminuir quantidade"
                   >
                     <Minus className="w-3 h-3" />
                   </button>
-                  <span className="text-[11px] font-semibold font-mono text-zinc-900 w-4 text-center">
+                  <span className="text-xs font-semibold font-mono text-zinc-900 w-5 text-center">
                     {currentQuantity}
                   </span>
                   <button
                     type="button"
                     onClick={handleIncrement}
-                    className="w-6 h-6 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 flex items-center justify-center transition-colors cursor-pointer"
+                    className={clsx(
+                      'w-7 h-7 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 flex items-center justify-center transition-all duration-200 active:scale-75 shadow-2xs cursor-pointer',
+                      isPulsing && 'scale-110 ring-2 ring-zinc-900/20'
+                    )}
                     aria-label="Aumentar quantidade"
                   >
                     <Plus className="w-3 h-3" />
@@ -284,18 +199,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   type="button"
                   onClick={handleQuickAdd}
                   className={clsx(
-                    'w-7 h-7 rounded-full bg-white/95 backdrop-blur-xs hover:bg-zinc-900 text-zinc-900 hover:text-white border border-zinc-200/80 flex items-center justify-center shadow-sm transition-all cursor-pointer',
+                    'w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-900 text-zinc-900 hover:text-white border border-zinc-200/80 hover:border-zinc-900 flex items-center justify-center transition-all duration-200 active:scale-75 cursor-pointer',
                     isPulsing && 'scale-110 bg-zinc-900 text-white'
                   )}
                   aria-label={`Adicionar ${product.name}`}
                 >
-                  <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
+                  <Plus className="w-4 h-4 stroke-[2]" />
                 </button>
-              )}
-            </div>
-          )}
+              )
+            ) : (
+              <span className="text-[11px] font-medium text-zinc-400 select-none">
+                {t('unavailable')}
+              </span>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </article>
   );
 };

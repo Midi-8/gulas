@@ -18,7 +18,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/types';
 import { menuAvisos } from '@/data/gulasCatalog';
-import { Utensils, Info, ChevronDown, Clock } from 'lucide-react';
+import { Utensils, Info, ChevronDown } from 'lucide-react';
 
 interface RestaurantMenuViewProps {
   restaurant: Restaurant;
@@ -47,23 +47,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
   const [prevProducts, setPrevProducts] = useState<Product[]>(products);
   const [realtimeOpenOverride, setRealtimeOpenOverride] = useState<boolean | null>(null);
   const [showServiceInfo, setShowServiceInfo] = useState(false);
-  const [estimatedPrepLabel, setEstimatedPrepLabel] = useState('~15–20 min');
   const isRestaurantOpen = realtimeOpenOverride ?? restaurant.isOpen;
-
-  useEffect(() => {
-    const updatePrepEstimate = () => {
-      const now = new Date();
-      const minutesOfDay = now.getHours() * 60 + now.getMinutes();
-      const isLunchPeak = minutesOfDay >= 12 * 60 + 30 && minutesOfDay <= 14 * 60;
-      const isDinnerPeak = minutesOfDay >= 20 * 60 && minutesOfDay <= 21 * 60 + 30;
-      setEstimatedPrepLabel(
-        isLunchPeak || isDinnerPeak ? '~25–30 min (Hora de Ponta)' : '~15–20 min'
-      );
-    };
-    updatePrepEstimate();
-    const timer = setInterval(updatePrepEstimate, 5 * 60 * 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Categorias visíveis na navegação principal (oculta categorias técnicas de suplementos)
   const visibleCategories = useMemo(
@@ -237,24 +221,6 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
         matchesPill = !!p.badges?.includes('picante');
       } else if (activeFilter === 'vegetariano') {
         matchesPill = !!p.badges?.some((b) => b === 'vegetariano' || b === 'vegan');
-      } else if (activeFilter === 'sem_gluten') {
-        const allergensLower = (p.allergens || []).map((a) => a.toLowerCase());
-        const hasGlutenTag = allergensLower.some((a) => a.includes('glúten') || a.includes('gluten'));
-        const catSlug = visibleCategories.find((c) => c.id === p.categoryId)?.slug || '';
-        const likelyHasGluten =
-          allergensLower.length === 0 &&
-          (catSlug.includes('pizza') ||
-            catSlug.includes('panuozzo') ||
-            catSlug.includes('caracoiz') ||
-            catSlug.includes('prego') ||
-            catSlug.includes('burger'));
-        matchesPill = !hasGlutenTag && !likelyHasGluten;
-      } else if (activeFilter === 'sem_lactose') {
-        const allergensLower = (p.allergens || []).map((a) => a.toLowerCase());
-        const hasLactoseTag = allergensLower.some(
-          (a) => a.includes('lactose') || a.includes('laticín') || a.includes('leite')
-        );
-        matchesPill = !hasLactoseTag;
       }
 
       return matchesSearch && matchesPill;
@@ -321,10 +287,6 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
             </span>
           </span>
           <span className="flex items-center gap-2 shrink-0">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-700 text-[10px] font-semibold">
-              <Clock className="w-3 h-3 text-zinc-500" />
-              {estimatedPrepLabel}
-            </span>
             <ChevronDown
               className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200 ${
                 showServiceInfo ? 'rotate-180' : ''
@@ -375,7 +337,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
             </p>
           </div>
         ) : (
-          visibleCategories.map((category, catIndex) => {
+          visibleCategories.map((category) => {
             const items = productsByCategory.get(category.id) || [];
             if (items.length === 0 && (searchQuery !== '' || activeFilter !== 'all')) {
               return null;
@@ -417,13 +379,12 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    {items.map(({ primary, variants }, itemIndex) => (
+                    {items.map(({ primary, variants }) => (
                       <ProductCard
                         key={primary.id}
                         product={primary}
                         variants={variants}
                         onOpenDetails={handleOpenProductDetails}
-                        priority={catIndex === 0 && itemIndex < 2}
                       />
                     ))}
                   </div>

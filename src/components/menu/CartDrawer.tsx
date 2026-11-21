@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import Image from 'next/image';
 import { Product } from '@/types/restaurant';
 import { useCart } from '@/context/CartContext';
 import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
@@ -414,18 +413,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       : 'border-zinc-200/80'
                   }`}
                 >
-                  {product.imageUrl && (
-                    <div className="relative w-13 h-13 rounded-xl overflow-hidden bg-zinc-100 shrink-0 border border-zinc-200/60">
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        fill
-                        sizes="52px"
-                        className={`object-cover ${!product.available ? 'grayscale' : ''}`}
-                      />
-                    </div>
-                  )}
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
@@ -527,7 +514,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             )}
 
             {/* Observações gerais */}
-            <div>
+            <div className="space-y-2">
+              <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                <strong>Tens alguma alergia alimentar?</strong> Avisa a cozinha nas observações do pedido ou informa diretamente o nosso staff.
+              </div>
               <label
                 htmlFor="general-order-notes"
                 className="text-xs font-semibold text-zinc-700 block mb-1"
@@ -540,7 +530,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 maxLength={1000}
                 value={orderNotes}
                 onChange={(e) => setOrderNotes(e.target.value)}
-                placeholder="Ex: trazer tudo junto, sem cebola..."
+                placeholder="Ex: trazer tudo junto, alergia a..."
                 className="w-full px-3 py-2.5 rounded-xl bg-white border border-zinc-200/80 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900"
               />
             </div>

@@ -4,7 +4,7 @@ import React from 'react';
 import { useCart } from '@/context/CartContext';
 import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency, mockRestaurant } from '@/data/mockRestaurant';
-import { CheckCircle2, Clock, UtensilsCrossed, X } from 'lucide-react';
+import { CheckCircle2, UtensilsCrossed, X } from 'lucide-react';
 
 export const OrderConfirmationModal: React.FC = () => {
   const {
@@ -67,16 +67,6 @@ export const OrderConfirmationModal: React.FC = () => {
           </div>
 
           <div className="pt-0.5 space-y-2">
-            <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white border border-zinc-200/80">
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-600">
-                <Clock className="w-3.5 h-3.5 text-zinc-500" />
-                Tempo estimado
-              </span>
-              <span className="text-[11px] font-semibold text-zinc-900">
-                ~15–20 min
-              </span>
-            </div>
-
             <div className="grid grid-cols-4 gap-1 text-center">
               {steps.map((step, idx) => (
                 <div key={idx} className="space-y-1">

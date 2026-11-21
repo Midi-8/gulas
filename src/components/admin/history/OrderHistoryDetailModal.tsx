@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { ManagedOrder } from '@/actions/order-management';
 import { OrderStatusBadge } from '../orders/OrderStatusBadge';
 import { OrderItemsList } from '../orders/OrderItemsList';
-import { X, Calendar, Clock, MessageSquare, Undo2, Printer } from 'lucide-react';
 
 interface OrderHistoryDetailModalProps {
   order: ManagedOrder | null;
@@ -60,44 +59,43 @@ export function OrderHistoryDetailModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-zinc-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="p-5 border-b border-zinc-200/80 flex items-start justify-between bg-zinc-50">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span
                 id="history-order-modal-title"
-                className="text-2xl font-bold text-zinc-900 tracking-tight"
+                className="text-2xl font-bold font-mono text-zinc-950 tracking-tight"
               >
                 #{order.orderNumber}
               </span>
               {order.tableNumber === 0 ? (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold uppercase">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-emerald-700 bg-emerald-600 text-white text-[11px] font-bold uppercase tracking-wider">
                   Take-Away
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-zinc-900 text-white text-xs font-semibold uppercase">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-zinc-900 bg-zinc-900 text-white text-[11px] font-bold uppercase tracking-wider">
                   Mesa {order.tableNumber}
                 </span>
               )}
               <OrderStatusBadge status={order.status} size="sm" />
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1.5">
-              <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-              <span>{formatDateTime(order.createdAt)}</span>
-            </div>
+            <p className="text-xs font-mono text-zinc-500 mt-1.5">
+              {formatDateTime(order.createdAt)}
+            </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-zinc-200/70 text-zinc-600 hover:bg-zinc-200 focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none flex items-center justify-center transition-colors cursor-pointer"
+            className="h-9 px-3 rounded-xl border border-zinc-200/90 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer"
             aria-label="Fechar modal"
           >
-            <X className="w-4 h-4" />
+            Fechar
           </button>
         </div>
 
@@ -105,75 +103,68 @@ export function OrderHistoryDetailModal({
         <div className="p-5 overflow-y-auto space-y-4">
           {/* Customer notes */}
           {order.customerNotes && (
-            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 flex items-start gap-2.5 text-xs text-amber-950 font-medium">
-              <MessageSquare className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-semibold text-amber-900">
-                  Nota do cliente:{' '}
-                </strong>
-                <span>{order.customerNotes}</span>
-              </div>
+            <div className="p-3 rounded-xl border border-amber-200/90 bg-amber-50/90 text-xs font-medium text-amber-950 leading-relaxed">
+              <span className="inline-block rounded-md bg-amber-700 text-white px-1.5 py-0.5 font-bold uppercase tracking-wider text-[10px] mr-2">
+                Nota
+              </span>
+              <span className="whitespace-pre-line">{order.customerNotes}</span>
             </div>
           )}
 
           {/* Items Section */}
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-2">
-              Artigos do Pedido ({order.items.reduce((acc, i) => acc + i.quantity, 0)})
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 block mb-2">
+              Artigos do Pedido (
+              {order.items.reduce((acc, i) => acc + i.quantity, 0)})
             </span>
-            <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-200/80">
+            <div className="bg-zinc-50 rounded-xl px-3 border border-zinc-200/80">
               <OrderItemsList items={order.items} />
             </div>
           </div>
 
           {/* Timestamp details */}
           <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-200/80 flex items-center justify-between text-xs text-zinc-600">
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-zinc-400" />
-              Concluído / Atualizado em:
-            </span>
-            <span className="font-medium text-zinc-900">
+            <span>Concluído / Atualizado em:</span>
+            <span className="font-mono font-semibold text-zinc-900">
               {formatDateTime(order.updatedAt)}
             </span>
           </div>
         </div>
 
         {/* Footer Financials */}
-        <div className="p-5 bg-zinc-50 border-t border-zinc-200/80 flex items-center justify-between gap-3">
+        <div className="p-5 bg-zinc-50 border-t border-zinc-200/80 flex flex-wrap items-center justify-between gap-3">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block">
               Subtotal: {formatPrice(order.subtotal)}
             </span>
-            <span className="text-xl font-bold text-zinc-900 tracking-tight tabular-nums">
+            <span className="text-xl font-bold font-mono text-zinc-950 tracking-tight tabular-nums">
               Total: {formatPrice(order.total)}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-900 text-xs font-semibold border border-zinc-200 transition-all cursor-pointer"
+              className="h-10 px-4 cursor-pointer rounded-xl border border-zinc-200/90 bg-white text-xs font-semibold text-zinc-700 shadow-2xs transition-all hover:bg-zinc-900 hover:border-zinc-900 hover:text-white active:scale-[0.98]"
               title="Imprimir talão (80mm)"
             >
-              <Printer className="w-3.5 h-3.5 text-zinc-600" />
-              <span>Imprimir</span>
+              Imprimir
             </button>
             {order.status === 'completed' && onReopen && (
               <button
                 type="button"
                 onClick={() => onReopen(order)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:outline-none transition-all cursor-pointer"
+                className="h-10 px-4 cursor-pointer rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-semibold shadow-2xs transition-all active:scale-[0.98]"
                 aria-label={`Desfazer conclusão do pedido ${order.orderNumber}`}
               >
-                <Undo2 className="w-4 h-4" />
                 Desfazer conclusão
               </button>
             )}
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:outline-none transition-all cursor-pointer"
+              className="h-10 px-5 cursor-pointer rounded-xl border border-zinc-900 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold shadow-2xs transition-all active:scale-[0.98]"
             >
               Fechar
             </button>

@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { Category, Product } from '@/types/restaurant';
 import { formatCurrency } from '@/data/mockRestaurant';
 import { useCart } from '@/context/CartContext';
-import { X, Plus, Minus, AlertCircle, Info, Clock, ShoppingBag, Check } from 'lucide-react';
+import { X, Plus, Minus, Info, ShoppingBag, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 interface ProductDetailModalProps {
@@ -152,20 +151,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <X className="w-4 h-4" />
         </button>
 
-        {/* Hero Image */}
-        {product.imageUrl && (
-          <div className="relative h-48 sm:h-56 w-full bg-zinc-100 shrink-0 border-b border-zinc-100">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              priority
-              sizes="(max-width: 640px) 100vw, 512px"
-              className="object-cover"
-            />
-          </div>
-        )}
-
         {/* Scrollable Content */}
         <div className="p-5 overflow-y-auto space-y-4 flex-1">
           {/* Badges */}
@@ -176,12 +161,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             {product.unitQuantity && (
               <span className="text-xs text-zinc-700 font-medium px-2 py-0.5 rounded-md bg-zinc-100 border border-zinc-200/80">
                 {product.unitQuantity}
-              </span>
-            )}
-            {product.prepTimeMinutes && (
-              <span className="inline-flex items-center gap-1 text-xs text-zinc-500 font-medium">
-                <Clock className="w-3 h-3" />
-                {product.prepTimeMinutes} min
               </span>
             )}
             {existingInCart && (
@@ -286,17 +265,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
           )}
 
-          {/* Allergens warning */}
-          {product.allergens && product.allergens.length > 0 && (
-            <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-2 text-xs text-zinc-600">
-              <AlertCircle className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-semibold text-zinc-800">Alergénios: </span>
-                <span>{product.allergens.join(', ')}</span>
-              </div>
-            </div>
-          )}
-
           {/* Ingredientes Extra Selecionáveis */}
           {availableExtras.length > 0 && (
             <div className="space-y-2 pt-1">
@@ -362,9 +330,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex: sem cebola, sem molho picante, bem passado..."
+              placeholder="Ex: sem cebola, sem molho picante, se tiveres alguma alergia alimentar indica aqui..."
               className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-200/80 text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors resize-none"
             />
+            <p className="text-[11px] text-amber-800 font-medium">
+              Se tiveres alguma alergia alimentar, indica aqui para avisar a cozinha.
+            </p>
           </div>
         </div>
 
