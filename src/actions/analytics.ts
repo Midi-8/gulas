@@ -806,6 +806,9 @@ export async function getAnalyticsSummary(
     } else if (period === '30days') {
       projectedPeriodRevenue = Math.round(totalRevenue * 100) / 100;
       projectionLabel = 'Volume Consolidado Mensal';
+    } else if (period === 'all') {
+      projectedPeriodRevenue = Math.round(totalRevenue * 100) / 100;
+      projectionLabel = 'Volume Total Acumulado (Sempre)';
     }
 
     const runRate: RunRateMetrics = {

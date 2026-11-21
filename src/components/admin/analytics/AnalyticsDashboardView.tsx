@@ -43,7 +43,7 @@ const PERIOD_LABELS: Record<AnalyticsPeriod, string> = {
   today: 'Turno Hoje',
   '7days': '7 Dias',
   '30days': '30 Dias',
-  all: 'Histórico',
+  all: 'Sempre',
 };
 
 const BCG_CONFIG: Record<
@@ -299,7 +299,7 @@ export function AnalyticsDashboardView({
           <div className="flex flex-wrap items-center gap-3">
             {/* Period Selector Toggle */}
             <div className="inline-flex p-1 bg-[#F4F4F5] border border-[#E4E4E7] rounded-xl">
-              {(['today', '7days', '30days'] as AnalyticsPeriod[]).map((p) => {
+              {(['today', '7days', '30days', 'all'] as AnalyticsPeriod[]).map((p) => {
                 const isActive = period === p;
                 return (
                   <button
