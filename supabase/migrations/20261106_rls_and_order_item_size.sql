@@ -183,15 +183,21 @@ BEGIN
             RAISE EXCEPTION 'PRODUCT_INVALID: Formato de UUID do artigo inválido.' USING ERRCODE = 'P0001';
         END;
 
+        IF v_item_notes IS NOT NULL AND length(trim(v_item_notes)) > 500 THEN
+            RAISE EXCEPTION 'INVALID_NOTES: As observações do artigo excedem o limite de 500 caracteres.' USING ERRCODE = 'P0001';
+        END IF;
+
         IF v_quantity IS NULL OR v_quantity <= 0 OR v_quantity > 50 THEN
             RAISE EXCEPTION 'INVALID_QUANTITY: A quantidade do artigo deve estar entre 1 e 50.' USING ERRCODE = 'P0001';
         END IF;
 
-        SELECT id, name, price, cost, is_available, unit_quantity
+        SELECT p.id, p.name, p.price, p.cost, p.is_available, p.unit_quantity, c.is_active AS category_is_active
         INTO v_product
-        FROM public.products
-        WHERE id = v_product_id
-          AND restaurant_id = v_restaurant.id;
+        FROM public.products p
+        JOIN public.categories c ON c.id = p.category_id
+        WHERE p.id = v_product_id
+          AND p.restaurant_id = v_restaurant.id
+          AND c.restaurant_id = v_restaurant.id;
 
         IF NOT FOUND THEN
             RAISE EXCEPTION 'PRODUCT_INVALID: Artigo não encontrado no menu do restaurante.' USING ERRCODE = 'P0001';
@@ -199,6 +205,10 @@ BEGIN
 
         IF NOT v_product.is_available THEN
             RAISE EXCEPTION 'PRODUCT_UNAVAILABLE: O artigo "%" não se encontra disponível de momento.', v_product.name USING ERRCODE = 'P0001';
+        END IF;
+
+        IF NOT v_product.category_is_active THEN
+            RAISE EXCEPTION 'PRODUCT_UNAVAILABLE: A categoria do artigo "%" encontra-se indisponível de momento.', v_product.name USING ERRCODE = 'P0001';
         END IF;
 
         v_subtotal := v_subtotal + (v_product.price * v_quantity);

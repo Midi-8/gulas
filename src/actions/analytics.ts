@@ -1,7 +1,7 @@
 'use server';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getAuthenticatedStaff } from '@/lib/auth/staff';
+import { getAuthenticatedStaff, canManageCatalogAndAnalytics } from '@/lib/auth/staff';
 
 export type AnalyticsPeriod = 'today' | '7days' | '30days' | 'all';
 
@@ -437,7 +437,7 @@ export async function getAnalyticsSummary(
   try {
     const staff = await getAuthenticatedStaff();
 
-    if (!staff) {
+    if (!canManageCatalogAndAnalytics(staff)) {
       return {
         success: false,
         error: {
@@ -491,7 +491,8 @@ export async function getAnalyticsSummary(
       `)
       .eq('restaurant_id', staff.restaurant.id)
       .eq('status', 'completed')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(1500);
 
     const startDate = getStartDateForPeriod(period);
     if (startDate) {
@@ -924,7 +925,7 @@ export async function exportAnalyticsCsv(
   try {
     const staff = await getAuthenticatedStaff();
 
-    if (!staff) {
+    if (!canManageCatalogAndAnalytics(staff)) {
       return {
         success: false,
         error: {
@@ -963,7 +964,8 @@ export async function exportAnalyticsCsv(
       `)
       .eq('restaurant_id', staff.restaurant.id)
       .eq('status', 'completed')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(1500);
 
     const startDate = getStartDateForPeriod(period);
     if (startDate) {

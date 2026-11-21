@@ -1,4 +1,3 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
 import { Database } from '@/lib/supabase/types';
@@ -258,7 +257,7 @@ export const getCachedRestaurantBySlugWithMenu = unstable_cache(
   }
 );
 
-export async function getTableByNumber(
+async function fetchTableByNumberFromDb(
   restaurantId: string,
   tableNumber: number
 ): Promise<Table | null> {
@@ -270,8 +269,7 @@ export async function getTableByNumber(
     return table || null;
   }
 
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return null;
+  const supabase = getPublicSupabaseClient();
 
   const { data, error } = await supabase
     .from('tables')
@@ -305,3 +303,17 @@ export async function getTableByNumber(
 
   return mapTableFromRow(data);
 }
+
+/**
+ * Consulta otimizada com Edge Cache para validação de mesas via QR Code.
+ */
+export const getTableByNumber = unstable_cache(
+  async (restaurantId: string, tableNumber: number): Promise<Table | null> => {
+    return fetchTableByNumberFromDb(restaurantId, tableNumber);
+  },
+  ['table-by-number'],
+  {
+    revalidate: 300,
+    tags: ['menu'],
+  }
+);

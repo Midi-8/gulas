@@ -745,8 +745,31 @@ export const ActiveOrderTrackerProvider: React.FC<{
     channel.subscribe();
 
 
+    // Canal partilhado de Broadcast KDS -> Cliente para atualização instantânea (<100ms)
+    // contornando a limitação do postgres_changes sob RLS estrito para clientes anónimos.
+    const broadcastChannel = supabase
+      .channel('gulas-order-status-broadcast')
+      .on(
+        'broadcast',
+        { event: 'status_update' },
+        (msg) => {
+          const data = msg?.payload as { id?: string; status?: OrderStatus } | undefined;
+          if (
+            data?.id &&
+            data?.status &&
+            activeOrderIdsRef.current.includes(data.id)
+          ) {
+            handleStatusTransition(data.id, data.status);
+            void fetchLatestStatus(data.id);
+          }
+        }
+      )
+      .subscribe();
+
+
     return () => {
       void supabase.removeChannel(channel);
+      void supabase.removeChannel(broadcastChannel);
     };
   }, [activeOrderIds, handleStatusTransition, fetchLatestStatus]);
 

@@ -18,6 +18,7 @@ import { ValidNextStatus } from '@/lib/validations/order-management';
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
 import { useKdsAlerts } from '@/hooks/useKdsAlerts';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { OrderCard } from './OrderCard';
 import { ThermalReceipt } from './ThermalReceipt';
@@ -118,6 +119,10 @@ export function OrderDashboard({
   const [autoPrintOnAccept, setAutoPrintOnAccept] = useState(false);
   const [viewMode, setViewMode] = useState<KdsViewMode>('orders');
   const [tableCalls, setTableCalls] = useState<TableServiceCall[]>([]);
+  const tableCallsStorageKey = `gulas_kds_table_calls_${restaurantSlug || 'gulas'}`;
+  const isTableCallsHydratedRef = useRef(false);
+  const lastLocalMutationAtRef = useRef<number>(0);
+  const statusBroadcastChannelRef = useRef<RealtimeChannel | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [, setLastRefreshedAt] = useState<Date | null>(null);
@@ -244,12 +249,37 @@ export function OrderDashboard({
     triggerNewOrderAlert,
   } = useKdsAlerts();
 
-  // Subscrição em tempo real para Chamadas de Mesa ("Pedir a Conta" / "Chamar Staff")
+  // Subscrição em tempo real para Chamadas de Mesa ("Pedir a Conta" / "Chamar Staff") + Canal de Broadcast de Estado KDS -> Cliente
   useEffect(() => {
+    try {
+      const rawCalls = localStorage.getItem(tableCallsStorageKey);
+      if (rawCalls) {
+        const parsed = JSON.parse(rawCalls);
+        if (Array.isArray(parsed)) {
+          const twoHoursMs = 2 * 60 * 60 * 1000;
+          const nowMs = Date.now();
+          const validCalls = parsed.filter((c): c is TableServiceCall => {
+            if (!c || typeof c.id !== 'string' || typeof c.tableNumber !== 'number') {
+              return false;
+            }
+            const age = nowMs - new Date(c.createdAt).getTime();
+            return !Number.isNaN(age) && age >= 0 && age < twoHoursMs;
+          });
+          if (validCalls.length > 0) {
+            queueMicrotask(() => setTableCalls(validCalls));
+          }
+        }
+      }
+    } catch {
+      // Ignorar
+    } finally {
+      isTableCallsHydratedRef.current = true;
+    }
+
     const supabase = createClient();
     if (!supabase) return;
 
-    const channel = supabase
+    const tableChannel = supabase
       .channel(`table-service-${restaurantSlug || 'gulas'}`)
       .on(
         'broadcast',
@@ -267,10 +297,26 @@ export function OrderDashboard({
       )
       .subscribe();
 
+    const statusChannel = supabase
+      .channel('gulas-order-status-broadcast')
+      .subscribe();
+    statusBroadcastChannelRef.current = statusChannel;
+
     return () => {
-      void supabase.removeChannel(channel);
+      statusBroadcastChannelRef.current = null;
+      void supabase.removeChannel(tableChannel);
+      void supabase.removeChannel(statusChannel);
     };
-  }, [restaurantSlug, triggerNewOrderAlert]);
+  }, [restaurantSlug, tableCallsStorageKey, triggerNewOrderAlert]);
+
+  useEffect(() => {
+    if (!isTableCallsHydratedRef.current) return;
+    try {
+      localStorage.setItem(tableCallsStorageKey, JSON.stringify(tableCalls));
+    } catch {
+      // Ignorar
+    }
+  }, [tableCalls, tableCallsStorageKey]);
 
   interface UndoOrderState {
     orderId: string;
@@ -364,6 +410,9 @@ export function OrderDashboard({
         return;
       }
 
+      // Garante que um novo pedido vindo de fora nunca é ignorado pelo cooldown de mutação local
+      lastLocalMutationAtRef.current = 0;
+
       triggerNewOrderAlert();
       setA11yAnnouncement('Novo pedido recebido.');
 
@@ -378,9 +427,21 @@ export function OrderDashboard({
     [triggerNewOrderAlert]
   );
 
+  const markLocalMutation = useCallback(() => {
+    lastLocalMutationAtRef.current = Date.now();
+  }, []);
+
+  const handleRealtimeOrdersChange = useCallback(async () => {
+    // Evita refetch completo duplicado imediatamente após uma mutação feita neste tablet
+    if (Date.now() - lastLocalMutationAtRef.current < 1500) {
+      return;
+    }
+    await fetchOrders();
+  }, [fetchOrders]);
+
   const { isConnected } = useOrdersRealtime({
     restaurantId,
-    onOrdersChange: fetchOrders,
+    onOrdersChange: handleRealtimeOrdersChange,
     onNewOrder: handleNewOrder,
   });
 
@@ -447,6 +508,8 @@ export function OrderDashboard({
         return;
       }
 
+      markLocalMutation();
+
       const result = await updateOrderStatus({
         orderId,
         nextStatus,
@@ -464,6 +527,16 @@ export function OrderDashboard({
         }));
         return;
       }
+
+      // Emite broadcast instantâneo (<100ms) para o telemóvel do cliente sem esperar pelo fallback polling
+      void statusBroadcastChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'status_update',
+        payload: {
+          id: result.data.id,
+          status: result.data.status,
+        },
+      });
 
       setNewOrderIds((previous) => {
         const next = new Set(previous);
@@ -526,6 +599,7 @@ export function OrderDashboard({
     if (!undoOrder || isUndoing) return;
 
     setIsUndoing(true);
+    markLocalMutation();
     try {
       const result = await reopenCompletedOrder({
         orderId: undoOrder.orderId,
@@ -539,6 +613,15 @@ export function OrderDashboard({
         setDashboardError(result.error.message);
         return;
       }
+
+      void statusBroadcastChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'status_update',
+        payload: {
+          id: result.data.id,
+          status: result.data.status,
+        },
+      });
 
       setOrders((previous) => [
         result.data,

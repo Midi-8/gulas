@@ -44,6 +44,8 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'gulas_cart_state_v1';
+const CART_TABLE_TTL_MS = 3 * 60 * 60 * 1000; // 3 horas para expiração da mesa pré-selecionada
+const CART_ITEMS_TTL_MS = 12 * 60 * 60 * 1000; // 12 horas para artigos no carrinho
 const ACTIVE_ORDER_IDS_KEY = 'gulas_active_order_ids';
 const ACTIVE_ORDERS_DATA_KEY = 'gulas_active_orders_data';
 const ACTIVE_ORDER_ID_KEY = 'gulas_active_order_id';
@@ -119,12 +121,18 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
         const parsed = JSON.parse(saved);
 
         if (parsed && typeof parsed === 'object') {
+          const savedAt = typeof parsed.savedAt === 'number' ? parsed.savedAt : null;
+          const ageMs = savedAt !== null ? Date.now() - savedAt : null;
+          const isTableFresh = ageMs !== null && ageMs >= 0 && ageMs < CART_TABLE_TTL_MS;
+          const areItemsFresh = ageMs === null || (ageMs >= 0 && ageMs < CART_ITEMS_TTL_MS);
+
           queueMicrotask(() => {
-            if (Array.isArray(parsed.items)) {
+            if (Array.isArray(parsed.items) && areItemsFresh) {
               setItems(parsed.items);
             }
 
             if (
+              isTableFresh &&
               typeof parsed.selectedTableNumber === 'number' &&
               Number.isInteger(parsed.selectedTableNumber) &&
               parsed.selectedTableNumber >= 0
@@ -151,6 +159,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
         JSON.stringify({
           items,
           selectedTableNumber,
+          savedAt: Date.now(),
         })
       );
     } catch {

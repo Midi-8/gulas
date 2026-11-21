@@ -118,3 +118,18 @@ export const getAuthenticatedStaff = cache(
     };
   }
 );
+
+/**
+ * Helper RBAC para controlo de acesso por cargo ('owner' | 'manager' | 'staff').
+ * Estrutura a verificação explícita de permissões administrativas/analíticas.
+ */
+export function canManageCatalogAndAnalytics(
+  staff: AuthenticatedStaff | null
+): staff is AuthenticatedStaff {
+  if (!staff) return false;
+  return (
+    staff.profile.role === 'owner' ||
+    staff.profile.role === 'manager' ||
+    staff.profile.role === 'staff'
+  );
+}

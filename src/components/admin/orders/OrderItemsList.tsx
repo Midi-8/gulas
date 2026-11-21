@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ManagedOrderItem } from '@/actions/order-management';
 import { MessageSquareText, Check } from 'lucide-react';
 
@@ -9,15 +9,78 @@ interface OrderItemsListProps {
   isDarkMode?: boolean;
 }
 
-export function OrderItemsList({ items, isDarkMode = false }: OrderItemsListProps) {
-  const [checkedItemIds, setCheckedItemIds] = useState<Record<string, boolean>>({});
+const PLATED_ITEMS_STORAGE_KEY = 'gulas_kds_plated_items_v1';
+const PLATED_ITEMS_TTL_MS = 12 * 60 * 60 * 1000; // 12 horas
+const PLATED_SYNC_EVENT = 'gulas_kds_plated_sync';
 
-  const toggleItemChecked = (itemId: string) => {
-    setCheckedItemIds((prev) => ({
-      ...prev,
-      [itemId]: !prev[itemId],
-    }));
-  };
+function readPlatedItemsMap(): Record<string, number> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(PLATED_ITEMS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+
+    const now = Date.now();
+    const fresh: Record<string, number> = {};
+    for (const [id, ts] of Object.entries(parsed)) {
+      if (typeof ts === 'number' && now - ts < PLATED_ITEMS_TTL_MS) {
+        fresh[id] = ts;
+      }
+    }
+    return fresh;
+  } catch {
+    return {};
+  }
+}
+
+function writePlatedItemsMap(map: Record<string, number>) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(PLATED_ITEMS_STORAGE_KEY, JSON.stringify(map));
+    window.dispatchEvent(new CustomEvent(PLATED_SYNC_EVENT));
+  } catch {
+    // Ignorar falha de armazenamento
+  }
+}
+
+export function OrderItemsList({ items, isDarkMode = false }: OrderItemsListProps) {
+  const [checkedItemIds, setCheckedItemIds] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setCheckedItemIds(readPlatedItemsMap());
+    });
+
+    const handleSync = () => {
+      setCheckedItemIds(readPlatedItemsMap());
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === PLATED_ITEMS_STORAGE_KEY) {
+        handleSync();
+      }
+    };
+
+    window.addEventListener(PLATED_SYNC_EVENT, handleSync);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener(PLATED_SYNC_EVENT, handleSync);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
+  const toggleItemChecked = useCallback((itemId: string) => {
+    const current = readPlatedItemsMap();
+    const next = { ...current };
+    if (next[itemId]) {
+      delete next[itemId];
+    } else {
+      next[itemId] = Date.now();
+    }
+    setCheckedItemIds(next);
+    writePlatedItemsMap(next);
+  }, []);
 
   return (
     <ul
