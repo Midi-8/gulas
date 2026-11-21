@@ -13,6 +13,7 @@ import {
   Timer,
   ShoppingBag,
   Printer,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useOrderTimer } from '@/hooks/useOrderTimer';
 
@@ -25,6 +26,7 @@ interface OrderCardProps {
   onClearError?: () => void;
   onUpdateStatus: (orderId: string, nextStatus: ValidNextStatus) => Promise<void>;
   onPrintOrder?: (order: ManagedOrder) => void;
+  onChangeTable?: (orderId: string, newTableNumber: number) => Promise<void>;
 }
 
 function getTimerStyles(minutes: number, isDarkMode: boolean) {
@@ -58,6 +60,7 @@ export function OrderCard({
   onClearError,
   onUpdateStatus,
   onPrintOrder,
+  onChangeTable,
 }: OrderCardProps) {
   const elapsedMinutes = useOrderTimer(order.createdAt);
   const timerStyles = getTimerStyles(elapsedMinutes, isDarkMode);
@@ -109,28 +112,54 @@ export function OrderCard({
                 #{order.orderNumber}
               </span>
 
-              {order.tableNumber === 0 ? (
-                <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border ${
-                    isDarkMode
-                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                      : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  }`}
-                >
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  Take-Away
-                </span>
-              ) : (
-                <span
-                  className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border ${
-                    isDarkMode
-                      ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
-                      : 'bg-zinc-900 text-white border-zinc-900'
-                  }`}
-                >
-                  Mesa {order.tableNumber}
-                </span>
-              )}
+              <div className="relative inline-flex items-center">
+                {order.tableNumber === 0 ? (
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border ${
+                      isDarkMode
+                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    }`}
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    Take-Away
+                    {onChangeTable && <ArrowLeftRight className="w-3 h-3 ml-0.5 opacity-60" />}
+                  </span>
+                ) : (
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border ${
+                      isDarkMode
+                        ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
+                        : 'bg-zinc-900 text-white border-zinc-900'
+                    }`}
+                  >
+                    Mesa {order.tableNumber}
+                    {onChangeTable && <ArrowLeftRight className="w-3 h-3 ml-0.5 opacity-60" />}
+                  </span>
+                )}
+
+                {onChangeTable && !isUpdating && (
+                  <select
+                    aria-label={`Transferir pedido #${order.orderNumber} para outra mesa`}
+                    title="Transferir pedido para outra mesa ou Take-Away"
+                    value={order.tableNumber}
+                    onChange={(e) => {
+                      const nextTable = Number(e.target.value);
+                      if (nextTable !== order.tableNumber) {
+                        void onChangeTable(order.id, nextTable);
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  >
+                    <option value={0}>Take-Away</option>
+                    {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
+                      <option key={num} value={num}>
+                        Mesa {num}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
 
               {isNew && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-500 text-xs font-bold border border-amber-500/30 animate-pulse">

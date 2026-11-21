@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import {
   ManagedOrder,
+  changeOrderTable,
   getActiveOrders,
   reopenCompletedOrder,
   updateOrderStatus,
@@ -592,6 +593,42 @@ export function OrderDashboard({
     const tableOrders = orders.filter((o) => o.tableNumber === tableNum);
     for (const ord of tableOrders) {
       await handleUpdateStatus(ord.id, 'completed');
+    }
+  };
+
+  const handleChangeOrderTable = async (
+    orderId: string,
+    newTableNumber: number
+  ) => {
+    setUpdatingMap((previous) => ({ ...previous, [orderId]: true }));
+    setOrderErrorMap((previous) => ({ ...previous, [orderId]: null }));
+    markLocalMutation();
+
+    try {
+      const res = await changeOrderTable({ orderId, newTableNumber });
+      if (!res.success) {
+        setOrderErrorMap((previous) => ({
+          ...previous,
+          [orderId]: res.error.message,
+        }));
+        return;
+      }
+
+      setOrders((previous) =>
+        previous.map((order) => (order.id === orderId ? res.data : order))
+      );
+      setA11yAnnouncement(
+        `Pedido #${res.data.orderNumber} transferido para ${
+          newTableNumber === 0 ? 'Take-Away' : `Mesa ${newTableNumber}`
+        }.`
+      );
+    } catch {
+      setOrderErrorMap((previous) => ({
+        ...previous,
+        [orderId]: 'Erro ao transferir o pedido de mesa.',
+      }));
+    } finally {
+      setUpdatingMap((previous) => ({ ...previous, [orderId]: false }));
     }
   };
 
@@ -1352,6 +1389,7 @@ export function OrderDashboard({
                   }
                   onUpdateStatus={handleUpdateStatus}
                   onPrintOrder={handlePrintOrder}
+                  onChangeTable={handleChangeOrderTable}
                 />
               ))}
             </div>

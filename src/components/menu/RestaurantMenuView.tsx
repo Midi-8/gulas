@@ -17,7 +17,7 @@ import { useCart } from '@/context/CartContext';
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/types';
 import { menuAvisos } from '@/data/gulasCatalog';
-import { Utensils, Info, ChevronDown } from 'lucide-react';
+import { Utensils, Info, ChevronDown, Clock } from 'lucide-react';
 
 interface RestaurantMenuViewProps {
   restaurant: Restaurant;
@@ -45,7 +45,23 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
   const [prevProducts, setPrevProducts] = useState<Product[]>(products);
   const [realtimeOpenOverride, setRealtimeOpenOverride] = useState<boolean | null>(null);
   const [showServiceInfo, setShowServiceInfo] = useState(false);
+  const [estimatedPrepLabel, setEstimatedPrepLabel] = useState('~15–20 min');
   const isRestaurantOpen = realtimeOpenOverride ?? restaurant.isOpen;
+
+  useEffect(() => {
+    const updatePrepEstimate = () => {
+      const now = new Date();
+      const minutesOfDay = now.getHours() * 60 + now.getMinutes();
+      const isLunchPeak = minutesOfDay >= 12 * 60 + 30 && minutesOfDay <= 14 * 60;
+      const isDinnerPeak = minutesOfDay >= 20 * 60 && minutesOfDay <= 21 * 60 + 30;
+      setEstimatedPrepLabel(
+        isLunchPeak || isDinnerPeak ? '~25–30 min (Hora de Ponta)' : '~15–20 min'
+      );
+    };
+    updatePrepEstimate();
+    const timer = setInterval(updatePrepEstimate, 5 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Categorias visíveis na navegação principal (oculta categorias técnicas de suplementos)
   const visibleCategories = useMemo(
@@ -281,14 +297,20 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
           <span className="flex items-center gap-2 truncate">
             <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
             <span className="truncate">
-              Pizzas Familiares exclusivas Take-Away · Alergénios & informações
+              Pizzas Familiares exclusivas Take-Away · Alergénios
             </span>
           </span>
-          <ChevronDown
-            className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200 ${
-              showServiceInfo ? 'rotate-180' : ''
-            }`}
-          />
+          <span className="flex items-center gap-2 shrink-0">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-700 text-[10px] font-semibold">
+              <Clock className="w-3 h-3 text-zinc-500" />
+              {estimatedPrepLabel}
+            </span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200 ${
+                showServiceInfo ? 'rotate-180' : ''
+              }`}
+            />
+          </span>
         </button>
 
         {showServiceInfo && (

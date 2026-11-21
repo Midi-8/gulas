@@ -150,6 +150,17 @@ BEGIN
         v_table_name := v_table.name;
     END IF;
 
+    -- Anti-spam no SQL (máximo 5 pedidos por mesa nos últimos 60 segundos)
+    IF (
+        SELECT COUNT(*)
+        FROM public.orders
+        WHERE restaurant_id = v_restaurant.id
+          AND table_number = p_table_number
+          AND created_at > NOW() - INTERVAL '60 seconds'
+    ) >= 5 THEN
+        RAISE EXCEPTION 'RATE_LIMIT_EXCEEDED: Demasiados pedidos submetidos em simultâneo. Por favor aguarde 1 minuto.' USING ERRCODE = 'P0001';
+    END IF;
+
     IF p_customer_notes IS NOT NULL AND length(trim(p_customer_notes)) > 1000 THEN
         RAISE EXCEPTION 'INVALID_NOTES: As observações gerais excedem o limite de 1000 caracteres.' USING ERRCODE = 'P0001';
     END IF;
@@ -216,11 +227,17 @@ BEGIN
 
     v_total := v_subtotal;
 
+    -- Reinicia automaticamente as senhas no #1 a cada novo dia operacional (Europe/Lisbon)
     INSERT INTO public.restaurant_counters (restaurant_id, last_order_number, updated_at)
     VALUES (v_restaurant.id, 1, NOW())
     ON CONFLICT (restaurant_id)
     DO UPDATE SET
-        last_order_number = public.restaurant_counters.last_order_number + 1,
+        last_order_number = CASE
+            WHEN (public.restaurant_counters.updated_at AT TIME ZONE 'Europe/Lisbon')::date
+                 < (NOW() AT TIME ZONE 'Europe/Lisbon')::date
+            THEN 1
+            ELSE public.restaurant_counters.last_order_number + 1
+        END,
         updated_at = NOW()
     RETURNING last_order_number INTO v_order_number;
 

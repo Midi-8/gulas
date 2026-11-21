@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Loader2,
   Download,
+  Printer,
 } from 'lucide-react';
 
 
@@ -328,6 +329,126 @@ export function OrderHistoryView({
   };
 
 
+  const handlePrintZReport = () => {
+    if (filteredOrders.length === 0) return;
+
+    const completed = filteredOrders.filter((o) => o.status === 'completed');
+    const cancelled = filteredOrders.filter((o) => o.status === 'cancelled');
+    const totalRevenue = completed.reduce((acc, o) => acc + o.total, 0);
+    const avgTicket = completed.length > 0 ? totalRevenue / completed.length : 0;
+
+    const dineIn = completed.filter((o) => o.tableNumber > 0);
+    const takeAway = completed.filter((o) => o.tableNumber === 0);
+    const dineInRevenue = dineIn.reduce((acc, o) => acc + o.total, 0);
+    const takeAwayRevenue = takeAway.reduce((acc, o) => acc + o.total, 0);
+
+    const productSales = new Map<string, { qty: number; revenue: number }>();
+    for (const ord of completed) {
+      for (const item of ord.items) {
+        const key = item.productName;
+        const prev = productSales.get(key) || { qty: 0, revenue: 0 };
+        productSales.set(key, {
+          qty: prev.qty + item.quantity,
+          revenue: prev.revenue + item.unitPrice * item.quantity,
+        });
+      }
+    }
+    const topProducts = Array.from(productSales.entries())
+      .sort((a, b) => b[1].qty - a[1].qty)
+      .slice(0, 8);
+
+    const periodLabelMap: Record<PeriodOption, string> = {
+      all: 'Todo o Histórico',
+      today: 'Turno Hoje',
+      '7days': 'Últimos 7 Dias',
+      '30days': 'Últimos 30 Dias',
+    };
+
+    const escapeHtml = (str: string) =>
+      str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    const topProductsRows = topProducts
+      .map(
+        ([name, stats]) => `
+        <div class="row">
+          <span>${stats.qty}x ${escapeHtml(name)}</span>
+          <span>${stats.revenue.toFixed(2)}€</span>
+        </div>`
+      )
+      .join('');
+
+    const printWindow = window.open('', '_blank', 'width=420,height=720');
+    if (!printWindow) return;
+
+    const nowFormatted = new Intl.DateTimeFormat('pt-PT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date());
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="pt">
+        <head>
+          <meta charset="utf-8" />
+          <title>Fecho de Caixa — ${escapeHtml(restaurantName)}</title>
+          <style>
+            @page { size: 80mm auto; margin: 0; }
+            * { box-sizing: border-box; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+            body { width: 76mm; margin: 0; padding: 4mm; color: #000; background: #fff; font-size: 11px; line-height: 1.4; }
+            .center { text-align: center; }
+            .bold { font-weight: 800; }
+            .section { border-bottom: 1.5px dashed #000; padding-bottom: 6px; margin-bottom: 6px; }
+            .row { display: flex; justify-content: space-between; gap: 8px; }
+            .big { font-size: 15px; font-weight: 900; }
+          </style>
+        </head>
+        <body>
+          <div class="section center">
+            <div class="bold" style="font-size:14px;text-transform:uppercase;">${escapeHtml(restaurantName)}</div>
+            <div class="bold">FECHO DE CAIXA / RELATÓRIO Z</div>
+            <div style="font-size:10px;">Período: ${periodLabelMap[periodFilter]}</div>
+            <div style="font-size:10px;">Emitido em: ${nowFormatted}</div>
+          </div>
+
+          <div class="section">
+            <div class="row big"><span>FATURAÇÃO</span><span>${totalRevenue.toFixed(2)}€</span></div>
+            <div class="row"><span>Ticket Médio</span><span>${avgTicket.toFixed(2)}€</span></div>
+            <div class="row"><span>Concluídos</span><span>${completed.length} pedidos</span></div>
+            <div class="row"><span>Cancelados</span><span>${cancelled.length} pedidos</span></div>
+          </div>
+
+          <div class="section">
+            <div class="bold" style="margin-bottom:2px;">POR CANAL</div>
+            <div class="row"><span>Sala (${dineIn.length} ped.)</span><span>${dineInRevenue.toFixed(2)}€</span></div>
+            <div class="row"><span>Take-Away (${takeAway.length} ped.)</span><span>${takeAwayRevenue.toFixed(2)}€</span></div>
+          </div>
+
+          <div class="section">
+            <div class="bold" style="margin-bottom:2px;">TOP ARTIGOS VENDIDOS</div>
+            ${topProductsRows || '<div>Sem artigos concluídos.</div>'}
+          </div>
+
+          <div class="center" style="font-size:9px;margin-top:8px;">
+            Resumo interno de fecho operacional
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 250);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   // Global Loaded Metrics
   const completedCount = orders.filter((o) => o.status === 'completed').length;
   const cancelledCount = orders.filter((o) => o.status === 'cancelled').length;
@@ -366,6 +487,17 @@ export function OrderHistoryView({
             </span>
           )}
 
+
+          <button
+            type="button"
+            disabled={filteredOrders.length === 0}
+            onClick={handlePrintZReport}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#18181B] hover:bg-[#27272A] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+            aria-label="Imprimir Fecho de Caixa 80mm"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Fecho 80mm</span>
+          </button>
 
           <button
             type="button"

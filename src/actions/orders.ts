@@ -144,6 +144,14 @@ function mapDatabaseError(rawMessage: string): {
   }
 
 
+  if (msg.includes('rate_limit_exceeded')) {
+    return {
+      code: 'VALIDATION_ERROR',
+      message: 'Demasiados pedidos seguidos para esta mesa. Por favor aguarda alguns segundos.',
+    };
+  }
+
+
   return {
     code: 'DATABASE_ERROR',
     message: 'Ocorreu um erro ao registar o teu pedido. Por favor tenta novamente.',

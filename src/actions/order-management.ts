@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAuthenticatedStaff } from '@/lib/auth/staff';
 import { OrderStatus } from '@/types/restaurant';
@@ -786,6 +787,113 @@ export async function reopenCompletedOrder(
       error: {
         code: 'DATABASE_ERROR',
         message: 'Ocorreu um erro inesperado ao reabrir o pedido.',
+      },
+    };
+  }
+}
+
+const changeOrderTableSchema = z.object({
+  orderId: z.string().uuid('Identificador de pedido inválido.'),
+  newTableNumber: z.number().int().min(0).max(20),
+});
+
+/**
+ * Permite transferir um pedido ativo entre mesas (1–20) ou Take-Away (0).
+ */
+export async function changeOrderTable(
+  input: z.infer<typeof changeOrderTableSchema>
+): Promise<OrderManagementActionResult<ManagedOrder>> {
+  try {
+    const parsed = changeOrderTableSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message:
+            parsed.error.issues[0]?.message ?? 'Dados de transferência inválidos.',
+        },
+      };
+    }
+
+    const staff = await getAuthenticatedStaff();
+    if (!staff) {
+      return {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Sessão expirada ou utilizador não autorizado.',
+        },
+      };
+    }
+
+    const supabase = await createServerSupabaseClient();
+    if (!supabase) {
+      return {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Serviço de base de dados indisponível.',
+        },
+      };
+    }
+
+    let resolvedTableId: string | null = null;
+    if (parsed.data.newTableNumber > 0) {
+      const { data: targetTable } = await supabase
+        .from('tables')
+        .select('id')
+        .eq('restaurant_id', staff.restaurant.id)
+        .eq('number', parsed.data.newTableNumber)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!targetTable) {
+        return {
+          success: false,
+          error: {
+            code: 'INVALID_INPUT',
+            message: `A Mesa ${parsed.data.newTableNumber} não está ativa no restaurante.`,
+          },
+        };
+      }
+      resolvedTableId = targetTable.id;
+    }
+
+    const { data: updatedOrder, error: updateError } = await supabase
+      .from('orders')
+      .update({
+        table_number: parsed.data.newTableNumber,
+        table_id: resolvedTableId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', parsed.data.orderId)
+      .eq('restaurant_id', staff.restaurant.id)
+      .select(ORDER_SELECT)
+      .maybeSingle();
+
+    if (updateError || !updatedOrder) {
+      console.error('[changeOrderTable] Erro ao transferir mesa:', updateError?.message);
+      return {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Não foi possível transferir o pedido para a mesa selecionada.',
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: mapRawOrderToManagedOrder(updatedOrder as unknown as RawOrderRow),
+    };
+  } catch (err: unknown) {
+    console.error('[changeOrderTable] Exceção inesperada:', err);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'Ocorreu um erro inesperado ao transferir a mesa.',
       },
     };
   }
