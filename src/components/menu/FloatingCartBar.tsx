@@ -17,7 +17,7 @@ export const FloatingCartBar: React.FC = () => {
       <div className="w-full max-w-md pointer-events-auto">
         <button
           onClick={() => setIsCartOpen(true)}
-          className="w-full py-3.5 px-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold shadow-xl shadow-zinc-950/20 flex items-center justify-between transition-all active:scale-[0.99] cursor-pointer border border-zinc-800"
+          className="w-full py-3.5 px-4 rounded-2xl bg-zinc-950/95 backdrop-blur-xl hover:bg-zinc-900 text-white font-semibold editorial-dock flex items-center justify-between transition-all active:scale-[0.99] cursor-pointer"
         >
           <div className="flex items-center gap-2.5">
             <span className="w-6 h-6 rounded-full bg-white text-zinc-900 text-xs font-bold flex items-center justify-center">

@@ -110,10 +110,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <article
       onClick={() => onOpenDetails(product)}
       className={clsx(
-        'group relative flex items-stretch justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white border transition-all duration-200 cursor-pointer select-none active:scale-[0.995]',
+        'group relative flex items-stretch justify-between gap-4 p-4 sm:p-5 rounded-[20px] bg-white border transition-all duration-300 cursor-pointer select-none active:scale-[0.995]',
         currentQuantity > 0
-          ? 'border-zinc-900/35 shadow-2xs ring-1 ring-zinc-900/5'
-          : 'border-zinc-200/80 hover:border-zinc-300 hover:shadow-xs',
+          ? 'border-zinc-900/40 shadow-[0_8px_24px_-8px_rgba(9,9,11,0.1)] ring-1 ring-zinc-900/8'
+          : 'border-zinc-200/75 shadow-[0_1px_2px_rgba(9,9,11,0.02)] hover:border-zinc-300/90 hover:-translate-y-[1px] hover:shadow-[0_12px_28px_-10px_rgba(9,9,11,0.07)]',
         !isAnyVariantAvailable && 'opacity-60 bg-zinc-50/70'
       )}
     >
@@ -170,7 +170,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Rodapé: Preço e Controlo (quando não tem imagem) */}
         <div className="mt-3.5 pt-2.5 flex items-center justify-between gap-2">
-          <span className="text-sm sm:text-[15px] font-semibold font-mono text-zinc-900 tracking-tight">
+          <span className="text-sm sm:text-[15px] font-semibold font-mono tabular-nums text-zinc-900 tracking-tight">
             {hasMultipleVariants && minPrice !== maxPrice
               ? `${formatCurrency(minPrice)} – ${formatCurrency(maxPrice)}`
               : formatCurrency(product.price)}
@@ -232,7 +232,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Coluna Direita: Imagem Real (apenas quando existe fotografia do produto) */}
       {hasValidImage && (
-        <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200/60 shrink-0 self-center">
+        <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-100 ring-1 ring-inset ring-black/5 shrink-0 self-center">
           {!isImageLoaded && (
             <div className="absolute inset-0 bg-zinc-100 animate-pulse" />
           )}

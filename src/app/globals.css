@@ -98,6 +98,22 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .editorial-card {
+    box-shadow: 0 1px 2px rgba(9, 9, 11, 0.03), 0 8px 24px -12px rgba(9, 9, 11, 0.05);
+  }
+  .editorial-glass {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .editorial-dock {
+    box-shadow: 0 20px 45px -10px rgba(9, 9, 11, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+}
+
+::selection {
+  background-color: #18181B;
+  color: #FFFFFF;
 }
 
 html {

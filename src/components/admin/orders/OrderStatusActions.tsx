@@ -79,7 +79,7 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => setIsConfirmingCancel(false)}
-              className="py-2 px-3 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+              className="py-2 px-3 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
             >
               Voltar
             </button>
@@ -93,7 +93,7 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('accepted')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Aceitar pedido número ${orderNumber}`}
             >
               {isUpdating && activeNextStatus === 'accepted' ? (
@@ -110,13 +110,13 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('preparing')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Iniciar preparação do pedido número ${orderNumber}`}
             >
               {isUpdating && activeNextStatus === 'preparing' ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Flame className="w-4 h-4" />
+                <Flame className="w-4 h-4 text-amber-400" />
               )}
               <span>Iniciar Preparação</span>
             </button>
@@ -127,7 +127,7 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('ready')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer ring-2 ring-emerald-500/30"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Marcar pedido número ${orderNumber} como pronto`}
             >
               {isUpdating && activeNextStatus === 'ready' ? (
@@ -144,13 +144,13 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => handleAction('completed')}
-              className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-[0.98] text-zinc-100 text-xs sm:text-sm font-bold border border-zinc-700 shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 active:scale-[0.98] text-xs sm:text-sm font-semibold transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Concluir entrega do pedido número ${orderNumber}`}
             >
               {isUpdating && activeNextStatus === 'completed' ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Check className="w-4 h-4 text-emerald-400" />
+                <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               )}
               <span>Concluir / Entregue</span>
             </button>
@@ -164,7 +164,7 @@ export function OrderStatusActions({
               type="button"
               disabled={isUpdating}
               onClick={() => setIsConfirmingCancel(true)}
-              className="inline-flex items-center justify-center p-3 rounded-xl bg-zinc-800/80 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 border border-zinc-700/60 transition-all disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center p-2.5 rounded-xl bg-zinc-100 hover:bg-rose-50 text-zinc-500 hover:text-rose-600 border border-zinc-200/80 dark:bg-zinc-800/80 dark:hover:bg-rose-500/20 dark:text-zinc-400 dark:hover:text-rose-400 dark:border-zinc-700/60 transition-all disabled:opacity-50 cursor-pointer"
               aria-label={`Cancelar pedido número ${orderNumber}`}
               title="Cancelar Pedido"
             >

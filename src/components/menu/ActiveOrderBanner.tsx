@@ -205,7 +205,7 @@ export const ActiveOrderBanner: React.FC = () => {
       <div className="w-full pointer-events-auto">
         <button
           onClick={() => openDetailModal()}
-          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white hover:bg-zinc-50 border border-zinc-200 shadow-lg text-zinc-900 transition-all cursor-pointer group active:scale-[0.99]"
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white/95 backdrop-blur-xl hover:bg-white border border-zinc-200/90 shadow-[0_12px_32px_-8px_rgba(9,9,11,0.14)] text-zinc-900 transition-all cursor-pointer group active:scale-[0.99]"
           aria-label="Acompanhar estado dos pedidos em tempo real"
         >
           <div className="flex items-center gap-2.5 min-w-0">

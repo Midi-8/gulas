@@ -32,14 +32,14 @@ const STATUS_CONFIG: Record<
   accepted: {
     label: 'Aceite',
     icon: CheckCircle2,
-    className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30',
-    dotClassName: 'bg-blue-400 ring-2 ring-blue-400/30',
+    className: 'bg-zinc-900 text-white dark:bg-white/15 dark:text-zinc-100 border-zinc-900/20 dark:border-white/20',
+    dotClassName: 'bg-emerald-400',
   },
   preparing: {
     label: 'Preparação',
     icon: Flame,
-    className: 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/35',
-    dotClassName: 'bg-orange-500 animate-pulse ring-2 ring-orange-500/40',
+    className: 'bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 border-amber-200 dark:border-amber-500/35',
+    dotClassName: 'bg-amber-500 animate-pulse',
   },
   ready: {
     label: 'Pronto (Pass)',

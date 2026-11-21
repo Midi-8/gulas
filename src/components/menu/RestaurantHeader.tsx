@@ -103,7 +103,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
 
   return (
     <>
-      <header className="w-full bg-white border-b border-zinc-200/80">
+      <header className="w-full bg-white/95 backdrop-blur-md border-b border-zinc-200/70">
         <div className="max-w-4xl mx-auto px-4 pt-3.5 pb-4">
           {/* Barra Superior Minimalista */}
           <div className="flex items-center justify-between gap-2">
@@ -114,10 +114,10 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                 alt="Gulas — Pizza, Burger & Coffee"
                 width={40}
                 height={40}
-                className="w-9 h-9 rounded-xl object-contain bg-zinc-50 border border-zinc-200/80 shrink-0"
+                className="w-9 h-9 rounded-xl object-contain bg-zinc-50 border border-zinc-200/80 shadow-2xs shrink-0"
               />
               <div className="min-w-0">
-                <span className="font-bold text-base tracking-tight text-zinc-900 leading-none block truncate">
+                <span className="font-bold text-base tracking-[-0.02em] text-zinc-900 leading-none block truncate">
                   {restaurant.name}
                 </span>
                 <span className="text-[11px] font-normal text-zinc-500 leading-none block mt-0.5 truncate">
@@ -235,7 +235,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
           </div>
 
           {/* Cartão Editorial Compacto */}
-          <div className="mt-3.5 relative rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-200/60">
+          <div className="mt-3.5 relative rounded-[22px] overflow-hidden bg-zinc-950 ring-1 ring-inset ring-black/10 shadow-[0_12px_32px_-12px_rgba(9,9,11,0.22)]">
             <div className="relative h-28 sm:h-36 w-full">
               <Image
                 src="/images/cover.jpg"
@@ -245,7 +245,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                 sizes="(max-width: 896px) 100vw, 896px"
                 className="object-cover opacity-85"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-zinc-950/45 to-zinc-950/15" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/92 via-zinc-950/40 to-zinc-950/10" />
 
               <div className="absolute bottom-3.5 left-4 right-4 flex items-end justify-between gap-3">
                 <div>

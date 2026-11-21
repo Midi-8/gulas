@@ -59,7 +59,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 flex flex-col selection:bg-zinc-900 selection:text-white">
       {/* Top Navbar */}
-      <header className="border-b border-zinc-200/80 bg-white/90 backdrop-blur-xl sticky top-0 z-30">
+      <header className="border-b border-zinc-200/70 editorial-glass sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <Image
@@ -67,13 +67,13 @@ export default function HomePage() {
               alt="Gulas"
               width={40}
               height={40}
-              className="w-10 h-10 rounded-xl object-contain bg-zinc-50 border border-zinc-200/80"
+              className="w-10 h-10 rounded-2xl object-contain bg-zinc-50 border border-zinc-200/80 shadow-2xs"
             />
             <div>
-              <span className="font-bold text-base tracking-tight text-zinc-950 uppercase leading-none block">
+              <span className="font-bold text-base tracking-[-0.02em] text-zinc-950 uppercase leading-none block">
                 GULAS
               </span>
-              <span className="text-[11px] font-medium text-zinc-500 leading-none mt-0.5 block">
+              <span className="text-[11px] font-medium text-zinc-500 leading-none mt-1 block">
                 Pizza · Burger · Coffee
               </span>
             </div>
@@ -112,9 +112,9 @@ export default function HomePage() {
               </div>
 
               {/* Main Headline */}
-              <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-zinc-950 leading-[1.1]">
+              <h1 className="text-3xl sm:text-5xl font-bold tracking-[-0.03em] text-zinc-950 leading-[1.08]">
                 Cozinha artesanal de forno.{' '}
-                <span className="text-zinc-500 font-normal">
+                <span className="text-zinc-400 font-normal">
                   Pedido direto no teu telemóvel.
                 </span>
               </h1>
@@ -149,7 +149,7 @@ export default function HomePage() {
 
             {/* Right Visual Showcase */}
             <div className="lg:col-span-5">
-              <div className="relative aspect-4/3 rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200/80 shadow-xs">
+              <div className="relative aspect-4/3 rounded-[24px] overflow-hidden bg-zinc-100 ring-1 ring-black/5 shadow-[0_20px_50px_-15px_rgba(9,9,11,0.14)]">
                 <Image
                   src="/images/cover.jpg"
                   alt="Gulas Ambiente Gastronómico"
@@ -234,7 +234,7 @@ export default function HomePage() {
             <Link
               key={dish.title}
               href="/menu/gulas"
-              className="group rounded-2xl bg-white border border-zinc-200/80 overflow-hidden hover:border-zinc-300 transition-all duration-200 flex flex-col"
+              className="group rounded-[22px] bg-white border border-zinc-200/80 overflow-hidden hover:border-zinc-300/90 hover:-translate-y-0.5 shadow-[0_1px_3px_rgba(9,9,11,0.02)] hover:shadow-[0_14px_34px_-10px_rgba(9,9,11,0.08)] transition-all duration-300 flex flex-col"
             >
               <div className="relative aspect-4/3 w-full bg-zinc-100 overflow-hidden border-b border-zinc-100">
                 <Image
