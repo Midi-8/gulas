@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Product } from '@/types/restaurant';
 import { formatCurrency } from '@/data/mockRestaurant';
 import { useCart } from '@/context/CartContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Plus, Minus } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { clsx } from 'clsx';
@@ -23,6 +24,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   priority = false,
 }) => {
   const { items, addItem, updateQuantity } = useCart();
+  const { t } = useLanguage();
   const [imageFailed, setImageFailed] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
@@ -125,7 +127,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex flex-wrap items-center gap-1.5">
               {!isAnyVariantAvailable && (
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-zinc-200 text-zinc-700 uppercase tracking-wider">
-                  Esgotado
+                  {t('outOfStock')}
                 </span>
               )}
               {unitBadgeText && (
@@ -151,12 +153,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           )}
 
-          {/* Notas técnicas discretas */}
+          {/* Notas técnicas discretas & Alergénios */}
           {(product.customizationNote || product.includesNotes) && (
             <p className="text-[11px] text-zinc-400 font-normal leading-snug line-clamp-1 pt-0.5">
               {[product.includesNotes, product.customizationNote]
                 .filter(Boolean)
                 .join(' · ')}
+            </p>
+          )}
+          {product.allergens && product.allergens.length > 0 && (
+            <p className="text-[10px] text-zinc-400 font-medium leading-snug line-clamp-1">
+              {t('allergensPrefix')}: {product.allergens.join(', ')}
             </p>
           )}
         </div>
@@ -215,7 +222,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 )
               ) : (
                 <span className="text-[11px] font-medium text-zinc-400 select-none">
-                  Indisponível
+                  {t('unavailable')}
                 </span>
               )}
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Product } from '@/types/restaurant';
 import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { useCart } from '@/context/CartContext';
@@ -79,8 +79,12 @@ export const ActiveOrderDetailModal: React.FC<ActiveOrderDetailModalProps> = ({
     selectedOrderId,
     setSelectedOrderId,
     closeDetailModal,
+    cancelPendingOrder,
   } = useActiveOrderTracker();
-  const { addItem, setIsCartOpen } = useCart();
+  const { addItem, setIsCartOpen, showToast } = useCart();
+  const [confirmingCancelId, setConfirmingCancelId] = useState<string | null>(null);
+  const [isCancellingOrder, setIsCancellingOrder] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const displayOrders = useMemo(() => {
     return activeOrders;
@@ -149,6 +153,26 @@ export const ActiveOrderDetailModal: React.FC<ActiveOrderDetailModalProps> = ({
     if (addedCount > 0) {
       closeDetailModal();
       setIsCartOpen(true);
+    }
+  };
+
+  const handleCancelOrderConfirm = async () => {
+    if (!activeOrder || isCancellingOrder) return;
+    setIsCancellingOrder(true);
+    setCancelError(null);
+    try {
+      const res = await cancelPendingOrder(activeOrder.id);
+      if (res.success) {
+        setConfirmingCancelId(null);
+        showToast('Pedido cancelado com sucesso.');
+      } else {
+        setCancelError(res.error || 'Não foi possível cancelar o pedido.');
+        setConfirmingCancelId(null);
+      }
+    } catch {
+      setCancelError('Erro inesperado ao cancelar pedido.');
+    } finally {
+      setIsCancellingOrder(false);
     }
   };
 
@@ -422,24 +446,71 @@ export const ActiveOrderDetailModal: React.FC<ActiveOrderDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Rodapé com "Pedir Novamente" (Bloco 2) */}
-        <div className="p-4 sm:p-5 border-t border-zinc-200/80 bg-white shrink-0 flex flex-col sm:flex-row gap-2">
-          {allProducts.length > 0 && activeOrder.items?.length > 0 && (
-            <button
-              type="button"
-              onClick={handleRepeatOrder}
-              className="flex-1 py-3 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Repetir estes artigos</span>
-            </button>
+        {/* Rodapé com Cancelamento (se pending), "Pedir Novamente" e Voltar */}
+        <div className="p-4 sm:p-5 border-t border-zinc-200/80 bg-white shrink-0 space-y-2">
+          {cancelError && (
+            <p className="text-[11px] font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
+              {cancelError}
+            </p>
           )}
-          <button
-            onClick={closeDetailModal}
-            className="flex-1 py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs transition-all active:scale-[0.99] cursor-pointer"
-          >
-            Voltar ao Menu
-          </button>
+
+          {currentStatus === 'pending' && (
+            confirmingCancelId === activeOrder.id ? (
+              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200">
+                <span className="text-[11px] font-semibold text-rose-900">
+                  Cancelar pedido #{activeOrder.orderNumber}?
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={isCancellingOrder}
+                    onClick={() => void handleCancelOrderConfirm()}
+                    className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-semibold cursor-pointer disabled:opacity-50"
+                  >
+                    {isCancellingOrder ? 'A cancelar...' : 'Sim, Cancelar'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isCancellingOrder}
+                    onClick={() => setConfirmingCancelId(null)}
+                    className="px-2.5 py-1.5 rounded-lg bg-white border border-zinc-200 text-zinc-700 text-[11px] font-semibold cursor-pointer"
+                  >
+                    Manter
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setCancelError(null);
+                  setConfirmingCancelId(activeOrder.id);
+                }}
+                className="w-full py-2 px-3 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-800 text-[11px] font-semibold transition-colors cursor-pointer"
+              >
+                Enganei-me — Cancelar Pedido (Antes da cozinha iniciar)
+              </button>
+            )
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            {allProducts.length > 0 && activeOrder.items?.length > 0 && !isCancelled && (
+              <button
+                type="button"
+                onClick={handleRepeatOrder}
+                className="flex-1 py-3 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Repetir estes artigos</span>
+              </button>
+            )}
+            <button
+              onClick={closeDetailModal}
+              className="flex-1 py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs transition-all active:scale-[0.99] cursor-pointer"
+            >
+              Voltar ao Menu
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -48,6 +48,7 @@ import {
   QrCode,
   Radio,
   RotateCcw,
+  Search,
   ShoppingBag,
   Sun,
   SunDim,
@@ -133,6 +134,19 @@ export function OrderDashboard({
   >({});
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>('all');
+  const [kdsSearchQuery, setKdsSearchQuery] = useState('');
+  const [onlyUrgentSla, setOnlyUrgentSla] = useState(false);
+  const [nowMs, setNowMs] = useState<number>(0);
+
+  useEffect(() => {
+    const syncClock = () => setNowMs(Date.now());
+    const initTimer = setTimeout(syncClock, 0);
+    const interval = setInterval(syncClock, 15000);
+    return () => {
+      clearTimeout(initTimer);
+      clearInterval(interval);
+    };
+  }, []);
   const {
     isSupported: isWakeLockSupported,
     isActive: isWakeLockActive,
@@ -688,22 +702,40 @@ export function OrderDashboard({
   const totalActiveCount = orders.length;
 
   const filteredOrders = orders.filter((order) => {
-    if (sectionFilter === 'all') {
-      return true;
+    if (sectionFilter !== 'all') {
+      const hasBarItem = order.items.some(
+        (item) => item.categorySlug === 'bebidas'
+      );
+      const hasKitchenItem = order.items.some(
+        (item) => item.categorySlug !== 'bebidas'
+      );
+
+      if (sectionFilter === 'bar' && !hasBarItem) return false;
+      if (sectionFilter === 'kitchen' && !hasKitchenItem) return false;
     }
 
-    const hasBarItem = order.items.some(
-      (item) => item.categorySlug === 'bebidas'
-    );
-    const hasKitchenItem = order.items.some(
-      (item) => item.categorySlug !== 'bebidas'
-    );
-
-    if (sectionFilter === 'bar') {
-      return hasBarItem;
+    if (onlyUrgentSla && nowMs > 0) {
+      const elapsedMs = nowMs - new Date(order.createdAt).getTime();
+      if (elapsedMs < 20 * 60 * 1000) return false;
     }
 
-    return hasKitchenItem;
+    const q = kdsSearchQuery.replace('#', '').trim().toLowerCase();
+    if (q) {
+      const matchesNum = String(order.orderNumber).includes(q);
+      const matchesTable =
+        order.tableNumber === 0
+          ? 'take-away takeaway'.includes(q)
+          : `mesa ${order.tableNumber}`.includes(q) || String(order.tableNumber) === q;
+      const matchesNotes = Boolean(order.customerNotes?.toLowerCase().includes(q));
+      const matchesItem = order.items.some((item) =>
+        item.productName.toLowerCase().includes(q)
+      );
+      if (!matchesNum && !matchesTable && !matchesNotes && !matchesItem) {
+        return false;
+      }
+    }
+
+    return true;
   });
 
   // Dados estruturados para a Vista de Mapa de Mesas (0 = Take-Away, 1..20 = Mesas)
@@ -1186,6 +1218,50 @@ export function OrderDashboard({
 
         {viewMode === 'orders' && (
           <div className="flex flex-wrap items-center gap-1.5">
+            {/* Pesquisa rápida no KDS */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={kdsSearchQuery}
+                onChange={(e) => setKdsSearchQuery(e.target.value)}
+                placeholder="Mesa, #pedido ou cliente..."
+                className={clsx(
+                  'pl-8 pr-7 py-1.5 rounded-xl border text-xs w-44 sm:w-52 focus:outline-none transition-all',
+                  isDarkMode
+                    ? 'bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-600'
+                    : 'bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900'
+                )}
+              />
+              {kdsSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setKdsSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                  aria-label="Limpar pesquisa"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setOnlyUrgentSla((v) => !v)}
+              className={clsx(
+                'inline-flex cursor-pointer items-center gap-1 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all',
+                onlyUrgentSla
+                  ? 'border-rose-600 bg-rose-600 text-white'
+                  : isDarkMode
+                  ? 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800'
+                  : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100'
+              )}
+              title="Mostrar apenas pedidos acima de 20 minutos de espera (SLA)"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Urgentes &gt;20m</span>
+            </button>
+
             {SECTION_FILTERS.map(({ key, label, icon }) => (
               <button
                 key={key}

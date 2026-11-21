@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   getOrderPublicStatus,
   getMultipleOrdersPublicStatus,
+  cancelPendingOrderByCustomer,
 } from '@/actions/orders';
 import { Order, OrderStatus } from '@/types/restaurant';
 
@@ -69,6 +70,7 @@ export interface ActiveOrderTrackerContextValue {
     initialData?: Partial<ActiveTrackerOrder> | Order
   ) => void;
   removeActiveOrder: (orderId: string) => void;
+  cancelPendingOrder: (orderId: string) => Promise<{ success: boolean; error?: string }>;
   clearActiveOrder: () => void;
   refreshOrder: () => Promise<void>;
 }
@@ -676,6 +678,26 @@ export const ActiveOrderTrackerProvider: React.FC<{
   }, [fetchAllActiveStatuses]);
 
 
+  const cancelPendingOrder = useCallback(
+    async (orderIdToCancel: string): Promise<{ success: boolean; error?: string }> => {
+      const token =
+        orderTokensRef.current[orderIdToCancel] ||
+        getInitialOrderTokens()[orderIdToCancel] ||
+        null;
+
+      const res = await cancelPendingOrderByCustomer(orderIdToCancel, token);
+      if (!res.success) {
+        await fetchLatestStatus(orderIdToCancel);
+        return res;
+      }
+
+      handleStatusTransition(orderIdToCancel, 'cancelled');
+      return { success: true };
+    },
+    [fetchLatestStatus, handleStatusTransition]
+  );
+
+
   useEffect(() => {
     if (activeOrderIds.length > 0) {
       const timer = setTimeout(() => {
@@ -922,6 +944,7 @@ export const ActiveOrderTrackerProvider: React.FC<{
     closeDetailModal,
     setActiveOrderId,
     removeActiveOrder,
+    cancelPendingOrder,
     clearActiveOrder,
     refreshOrder,
   };

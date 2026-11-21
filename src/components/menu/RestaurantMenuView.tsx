@@ -14,6 +14,7 @@ import { ActiveOrderDetailModal } from './ActiveOrderDetailModal';
 import { ActiveOrderBanner } from './ActiveOrderBanner';
 import { Toast } from '@/components/ui/Toast';
 import { useCart } from '@/context/CartContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/types';
 import { menuAvisos } from '@/data/gulasCatalog';
@@ -40,6 +41,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
     setRestaurantSlug,
     syncCatalogProducts,
   } = useCart();
+  const { t, translateCategoryName } = useLanguage();
 
   const [menuProducts, setMenuProducts] = useState<Product[]>(products);
   const [prevProducts, setPrevProducts] = useState<Product[]>(products);
@@ -235,6 +237,24 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
         matchesPill = !!p.badges?.includes('picante');
       } else if (activeFilter === 'vegetariano') {
         matchesPill = !!p.badges?.some((b) => b === 'vegetariano' || b === 'vegan');
+      } else if (activeFilter === 'sem_gluten') {
+        const allergensLower = (p.allergens || []).map((a) => a.toLowerCase());
+        const hasGlutenTag = allergensLower.some((a) => a.includes('glúten') || a.includes('gluten'));
+        const catSlug = visibleCategories.find((c) => c.id === p.categoryId)?.slug || '';
+        const likelyHasGluten =
+          allergensLower.length === 0 &&
+          (catSlug.includes('pizza') ||
+            catSlug.includes('panuozzo') ||
+            catSlug.includes('caracoiz') ||
+            catSlug.includes('prego') ||
+            catSlug.includes('burger'));
+        matchesPill = !hasGlutenTag && !likelyHasGluten;
+      } else if (activeFilter === 'sem_lactose') {
+        const allergensLower = (p.allergens || []).map((a) => a.toLowerCase());
+        const hasLactoseTag = allergensLower.some(
+          (a) => a.includes('lactose') || a.includes('laticín') || a.includes('leite')
+        );
+        matchesPill = !hasLactoseTag;
       }
 
       return matchesSearch && matchesPill;
@@ -297,7 +317,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
           <span className="flex items-center gap-2 truncate">
             <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
             <span className="truncate">
-              Pizzas Familiares exclusivas Take-Away · Alergénios
+              {t('serviceNotesTitle')}
             </span>
           </span>
           <span className="flex items-center gap-2 shrink-0">
@@ -348,10 +368,10 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
               <Utensils className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-semibold text-zinc-900">
-              Nenhum artigo encontrado
+              {t('emptySearchTitle')}
             </h3>
             <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-              Tenta alterar os termos da pesquisa ou remover o filtro selecionado.
+              {t('emptySearchDesc')}
             </p>
           </div>
         ) : (
@@ -371,7 +391,7 @@ export const RestaurantMenuView: React.FC<RestaurantMenuViewProps> = ({
                 <div className="pb-2 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 border-b border-zinc-200/80">
                   <div className="flex items-center gap-2">
                     <h2 className="text-base sm:text-lg font-bold text-zinc-900 tracking-tight">
-                      {category.name}
+                      {translateCategoryName(category.name)}
                     </h2>
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
                       {items.length}

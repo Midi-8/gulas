@@ -18,6 +18,7 @@ const updateProductDetailsSchema = z.object({
   description: z.string().max(600).optional(),
   unitQuantity: z.string().max(50).nullable().optional(),
   badges: z.array(z.string()).optional(),
+  allergens: z.array(z.string()).optional(),
   prepTimeMinutes: z.number().int().min(1).max(180).nullable().optional(),
 });
 
@@ -29,7 +30,20 @@ const createProductSchema = z.object({
   description: z.string().max(600).optional(),
   unitQuantity: z.string().max(50).nullable().optional(),
   badges: z.array(z.string()).optional(),
+  allergens: z.array(z.string()).optional(),
 });
+
+const updateRestaurantSettingsSchema = z.object({
+  openingHours: z.string().trim().min(2, 'O horário é obrigatório.').max(100),
+  phone: z.string().trim().max(50).optional().nullable(),
+  tagline: z.string().trim().max(255).optional().nullable(),
+});
+
+export interface RestaurantSettingsData {
+  openingHours: string;
+  phone: string;
+  tagline: string;
+}
 
 const toggleCategorySchema = z.object({
   categoryId: z.string().uuid('Identificador de categoria inválido.'),
@@ -50,6 +64,7 @@ export interface ProductStockItem {
   unitQuantity?: string | null;
   imageUrl?: string | null;
   badges: string[];
+  allergens: string[];
   prepTimeMinutes?: number | null;
   displayOrder: number;
 }
@@ -218,6 +233,7 @@ export async function updateProductDetails(
         description: parsed.data.description?.trim() || null,
         unit_quantity: parsed.data.unitQuantity?.trim() || null,
         badges: parsed.data.badges || [],
+        allergens: parsed.data.allergens || [],
         prep_time_minutes: parsed.data.prepTimeMinutes ?? null,
         updated_at: new Date().toISOString(),
       })
@@ -234,6 +250,7 @@ export async function updateProductDetails(
         unit_quantity,
         image_url,
         badges,
+        allergens,
         prep_time_minutes,
         categories (
           id,
@@ -276,6 +293,7 @@ export async function updateProductDetails(
         unitQuantity: updated.unit_quantity,
         imageUrl: updated.image_url,
         badges: updated.badges || [],
+        allergens: updated.allergens || [],
         prepTimeMinutes: updated.prep_time_minutes,
         displayOrder: updated.display_order,
       },
@@ -352,6 +370,7 @@ export async function createCatalogProduct(
         description: parsed.data.description?.trim() || null,
         unit_quantity: parsed.data.unitQuantity?.trim() || null,
         badges: parsed.data.badges || [],
+        allergens: parsed.data.allergens || [],
         is_available: true,
         display_order: 99,
       })
@@ -366,6 +385,7 @@ export async function createCatalogProduct(
         unit_quantity,
         image_url,
         badges,
+        allergens,
         prep_time_minutes,
         categories (
           id,
@@ -408,6 +428,7 @@ export async function createCatalogProduct(
         unitQuantity: created.unit_quantity,
         imageUrl: created.image_url,
         badges: created.badges || [],
+        allergens: created.allergens || [],
         prepTimeMinutes: created.prep_time_minutes,
         displayOrder: created.display_order,
       },
@@ -545,6 +566,7 @@ export async function getRestaurantStockList(): Promise<ProductStockActionResult
         unit_quantity,
         image_url,
         badges,
+        allergens,
         prep_time_minutes,
         categories (
           id,
@@ -584,6 +606,7 @@ export async function getRestaurantStockList(): Promise<ProductStockActionResult
         unitQuantity: row.unit_quantity,
         imageUrl: row.image_url,
         badges: row.badges || [],
+        allergens: row.allergens || [],
         prepTimeMinutes: row.prep_time_minutes,
         displayOrder: row.display_order,
       };
@@ -673,6 +696,129 @@ export async function toggleRestaurantOpenStatus(
         code: 'UNEXPECTED_ERROR',
         message: 'Ocorreu um erro ao alterar o estado do restaurante.',
       },
+    };
+  }
+}
+
+/**
+ * Obtém as configurações editáveis do restaurante (horário, telefone e subtítulo/aviso).
+ */
+export async function getRestaurantSettings(): Promise<ProductStockActionResult<RestaurantSettingsData>> {
+  try {
+    const staff = await getAuthenticatedStaff();
+    if (!staff) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Sessão expirada ou utilizador não autorizado.' },
+      };
+    }
+
+    const supabase = await createServerSupabaseClient();
+    if (!supabase) {
+      return {
+        success: false,
+        error: { code: 'DATABASE_ERROR', message: 'Serviço de base de dados indisponível.' },
+      };
+    }
+
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('opening_hours, phone, tagline')
+      .eq('id', staff.restaurant.id)
+      .maybeSingle();
+
+    if (error || !data) {
+      return {
+        success: false,
+        error: { code: 'FETCH_ERROR', message: 'Não foi possível carregar as definições.' },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        openingHours: data.opening_hours || '',
+        phone: data.phone || '',
+        tagline: data.tagline || '',
+      },
+    };
+  } catch (err: unknown) {
+    console.error('[getRestaurantSettings] Exceção:', err);
+    return {
+      success: false,
+      error: { code: 'UNEXPECTED_ERROR', message: 'Erro ao carregar definições do restaurante.' },
+    };
+  }
+}
+
+/**
+ * Atualiza o horário, telefone e subtítulo/aviso do restaurante e revalida o menu público.
+ */
+export async function updateRestaurantSettings(
+  input: z.infer<typeof updateRestaurantSettingsSchema>
+): Promise<ProductStockActionResult<RestaurantSettingsData>> {
+  try {
+    const parsed = updateRestaurantSettingsSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: parsed.error.issues[0]?.message || 'Dados inválidos.',
+        },
+      };
+    }
+
+    const staff = await getAuthenticatedStaff();
+    if (!staff) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Sessão expirada ou utilizador não autorizado.' },
+      };
+    }
+
+    const supabase = await createServerSupabaseClient();
+    if (!supabase) {
+      return {
+        success: false,
+        error: { code: 'DATABASE_ERROR', message: 'Serviço de base de dados indisponível.' },
+      };
+    }
+
+    const { data: updated, error } = await supabase
+      .from('restaurants')
+      .update({
+        opening_hours: parsed.data.openingHours,
+        phone: parsed.data.phone?.trim() || null,
+        tagline: parsed.data.tagline?.trim() || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', staff.restaurant.id)
+      .select('opening_hours, phone, tagline')
+      .maybeSingle();
+
+    if (error || !updated) {
+      return {
+        success: false,
+        error: { code: 'UPDATE_FAILED', message: 'Não foi possível guardar as definições.' },
+      };
+    }
+
+    revalidateMenuAndAdmin(staff.restaurant.slug);
+
+    return {
+      success: true,
+      data: {
+        openingHours: updated.opening_hours || '',
+        phone: updated.phone || '',
+        tagline: updated.tagline || '',
+      },
+    };
+  } catch (err: unknown) {
+    console.error('[updateRestaurantSettings] Exceção:', err);
+    return {
+      success: false,
+      error: { code: 'UNEXPECTED_ERROR', message: 'Erro inesperado ao guardar definições.' },
     };
   }
 }

@@ -615,3 +615,52 @@ export async function getMultipleOrdersPublicStatus(
     },
   };
 }
+
+/**
+ * Permite ao cliente cancelar um pedido enquanto o mesmo ainda está no estado 'pending'
+ * (antes de a cozinha aceitar), validado pelo tracking_token criptográfico.
+ */
+export async function cancelPendingOrderByCustomer(
+  orderId: string,
+  trackingToken: string | null
+): Promise<{ success: boolean; error?: string }> {
+  if (!orderId || typeof orderId !== 'string' || orderId.trim() === '') {
+    return { success: false, error: 'Identificador do pedido inválido.' };
+  }
+  if (!trackingToken || typeof trackingToken !== 'string' || trackingToken.trim() === '') {
+    return { success: false, error: 'Credencial de acompanhamento ausente.' };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) {
+    return { success: false, error: 'Serviço de base de dados indisponível.' };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('cancel_pending_order_by_customer', {
+      p_order_id: orderId.trim(),
+      p_tracking_token: trackingToken.trim(),
+    });
+
+    if (error) {
+      return {
+        success: false,
+        error:
+          error.message ||
+          'Não foi possível cancelar o pedido (a cozinha poderá já ter iniciado a preparação).',
+      };
+    }
+
+    const payload = data as { success?: boolean; error?: string } | null;
+    if (!payload?.success) {
+      return {
+        success: false,
+        error: payload?.error || 'Não foi possível cancelar este pedido.',
+      };
+    }
+
+    return { success: true };
+  } catch {
+    return { success: false, error: 'Erro inesperado ao tentar cancelar o pedido.' };
+  }
+}

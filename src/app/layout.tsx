@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import { ActiveOrderTrackerProvider } from '@/hooks/useActiveOrderTracker';
 
 const inter = Inter({
@@ -30,9 +31,11 @@ export default function RootLayout({
   return (
     <html lang="pt" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full bg-[#FAFAFA] text-zinc-900 font-sans flex flex-col">
-        <CartProvider>
-          <ActiveOrderTrackerProvider>{children}</ActiveOrderTrackerProvider>
-        </CartProvider>
+        <LanguageProvider>
+          <CartProvider>
+            <ActiveOrderTrackerProvider>{children}</ActiveOrderTrackerProvider>
+          </CartProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

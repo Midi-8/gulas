@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Restaurant } from '@/types/restaurant';
 import { useCart } from '@/context/CartContext';
+import { useLanguage, Locale } from '@/context/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
 import {
   ShoppingBag,
@@ -27,6 +28,7 @@ const emptySubscribe = () => () => {};
 
 export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }) => {
   const { selectedTableNumber, isTableLocked, itemCount, setIsCartOpen, showToast } = useCart();
+  const { locale, setLocale, t } = useLanguage();
   const hasMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -124,8 +126,39 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
               </div>
             </Link>
 
-            {/* Controlos de Serviço: Mesa / Take-Away, Chamar Staff e Carrinho */}
+            {/* Controlos de Serviço: Idioma, Mesa / Take-Away, Chamar Staff e Carrinho */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Seletor PT | EN | FR */}
+              <div
+                className="hidden sm:inline-flex items-center p-0.5 rounded-xl bg-zinc-100 border border-zinc-200/80 text-[10px] font-semibold"
+                aria-label="Idioma"
+              >
+                {(['pt', 'en', 'fr'] as Locale[]).map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => setLocale(loc)}
+                    className={`px-2 py-1 rounded-lg uppercase transition-colors cursor-pointer ${
+                      locale === loc
+                        ? 'bg-zinc-900 text-white'
+                        : 'text-zinc-500 hover:text-zinc-900'
+                    }`}
+                  >
+                    {loc}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setLocale(locale === 'pt' ? 'en' : locale === 'en' ? 'fr' : 'pt')
+                }
+                className="sm:hidden px-2 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200/80 text-[10px] font-bold uppercase text-zinc-700 cursor-pointer"
+                aria-label="Mudar idioma"
+              >
+                {locale.toUpperCase()}
+              </button>
+
               {!hasMounted ? (
                 <div
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 text-xs font-medium text-transparent select-none animate-pulse"
@@ -142,14 +175,14 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                   title="Pedido configurado para Take-Away. Clica para alterar."
                 >
                   <ShoppingBag className="w-3.5 h-3.5 text-zinc-300" />
-                  <span>Take-Away</span>
+                  <span>{t('takeAway')}</span>
                 </button>
               ) : selectedTableNumber !== null && selectedTableNumber > 0 ? (
                 <>
                   {isTableLocked ? (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200/80 text-xs font-medium text-zinc-900">
                       <UtensilsCrossed className="w-3.5 h-3.5 text-zinc-600" />
-                      <span>Mesa {selectedTableNumber}</span>
+                      <span>{t('table')} {selectedTableNumber}</span>
                     </div>
                   ) : (
                     <button
@@ -159,7 +192,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                       title="Alterar mesa ou mudar para Take-Away"
                     >
                       <UtensilsCrossed className="w-3.5 h-3.5 text-zinc-600" />
-                      <span>Mesa {selectedTableNumber}</span>
+                      <span>{t('table')} {selectedTableNumber}</span>
                     </button>
                   )}
 
@@ -171,7 +204,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                     title="Pedir a conta ou chamar staff à mesa"
                   >
                     <BellRing className="w-3.5 h-3.5 text-zinc-600" />
-                    <span className="hidden sm:inline">Conta / Staff</span>
+                    <span className="hidden sm:inline">{t('billOrStaff')}</span>
                   </button>
                 </>
               ) : (
@@ -182,7 +215,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                   title="Escolher mesa ou opção Take-Away"
                 >
                   <UtensilsCrossed className="w-3.5 h-3.5 text-zinc-600" />
-                  <span>Mesa / Levar</span>
+                  <span>{t('tableOrTakeAway')}</span>
                 </button>
               )}
 
@@ -236,12 +269,12 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                 {restaurant.isOpen ? (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-xs text-[11px] font-semibold text-zinc-900 shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Aberto</span>
+                    <span>{t('open')}</span>
                   </div>
                 ) : (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-950/90 border border-white/15 text-[11px] font-semibold text-rose-200 shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                    <span>Encerrado</span>
+                    <span>{t('closed')}</span>
                   </div>
                 )}
               </div>
@@ -250,7 +283,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
 
           {!restaurant.isOpen && (
             <div className="mt-2.5 px-3.5 py-2 rounded-xl bg-rose-50/80 border border-rose-200/80 text-xs font-medium text-rose-900 flex items-center justify-between gap-2">
-              <span>O restaurante encontra-se encerrado de momento para novos pedidos.</span>
+              <span>{t('closedNotice')}</span>
               {restaurant.openingHours && (
                 <span className="text-[11px] font-mono text-rose-700 shrink-0 hidden sm:inline">
                   {restaurant.openingHours}
@@ -274,10 +307,10 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block">
-                  Mesa {selectedTableNumber}
+                  {t('table')} {selectedTableNumber}
                 </span>
                 <h2 className="text-base font-bold text-zinc-900">
-                  Assistência na Mesa
+                  {t('tableAssistance')}
                 </h2>
               </div>
               <button
@@ -295,10 +328,10 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                   <Check className="w-5 h-5" />
                 </div>
                 <p className="text-sm font-semibold text-zinc-900">
-                  A equipa já recebeu o teu pedido!
+                  {t('callReceived')}
                 </p>
                 <p className="text-xs text-zinc-500">
-                  Um membro do staff irá dirigir-se à Mesa {selectedTableNumber} em breve.
+                  {t('callReceivedDesc')}
                 </p>
               </div>
             ) : (
@@ -316,7 +349,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                     <CreditCard className="w-4 h-4 shrink-0" />
                     <div>
                       <span className="text-xs font-semibold block">
-                        Pedir a Conta · Multibanco / MB WAY
+                        {t('billCard')}
                       </span>
                       <span
                         className={`text-[11px] ${
@@ -325,7 +358,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                             : 'text-zinc-500'
                         }`}
                       >
-                        O staff leva o terminal de pagamento à mesa
+                        {t('billCardDesc')}
                       </span>
                     </div>
                   </button>
@@ -342,7 +375,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                     <Banknote className="w-4 h-4 shrink-0" />
                     <div>
                       <span className="text-xs font-semibold block">
-                        Pedir a Conta · Dinheiro
+                        {t('billCash')}
                       </span>
                       <span
                         className={`text-[11px] ${
@@ -351,7 +384,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                             : 'text-zinc-500'
                         }`}
                       >
-                        Pagamento em numerário na mesa
+                        {t('billCashDesc')}
                       </span>
                     </div>
                   </button>
@@ -368,7 +401,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                     <HandHelping className="w-4 h-4 shrink-0" />
                     <div>
                       <span className="text-xs font-semibold block">
-                        Chamar Staff à Mesa
+                        {t('callStaff')}
                       </span>
                       <span
                         className={`text-[11px] ${
@@ -377,7 +410,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                             : 'text-zinc-500'
                         }`}
                       >
-                        Dúvida, guardanapos, talheres ou assistência
+                        {t('callStaffDesc')}
                       </span>
                     </div>
                   </button>
@@ -386,7 +419,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                 {selectedRequestType !== 'call_staff' && (
                   <div>
                     <label className="block text-[11px] font-medium text-zinc-600 mb-1">
-                      NIF na fatura (opcional)
+                      {t('nifLabel')}
                     </label>
                     <input
                       type="text"
@@ -405,7 +438,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurant }
                   disabled={isSendingCall}
                   className="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {isSendingCall ? 'A chamar staff...' : 'Confirmar Pedido à Equipa'}
+                  {isSendingCall ? t('sendingCall') : t('confirmCall')}
                 </button>
               </form>
             )}

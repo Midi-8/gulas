@@ -1,10 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Sparkles, Leaf, Zap, Flame } from 'lucide-react';
+import { Search, X, Sparkles, Leaf, Zap, Flame, ShieldCheck } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useLanguage } from '@/context/LanguageContext';
 
-export type MenuFilterType = 'all' | 'especialidade' | 'novidade' | 'picante' | 'vegetariano';
+export type MenuFilterType =
+  | 'all'
+  | 'especialidade'
+  | 'novidade'
+  | 'picante'
+  | 'vegetariano'
+  | 'sem_gluten'
+  | 'sem_lactose';
 
 interface SearchBarProps {
   searchQuery: string;
@@ -19,6 +27,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   activeFilter,
   onFilterChange,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <div className="max-w-4xl mx-auto px-4 pt-3 pb-2 space-y-2">
       {/* Search Input */}
@@ -28,7 +38,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Pesquisar prato, bebida ou ingrediente..."
+          placeholder={t('searchPlaceholder')}
           className="w-full pl-10 pr-9 py-2.5 bg-white border border-zinc-200/80 rounded-xl text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 transition-colors"
         />
         {searchQuery && (
@@ -52,7 +62,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               : 'text-zinc-600 bg-white border-zinc-200/80 hover:bg-zinc-100 hover:text-zinc-900'
           )}
         >
-          Todos
+          {t('all')}
         </button>
 
         <button
@@ -65,7 +75,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           )}
         >
           <Sparkles className="w-3 h-3 opacity-70" />
-          Especialidades
+          {t('specialties')}
         </button>
 
         <button
@@ -78,7 +88,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           )}
         >
           <Zap className="w-3 h-3 opacity-70" />
-          Novidades
+          {t('new')}
         </button>
 
         <button
@@ -91,7 +101,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           )}
         >
           <Flame className="w-3 h-3 opacity-70" />
-          Picantes
+          {t('spicy')}
         </button>
 
         <button
@@ -104,7 +114,33 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           )}
         >
           <Leaf className="w-3 h-3 opacity-70" />
-          Vegetarianos
+          {t('vegetarian')}
+        </button>
+
+        <button
+          onClick={() => onFilterChange('sem_gluten')}
+          className={clsx(
+            'inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer border',
+            activeFilter === 'sem_gluten'
+              ? 'bg-zinc-900 text-white border-zinc-900'
+              : 'text-zinc-600 bg-white border-zinc-200/80 hover:bg-zinc-100 hover:text-zinc-900'
+          )}
+        >
+          <ShieldCheck className="w-3 h-3 opacity-70" />
+          {t('glutenFree')}
+        </button>
+
+        <button
+          onClick={() => onFilterChange('sem_lactose')}
+          className={clsx(
+            'inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer border',
+            activeFilter === 'sem_lactose'
+              ? 'bg-zinc-900 text-white border-zinc-900'
+              : 'text-zinc-600 bg-white border-zinc-200/80 hover:bg-zinc-100 hover:text-zinc-900'
+          )}
+        >
+          <ShieldCheck className="w-3 h-3 opacity-70" />
+          {t('lactoseFree')}
         </button>
       </div>
     </div>

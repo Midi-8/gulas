@@ -8,6 +8,8 @@ import {
   updateProductDetails,
   createCatalogProduct,
   toggleCategoryAvailability,
+  getRestaurantSettings,
+  updateRestaurantSettings,
 } from '@/actions/product-stock';
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/types';
@@ -25,6 +27,7 @@ import {
   Eye,
   EyeOff,
   Save,
+  Settings,
 } from 'lucide-react';
 
 interface QuickStockDrawerProps {
@@ -41,6 +44,15 @@ const AVAILABLE_BADGES = [
   { id: 'vegan', label: 'Vegan' },
   { id: 'vegetariano', label: 'Vegetariano' },
   { id: 'popular', label: 'Popular' },
+];
+
+const COMMON_ALLERGENS = [
+  'Glúten',
+  'Lactose',
+  'Ovo',
+  'Frutos Secos',
+  'Marisco',
+  'Soja',
 ];
 
 export function QuickStockDrawer({
@@ -66,6 +78,7 @@ export function QuickStockDrawer({
   const [editDescription, setEditDescription] = useState('');
   const [editUnitQuantity, setEditUnitQuantity] = useState('');
   const [editBadges, setEditBadges] = useState<string[]>([]);
+  const [editAllergens, setEditAllergens] = useState<string[]>([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // Create new product state
@@ -77,7 +90,16 @@ export function QuickStockDrawer({
   const [newDescription, setNewDescription] = useState('');
   const [newUnitQuantity, setNewUnitQuantity] = useState('');
   const [newBadges, setNewBadges] = useState<string[]>([]);
+  const [newAllergens, setNewAllergens] = useState<string[]>([]);
   const [isSavingNew, setIsSavingNew] = useState(false);
+
+  // Restaurant settings state (Horário, Telefone e Subtítulo)
+  const [isEditingSettings, setIsEditingSettings] = useState(false);
+  const [settingsHours, setSettingsHours] = useState('');
+  const [settingsPhone, setSettingsPhone] = useState('');
+  const [settingsTagline, setSettingsTagline] = useState('');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsSavedMsg, setSettingsSavedMsg] = useState<string | null>(null);
 
   const [isRefreshing, startTransition] = useTransition();
 
@@ -305,6 +327,7 @@ export function QuickStockDrawer({
     setEditDescription(item.description || '');
     setEditUnitQuantity(item.unitQuantity || '');
     setEditBadges(item.badges || []);
+    setEditAllergens(item.allergens || []);
     setErrorMessage(null);
   };
 
@@ -332,6 +355,7 @@ export function QuickStockDrawer({
         description: editDescription,
         unitQuantity: editUnitQuantity || null,
         badges: editBadges,
+        allergens: editAllergens,
       });
 
       if (res.success) {
@@ -375,6 +399,7 @@ export function QuickStockDrawer({
         description: newDescription,
         unitQuantity: newUnitQuantity || null,
         badges: newBadges,
+        allergens: newAllergens,
       });
 
       if (res.success) {
@@ -386,6 +411,7 @@ export function QuickStockDrawer({
         setNewDescription('');
         setNewUnitQuantity('');
         setNewBadges([]);
+        setNewAllergens([]);
       } else {
         setErrorMessage(res.error.message);
       }
@@ -393,6 +419,44 @@ export function QuickStockDrawer({
       setErrorMessage('Erro ao criar novo artigo.');
     } finally {
       setIsSavingNew(false);
+    }
+  };
+
+  const handleOpenSettings = async () => {
+    const nextState = !isEditingSettings;
+    setIsEditingSettings(nextState);
+    setSettingsSavedMsg(null);
+    if (nextState) {
+      const res = await getRestaurantSettings();
+      if (res.success) {
+        setSettingsHours(res.data.openingHours);
+        setSettingsPhone(res.data.phone);
+        setSettingsTagline(res.data.tagline);
+      }
+    }
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSavingSettings) return;
+    setIsSavingSettings(true);
+    setErrorMessage(null);
+    setSettingsSavedMsg(null);
+    try {
+      const res = await updateRestaurantSettings({
+        openingHours: settingsHours,
+        phone: settingsPhone,
+        tagline: settingsTagline,
+      });
+      if (res.success) {
+        setSettingsSavedMsg('Definições guardadas com sucesso!');
+      } else {
+        setErrorMessage(res.error.message);
+      }
+    } catch {
+      setErrorMessage('Erro ao guardar definições do restaurante.');
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
@@ -440,6 +504,19 @@ export function QuickStockDrawer({
           <div className="flex items-center gap-1.5">
             <button
               type="button"
+              onClick={() => void handleOpenSettings()}
+              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer ${
+                isEditingSettings
+                  ? 'bg-zinc-900 text-white border-zinc-900'
+                  : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
+              }`}
+              title="Editar horário de serviço, telefone e subtítulo"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Horário</span>
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setIsCreatingProduct((v) => !v);
                 if (!newCategoryId && categories[0]) {
@@ -472,6 +549,90 @@ export function QuickStockDrawer({
             </button>
           </div>
         </div>
+
+        {/* Painel de Horário, Telefone e Subtítulo do Restaurante */}
+        {isEditingSettings && (
+          <form
+            onSubmit={handleSaveSettings}
+            className="p-4 bg-zinc-50 border-b border-zinc-200 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-900">
+                Horário &amp; Informações do Menu
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsEditingSettings(false)}
+                className="text-xs font-medium text-zinc-500 hover:text-zinc-900 cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-600 mb-1">
+                  Horário de Serviço *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={settingsHours}
+                  onChange={(e) => setSettingsHours(e.target.value)}
+                  placeholder="12:00 – 15:00 • 19:00 – 23:00"
+                  className="w-full px-3 py-2 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-900 focus:outline-none focus:border-zinc-900"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-600 mb-1">
+                  Telefone
+                </label>
+                <input
+                  type="text"
+                  value={settingsPhone}
+                  onChange={(e) => setSettingsPhone(e.target.value)}
+                  placeholder="+351 252 870 120"
+                  className="w-full px-3 py-2 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-900 focus:outline-none focus:border-zinc-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-600 mb-1">
+                Subtítulo / Aviso no Topo do Menu
+              </label>
+              <input
+                type="text"
+                value={settingsTagline}
+                onChange={(e) => setSettingsTagline(e.target.value)}
+                placeholder="Ex: Pizza · Burger · Coffee"
+                className="w-full px-3 py-2 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-900 focus:outline-none focus:border-zinc-900"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+              {settingsSavedMsg ? (
+                <span className="text-xs font-semibold text-emerald-700">
+                  {settingsSavedMsg}
+                </span>
+              ) : (
+                <span />
+              )}
+              <button
+                type="submit"
+                disabled={isSavingSettings}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800 disabled:opacity-50 cursor-pointer"
+              >
+                {isSavingSettings ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                <span>Guardar Definições</span>
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* Formulário de Criação de Novo Artigo */}
         {isCreatingProduct && (
@@ -579,6 +740,31 @@ export function QuickStockDrawer({
                 placeholder="Ingredientes ou notas do prato..."
                 className="w-full px-3 py-2 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-900 focus:outline-none focus:border-zinc-900"
               />
+            </div>
+
+            <div>
+              <span className="block text-[10px] font-semibold text-zinc-500 mb-1">
+                Alergénios (opcional):
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {COMMON_ALLERGENS.map((alg) => {
+                  const active = newAllergens.includes(alg);
+                  return (
+                    <button
+                      key={alg}
+                      type="button"
+                      onClick={() => toggleBadgeInList(alg, newAllergens, setNewAllergens)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-amber-900 text-white border-amber-900'
+                          : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                      }`}
+                    >
+                      {alg}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
@@ -951,6 +1137,33 @@ export function QuickStockDrawer({
                                   onChange={(e) => setEditDescription(e.target.value)}
                                   className="w-full px-2.5 py-1.5 text-xs bg-white border border-zinc-200 rounded-lg text-zinc-900 focus:outline-none focus:border-zinc-900 resize-none"
                                 />
+                              </div>
+
+                              <div>
+                                <span className="block text-[10px] font-semibold text-zinc-500 mb-1">
+                                  Alergénios
+                                </span>
+                                <div className="flex flex-wrap gap-1">
+                                  {COMMON_ALLERGENS.map((alg) => {
+                                    const active = editAllergens.includes(alg);
+                                    return (
+                                      <button
+                                        key={alg}
+                                        type="button"
+                                        onClick={() =>
+                                          toggleBadgeInList(alg, editAllergens, setEditAllergens)
+                                        }
+                                        className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border transition-colors cursor-pointer ${
+                                          active
+                                            ? 'bg-amber-900 text-white border-amber-900'
+                                            : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                                        }`}
+                                      >
+                                        {alg}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
                               </div>
 
                               <div className="flex flex-wrap items-center justify-between gap-2 pt-1">

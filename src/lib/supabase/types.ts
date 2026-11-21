@@ -364,6 +364,13 @@ export interface Database {
         };
         Returns: Json;
       };
+      cancel_pending_order_by_customer: {
+        Args: {
+          p_order_id: string;
+          p_tracking_token: string;
+        };
+        Returns: Json;
+      };
     };
     Views: {
       [_ in never]: never;

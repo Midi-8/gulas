@@ -2,11 +2,13 @@
 
 import React from 'react';
 import { useCart } from '@/context/CartContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { formatCurrency } from '@/data/mockRestaurant';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 
 export const FloatingCartBar: React.FC = () => {
   const { itemCount, total, setIsCartOpen } = useCart();
+  const { t } = useLanguage();
 
   if (itemCount === 0) return null;
 
@@ -23,7 +25,7 @@ export const FloatingCartBar: React.FC = () => {
             </span>
             <span className="text-xs sm:text-sm font-semibold text-white flex items-center gap-1.5">
               <ShoppingBag className="w-4 h-4 text-zinc-300" />
-              <span>Ver o teu pedido</span>
+              <span>{t('viewOrder')}</span>
             </span>
           </div>
 

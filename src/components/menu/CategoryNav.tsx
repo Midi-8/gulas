@@ -3,6 +3,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Category } from '@/types/restaurant';
 import { clsx } from 'clsx';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface CategoryNavProps {
   categories: Category[];
@@ -15,6 +16,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   activeCategoryId,
   onSelectCategory,
 }) => {
+  const { translateCategoryName } = useLanguage();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeBtnRef = useRef<HTMLButtonElement | null>(null);
 
@@ -62,7 +64,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                     : 'bg-zinc-100/80 text-zinc-600 border-zinc-200/80 hover:border-zinc-300 hover:text-zinc-950 hover:bg-zinc-100'
                 )}
               >
-                {category.name}
+                {translateCategoryName(category.name)}
               </button>
             );
           })}

@@ -1,8 +1,11 @@
+'use client';
+
 import React from 'react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Sparkles, Leaf, Flame } from 'lucide-react';
 import { ProductBadge } from '@/types/restaurant';
+import { useLanguage, TranslationKey } from '@/context/LanguageContext';
 
 interface BadgeProps {
   children?: React.ReactNode;
@@ -36,6 +39,7 @@ export const Badge: React.FC<BadgeProps> = ({
   className,
   size = 'sm',
 }) => {
+  const { t } = useLanguage();
   const effectiveVariant = variant || (badgeType as string) || 'secondary';
 
   const baseStyles =
@@ -91,30 +95,20 @@ export const Badge: React.FC<BadgeProps> = ({
   };
 
   const renderDefaultLabel = () => {
-    switch (effectiveVariant) {
-      case 'novidade':
-        return 'Novidade';
-      case 'picante':
-        return 'Picante';
-      case 'vegetariano':
-        return 'Vegetariano';
-      case 'vegan':
-        return 'Vegan';
-      case 'especialidade':
-        return 'Especialidade';
-      case 'house_special':
-        return 'Especial Gulas';
-      case 'popular':
-        return 'Popular';
-      case 'promocao':
-        return 'Promoção';
-      case 'extra':
-        return 'Extra';
-      case 'acompanhamento':
-        return 'Acompanhamento';
-      default:
-        return null;
-    }
+    const keyMap: Record<string, TranslationKey> = {
+      novidade: 'novidade',
+      picante: 'picante',
+      vegetariano: 'vegetariano',
+      vegan: 'vegan',
+      especialidade: 'especialidade',
+      house_special: 'house_special',
+      popular: 'popular',
+      promocao: 'promocao',
+      extra: 'extra',
+      acompanhamento: 'acompanhamento',
+    };
+    const key = keyMap[effectiveVariant];
+    return key ? t(key) : null;
   };
 
   return (

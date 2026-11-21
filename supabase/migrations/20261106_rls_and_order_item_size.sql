@@ -337,5 +337,49 @@ $$;
 REVOKE ALL ON FUNCTION public.create_order_atomic(TEXT, INTEGER, TEXT, JSONB) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.create_order_atomic(TEXT, INTEGER, TEXT, JSONB) TO anon, authenticated, service_role;
 
+-- 3. RPC segura para cancelamento pelo cliente enquanto o pedido está 'pending'
+CREATE OR REPLACE FUNCTION public.cancel_pending_order_by_customer(
+    p_order_id UUID,
+    p_tracking_token TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+    v_order RECORD;
+BEGIN
+    IF p_order_id IS NULL OR p_tracking_token IS NULL OR trim(p_tracking_token) = '' THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Credenciais de pedido inválidas.');
+    END IF;
+
+    SELECT id, status
+    INTO v_order
+    FROM public.orders
+    WHERE id = p_order_id
+      AND tracking_token = trim(p_tracking_token)
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Pedido não encontrado.');
+    END IF;
+
+    IF v_order.status <> 'pending' THEN
+        RETURN jsonb_build_object('success', false, 'error', 'A cozinha já aceitou este pedido e não pode ser cancelado aqui.');
+    END IF;
+
+    UPDATE public.orders
+    SET status = 'cancelled',
+        updated_at = NOW()
+    WHERE id = p_order_id;
+
+    RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.cancel_pending_order_by_customer(UUID, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.cancel_pending_order_by_customer(UUID, TEXT) TO anon, authenticated, service_role;
+
 COMMIT;
 
