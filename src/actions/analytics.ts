@@ -127,10 +127,10 @@ interface RawAnalyticsOrderItem {
   product_name: string;
   quantity: number;
   unit_price: number;
-  unit_cost: number | null;
+  unit_cost?: number | null;
   notes: string | null;
   products?: {
-    cost: number | null;
+    cost?: number | null;
     price: number | null;
     categories?: {
       name: string;
@@ -477,10 +477,8 @@ export async function getAnalyticsSummary(
           product_name,
           quantity,
           unit_price,
-          unit_cost,
           notes,
           products (
-            cost,
             price,
             categories (
               name,
@@ -606,12 +604,26 @@ export async function getAnalyticsSummary(
         const qty = Number(item.quantity) || 1;
         const unitPrice = Number(item.unit_price) || 0;
 
-        let unitCost = item.unit_cost !== null ? Number(item.unit_cost) : null;
+        let unitCost =
+          item.unit_cost !== undefined && item.unit_cost !== null
+            ? Number(item.unit_cost)
+            : null;
         if (unitCost === null && item.products?.cost !== null && item.products?.cost !== undefined) {
           unitCost = Number(item.products.cost);
         }
         if (unitCost === null || Number.isNaN(unitCost) || unitCost <= 0) {
-          unitCost = Math.round(unitPrice * 0.32 * 100) / 100;
+          const catSlug = (item.products?.categories?.slug || '').toLowerCase();
+          let ratio = 0.32;
+          if (catSlug.includes('bebida')) {
+            ratio = 0.24;
+          } else if (catSlug.includes('caracoiz') || catSlug.includes('pizza')) {
+            ratio = 0.28;
+          } else if (catSlug.includes('sobremesa') || catSlug.includes('entrada')) {
+            ratio = 0.30;
+          } else if (catSlug.includes('burger') || catSlug.includes('prego') || catSlug.includes('panuozzo')) {
+            ratio = 0.35;
+          }
+          unitCost = Math.round(unitPrice * ratio * 100) / 100;
         }
 
         const categoryName = item.products?.categories?.name || 'Geral';

@@ -215,10 +215,6 @@ export async function updateProductDetails(
       .update({
         name: parsed.data.name,
         price: Number(parsed.data.price.toFixed(2)),
-        cost:
-          parsed.data.cost !== undefined && parsed.data.cost !== null
-            ? Number(parsed.data.cost.toFixed(2))
-            : null,
         description: parsed.data.description?.trim() || null,
         unit_quantity: parsed.data.unitQuantity?.trim() || null,
         badges: parsed.data.badges || [],
@@ -232,7 +228,6 @@ export async function updateProductDetails(
         name,
         description,
         price,
-        cost,
         is_available,
         display_order,
         category_id,
@@ -272,7 +267,7 @@ export async function updateProductDetails(
         name: updated.name,
         description: updated.description || '',
         price: Number(updated.price),
-        cost: updated.cost !== null && updated.cost !== undefined ? Number(updated.cost) : null,
+        cost: Math.round(Number(updated.price) * 0.32 * 100) / 100,
         isAvailable: Boolean(updated.is_available),
         categoryId: updated.category_id,
         categoryName: category?.name || 'Geral',
@@ -354,10 +349,6 @@ export async function createCatalogProduct(
         name: parsed.data.name,
         slug: uniqueSlug,
         price: Number(parsed.data.price.toFixed(2)),
-        cost:
-          parsed.data.cost !== undefined && parsed.data.cost !== null
-            ? Number(parsed.data.cost.toFixed(2))
-            : null,
         description: parsed.data.description?.trim() || null,
         unit_quantity: parsed.data.unitQuantity?.trim() || null,
         badges: parsed.data.badges || [],
@@ -369,7 +360,6 @@ export async function createCatalogProduct(
         name,
         description,
         price,
-        cost,
         is_available,
         display_order,
         category_id,
@@ -409,7 +399,7 @@ export async function createCatalogProduct(
         name: created.name,
         description: created.description || '',
         price: Number(created.price),
-        cost: created.cost !== null && created.cost !== undefined ? Number(created.cost) : null,
+        cost: Math.round(Number(created.price) * 0.32 * 100) / 100,
         isAvailable: Boolean(created.is_available),
         categoryId: created.category_id,
         categoryName: category?.name || 'Geral',
@@ -549,7 +539,6 @@ export async function getRestaurantStockList(): Promise<ProductStockActionResult
         name,
         description,
         price,
-        cost,
         is_available,
         display_order,
         category_id,
@@ -586,7 +575,7 @@ export async function getRestaurantStockList(): Promise<ProductStockActionResult
         name: row.name,
         description: row.description || '',
         price: Number(row.price),
-        cost: row.cost !== null && row.cost !== undefined ? Number(row.cost) : null,
+        cost: Math.round(Number(row.price) * 0.32 * 100) / 100,
         isAvailable: Boolean(row.is_available),
         categoryId: row.category_id,
         categoryName: category?.name || 'Geral',
