@@ -11,6 +11,7 @@ interface OrderCardProps {
   isUpdating: boolean;
   isNew?: boolean;
   isDarkMode?: boolean;
+  isOwner?: boolean;
   error?: string | null;
   onClearError?: () => void;
   onUpdateStatus: (orderId: string, nextStatus: ValidNextStatus) => Promise<void>;
@@ -41,6 +42,7 @@ export function OrderCard({
   order,
   isUpdating,
   isNew = false,
+  isOwner = true,
   error,
   onClearError,
   onUpdateStatus,
@@ -100,7 +102,7 @@ export function OrderCard({
                   {isTakeAway ? 'Take-Away' : `Mesa ${order.tableNumber}`}
                 </span>
 
-                {onChangeTable && (
+                {isOwner && onChangeTable && (
                   <select
                     aria-label={`Transferir pedido #${order.orderNumber} para outra mesa`}
                     title="Transferir pedido para outra mesa ou Take-Away"
@@ -192,6 +194,7 @@ export function OrderCard({
           tableNumber={order.tableNumber}
           status={order.status}
           isUpdating={isUpdating}
+          isOwner={isOwner}
           onUpdateStatus={(nextStatus) => onUpdateStatus(order.id, nextStatus)}
         />
       </div>

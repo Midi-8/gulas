@@ -231,11 +231,13 @@ export async function createOrder(
   }
 
 
-  // 3. Formatar itens para a RPC (apenas product_id, quantity, notes — sem preços!)
+  // 3. Enviar os artigos e os IDs dos modificadores para a RPC.
+  // Os preços são calculados exclusivamente na base de dados.
   const rpcItemsPayload = items.map((item) => ({
     product_id: item.productId,
     quantity: item.quantity,
     notes: item.notes,
+    modifier_ids: item.modifierIds ?? [],
   }));
 
 

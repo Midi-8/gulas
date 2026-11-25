@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Product } from '@/types/restaurant';
+import { Product, getCartItemUnitPrice, getCartItemTotal } from '@/types/restaurant';
 import { useCart } from '@/context/CartContext';
 import { useActiveOrderTracker } from '@/hooks/useActiveOrderTracker';
 import { formatCurrency, mockTables } from '@/data/mockRestaurant';
@@ -404,78 +404,115 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* Lista de Artigos no Pedido */}
             <div className="space-y-2">
-              {items.map(({ product, quantity, notes }) => (
-                <div
-                  key={product.id}
-                  className={`p-3.5 rounded-2xl bg-white border flex items-start gap-3 transition-all ${
-                    !product.available
-                      ? 'border-amber-300 bg-amber-50/40'
-                      : 'border-zinc-200/80'
-                  }`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 truncate">
-                            {product.name}
-                          </h4>
-                          {product.unitQuantity && (
-                            <span className="px-1.5 py-0.5 rounded-md bg-zinc-100 border border-zinc-200/80 text-[10px] font-medium text-zinc-600">
-                              {product.unitQuantity}
+              {items.map((item) => {
+                const lineId = item.id || item.product.id;
+                const unitPrice = getCartItemUnitPrice(item);
+                const lineTotal = getCartItemTotal(item);
+                const { product, quantity, notes, selectedModifiers } = item;
+
+                return (
+                  <div
+                    key={lineId}
+                    className={`p-3.5 rounded-2xl bg-white border flex items-start gap-3 transition-all ${
+                      !product.available
+                        ? 'border-amber-300 bg-amber-50/40'
+                        : 'border-zinc-200/80'
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 truncate">
+                              {product.name}
+                            </h4>
+                            {product.unitQuantity && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-zinc-100 border border-zinc-200/80 text-[10px] font-medium text-zinc-600">
+                                {product.unitQuantity}
+                              </span>
+                            )}
+                          </div>
+                          {!product.available && (
+                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-semibold">
+                              Temporariamente Esgotado
                             </span>
                           )}
                         </div>
-                        {!product.available && (
-                          <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-semibold">
-                            Temporariamente Esgotado
-                          </span>
-                        )}
+                        <button
+                          onClick={() => removeItem(lineId)}
+                          className="text-zinc-400 hover:text-rose-600 p-0.5 transition-colors cursor-pointer"
+                          aria-label="Remover item"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => removeItem(product.id)}
-                        className="text-zinc-400 hover:text-rose-600 p-0.5 transition-colors cursor-pointer"
-                        aria-label="Remover item"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
 
-                    {notes && (
-                      <p className="text-[11px] text-zinc-500 bg-zinc-50 px-2 py-1 rounded-lg mt-1.5 line-clamp-2 border border-zinc-200/60">
-                        {notes}
-                      </p>
-                    )}
+                      {/* Modificadores Selecionados (Legíveis) */}
+                      {selectedModifiers && selectedModifiers.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {selectedModifiers.map((mod) => (
+                            <span
+                              key={mod.id}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${
+                                mod.group === 'remove'
+                                  ? 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                                  : 'bg-zinc-900 text-white border-zinc-900'
+                              }`}
+                            >
+                              <span>{mod.label}</span>
+                              {mod.priceDelta > 0 && (
+                                <span className="font-mono text-zinc-300 text-[9px]">
+                                  +{formatCurrency(mod.priceDelta)}
+                                </span>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
-                    <div className="mt-2.5 flex items-center justify-between">
-                      <span className="text-xs font-semibold font-mono text-zinc-900">
-                        {formatCurrency(product.price * quantity)}
-                      </span>
+                      {notes && (
+                        <p className="text-[11px] text-zinc-500 bg-zinc-50 px-2 py-1 rounded-lg mt-1.5 line-clamp-2 border border-zinc-200/60">
+                          {notes}
+                        </p>
+                      )}
 
-                      <div className="flex items-center gap-1 bg-zinc-100 border border-zinc-200/80 rounded-full p-0.5">
-                        <button
-                          onClick={() => updateQuantity(product.id, quantity - 1)}
-                          className="w-6 h-6 rounded-full bg-white text-zinc-900 hover:bg-zinc-200 flex items-center justify-center cursor-pointer"
-                          aria-label="Diminuir"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="text-xs font-semibold font-mono text-zinc-900 w-4 text-center">
-                          {quantity}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(product.id, quantity + 1)}
-                          disabled={!product.available}
-                          className="w-6 h-6 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-40 flex items-center justify-center cursor-pointer"
-                          aria-label="Aumentar"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                      <div className="mt-2.5 flex items-center justify-between">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xs font-semibold font-mono text-zinc-900">
+                            {formatCurrency(lineTotal)}
+                          </span>
+                          {quantity > 1 && (
+                            <span className="text-[10px] text-zinc-500 font-mono">
+                              ({formatCurrency(unitPrice)}/un)
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 bg-zinc-100 border border-zinc-200/80 rounded-full p-0.5">
+                          <button
+                            onClick={() => updateQuantity(lineId, quantity - 1)}
+                            className="w-6 h-6 rounded-full bg-white text-zinc-900 hover:bg-zinc-200 flex items-center justify-center cursor-pointer"
+                            aria-label="Diminuir"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-xs font-semibold font-mono text-zinc-900 w-4 text-center">
+                            {quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(lineId, quantity + 1)}
+                            disabled={!product.available}
+                            className="w-6 h-6 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-40 flex items-center justify-center cursor-pointer"
+                            aria-label="Aumentar"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Sugestões Inteligentes de Cross-Sell (Bloco 2) */}

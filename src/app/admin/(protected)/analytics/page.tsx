@@ -1,6 +1,6 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
-import { getAuthenticatedStaff } from '@/lib/auth/staff';
+import { getAuthenticatedStaff, isOwner } from '@/lib/auth/staff';
 import { getAnalyticsSummary, AnalyticsSummary } from '@/actions/analytics';
 import { AnalyticsDashboardView } from '@/components/admin/analytics/AnalyticsDashboardView';
 
@@ -118,6 +118,10 @@ export default async function AdminAnalyticsPage() {
 
   if (!staff) {
     redirect('/admin/login');
+  }
+
+  if (!isOwner(staff)) {
+    redirect('/admin/orders');
   }
 
   // Pre-fetch initial analytics for today/current shift

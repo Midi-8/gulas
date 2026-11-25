@@ -33,6 +33,7 @@ interface OrderDashboardProps {
   restaurantSlug: string;
   initialIsRestaurantOpen?: boolean;
   initialOrders: ManagedOrder[];
+  isOwner: boolean;
 }
 
 type SectionFilter = 'all' | 'bar' | 'kitchen';
@@ -51,19 +52,19 @@ const SECTION_FILTERS: Array<{
   key: SectionFilter;
   label: string;
 }> = [
-  {
-    key: 'all',
-    label: 'Todos',
-  },
-  {
-    key: 'bar',
-    label: 'Bar / Copa',
-  },
-  {
-    key: 'kitchen',
-    label: 'Cozinha',
-  },
-];
+    {
+      key: 'all',
+      label: 'Todos',
+    },
+    {
+      key: 'bar',
+      label: 'Bar / Copa',
+    },
+    {
+      key: 'kitchen',
+      label: 'Cozinha',
+    },
+  ];
 
 export function OrderDashboard({
   restaurantId,
@@ -71,6 +72,7 @@ export function OrderDashboard({
   restaurantSlug,
   initialIsRestaurantOpen = true,
   initialOrders,
+  isOwner,
 }: OrderDashboardProps) {
   const [orders, setOrders] = useState<ManagedOrder[]>(initialOrders);
   const [isRestaurantOpen, setIsRestaurantOpen] = useState(
@@ -473,7 +475,7 @@ export function OrderDashboard({
         );
         previousOrderIdsRef.current.delete(orderId);
 
-        if (nextStatus === 'completed') {
+        if (nextStatus === 'completed' && isOwner) {
           if (undoTimerRef.current) {
             clearTimeout(undoTimerRef.current);
           }
@@ -508,11 +510,17 @@ export function OrderDashboard({
   };
 
   const handleCloseAllTableOrders = async (tableNum: number) => {
-    const tableOrders = orders.filter((o) => o.tableNumber === tableNum);
-    for (const ord of tableOrders) {
-      await handleUpdateStatus(ord.id, 'completed');
+    if (!isOwner) return;
+
+    const tableOrders = orders.filter(
+      (order) => order.tableNumber === tableNum
+    );
+
+    for (const order of tableOrders) {
+      await handleUpdateStatus(order.id, 'completed');
     }
   };
+
 
   const handleChangeOrderTable = async (
     orderId: string,
@@ -536,8 +544,7 @@ export function OrderDashboard({
         previous.map((order) => (order.id === orderId ? res.data : order))
       );
       setA11yAnnouncement(
-        `Pedido #${res.data.orderNumber} transferido para ${
-          newTableNumber === 0 ? 'Take-Away' : `Mesa ${newTableNumber}`
+        `Pedido #${res.data.orderNumber} transferido para ${newTableNumber === 0 ? 'Take-Away' : `Mesa ${newTableNumber}`
         }.`
       );
     } catch {
@@ -735,102 +742,101 @@ export function OrderDashboard({
           {/* Opções operacionais em linha única, com QR Codes na mesma linha à direita */}
           <div className="flex flex-wrap items-center justify-between gap-2 w-full">
             <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={isTogglingOpen}
-              onClick={handleToggleRestaurantOpen}
-              className={`inline-flex items-center gap-2 h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] disabled:opacity-60 ${
-                isRestaurantOpen
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
-                  : 'bg-rose-50 border-rose-200 text-rose-800 hover:bg-rose-100'
-              }`}
-            >
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  isRestaurantOpen ? 'bg-emerald-500' : 'bg-rose-500'
-                }`}
-              />
-              <span>
-                {isRestaurantOpen ? 'Receção: Aberta' : 'Receção: Encerrada'}
-              </span>
-            </button>
-
-            <span
-              className={`inline-flex items-center gap-2 h-10 px-4 rounded-xl border text-xs font-semibold shadow-2xs ${
-                isConnected
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                  : 'bg-zinc-100 border-zinc-200 text-zinc-600'
-              }`}
-            >
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'
-                }`}
-              />
-              <span>{isConnected ? 'Tempo Real' : 'A Sincronizar...'}</span>
-            </span>
-
-            {alertsState === 'idle' ? (
-              <button
-                type="button"
-                id="kds-alerts-activate-btn"
-                onClick={activateAlerts}
-                className="h-10 px-4 cursor-pointer rounded-xl border border-zinc-200/90 bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition-all hover:bg-zinc-900 hover:border-zinc-900 hover:text-white active:scale-[0.98]"
-              >
-                Ativar Som
-              </button>
-            ) : (
-              <button
-                type="button"
-                id="kds-alerts-deactivate-btn"
-                onClick={deactivateAlerts}
-                className="h-10 px-4 cursor-pointer rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-800 shadow-2xs transition-all active:scale-[0.98]"
-              >
-                Som Ativo
-              </button>
-            )}
-
-            {isWakeLockSupported &&
-              (isWakeLockActive ? (
+              {isOwner && (
                 <button
                   type="button"
-                  onClick={() => void releaseWakeLock()}
-                  className="h-10 px-4 cursor-pointer rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-800 shadow-2xs transition-all active:scale-[0.98]"
-                  title="Ecrã mantido ligado"
+                  disabled={isTogglingOpen}
+                  onClick={handleToggleRestaurantOpen}
+                  className={`inline-flex items-center gap-2 h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] disabled:opacity-60 ${isRestaurantOpen
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                    : 'bg-rose-50 border-rose-200 text-rose-800 hover:bg-rose-100'
+                    }`}
                 >
-                  Ecrã Ativo
+                  <span
+                    className={`h-2 w-2 rounded-full ${isRestaurantOpen ? 'bg-emerald-500' : 'bg-rose-500'
+                      }`}
+                  />
+                  <span>
+                    {isRestaurantOpen ? 'Receção: Aberta' : 'Receção: Encerrada'}
+                  </span>
+                </button>
+              )}
+
+              <span
+                className={`inline-flex items-center gap-2 h-10 px-4 rounded-xl border text-xs font-semibold shadow-2xs ${isConnected
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-zinc-100 border-zinc-200 text-zinc-600'
+                  }`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'
+                    }`}
+                />
+                <span>{isConnected ? 'Tempo Real' : 'A Sincronizar...'}</span>
+              </span>
+
+              {alertsState === 'idle' ? (
+                <button
+                  type="button"
+                  id="kds-alerts-activate-btn"
+                  onClick={activateAlerts}
+                  className="h-10 px-4 cursor-pointer rounded-xl border border-zinc-200/90 bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition-all hover:bg-zinc-900 hover:border-zinc-900 hover:text-white active:scale-[0.98]"
+                >
+                  Ativar Som
                 </button>
               ) : (
                 <button
                   type="button"
-                  onClick={() => void requestWakeLock()}
-                  className="h-10 px-4 cursor-pointer rounded-xl border border-zinc-200/90 bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition-all hover:bg-zinc-900 hover:border-zinc-900 hover:text-white active:scale-[0.98]"
+                  id="kds-alerts-deactivate-btn"
+                  onClick={deactivateAlerts}
+                  className="h-10 px-4 cursor-pointer rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-800 shadow-2xs transition-all active:scale-[0.98]"
                 >
-                  {wakeLockStatus === 'error' ? 'Tentar Ecrã' : 'Fixar Ecrã'}
+                  Som Ativo
                 </button>
-              ))}
+              )}
 
-            <button
-              type="button"
-              onClick={toggleAutoPrint}
-              className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${
-                autoPrintOnAccept
+              {isWakeLockSupported &&
+                (isWakeLockActive ? (
+                  <button
+                    type="button"
+                    onClick={() => void releaseWakeLock()}
+                    className="h-10 px-4 cursor-pointer rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-800 shadow-2xs transition-all active:scale-[0.98]"
+                    title="Ecrã mantido ligado"
+                  >
+                    Ecrã Ativo
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void requestWakeLock()}
+                    className="h-10 px-4 cursor-pointer rounded-xl border border-zinc-200/90 bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition-all hover:bg-zinc-900 hover:border-zinc-900 hover:text-white active:scale-[0.98]"
+                  >
+                    {wakeLockStatus === 'error' ? 'Tentar Ecrã' : 'Fixar Ecrã'}
+                  </button>
+                ))}
+
+              <button
+                type="button"
+                onClick={toggleAutoPrint}
+                className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${autoPrintOnAccept
                   ? 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800'
                   : 'bg-zinc-50 border-zinc-200/90 text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white'
-              }`}
-              title="Imprimir automaticamente o talão térmico (80mm) sempre que um pedido for aceite"
-            >
-              Auto-Print: {autoPrintOnAccept ? 'ON' : 'OFF'}
-            </button>
+                  }`}
+                title="Imprimir automaticamente o talão térmico (80mm) sempre que um pedido for aceite"
+              >
+                Auto-Print: {autoPrintOnAccept ? 'ON' : 'OFF'}
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsQrModalOpen(true)}
-              className="ml-auto h-10 px-4 cursor-pointer rounded-xl border border-zinc-200/90 bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition-all hover:bg-zinc-900 hover:border-zinc-900 hover:text-white active:scale-[0.98]"
-            >
-              QR Codes
-            </button>
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setIsQrModalOpen(true)}
+                className="ml-auto h-10 px-4 cursor-pointer rounded-xl border border-zinc-200/90 bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition-all hover:bg-zinc-900 hover:border-zinc-900 hover:text-white active:scale-[0.98]"
+              >
+                QR Codes
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -891,22 +897,20 @@ export function OrderDashboard({
           <button
             type="button"
             onClick={() => setViewMode('orders')}
-            className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${
-              viewMode === 'orders'
-                ? 'bg-zinc-900 border-zinc-900 text-white'
-                : 'bg-zinc-50 border-zinc-200/90 text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white'
-            }`}
+            className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${viewMode === 'orders'
+              ? 'bg-zinc-900 border-zinc-900 text-white'
+              : 'bg-zinc-50 border-zinc-200/90 text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white'
+              }`}
           >
             Pedidos ({totalActiveCount})
           </button>
           <button
             type="button"
             onClick={() => setViewMode('tables')}
-            className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${
-              viewMode === 'tables'
-                ? 'bg-zinc-900 border-zinc-900 text-white'
-                : 'bg-zinc-50 border-zinc-200/90 text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white'
-            }`}
+            className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${viewMode === 'tables'
+              ? 'bg-zinc-900 border-zinc-900 text-white'
+              : 'bg-zinc-50 border-zinc-200/90 text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white'
+              }`}
           >
             Mapa de Sala (1–20)
           </button>
@@ -938,11 +942,10 @@ export function OrderDashboard({
             <button
               type="button"
               onClick={() => setOnlyUrgentSla((v) => !v)}
-              className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${
-                onlyUrgentSla
-                  ? 'bg-rose-600 border-rose-700 text-white'
-                  : 'bg-rose-50 border-rose-200 text-rose-800 hover:bg-rose-100'
-              }`}
+              className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${onlyUrgentSla
+                ? 'bg-rose-600 border-rose-700 text-white'
+                : 'bg-rose-50 border-rose-200 text-rose-800 hover:bg-rose-100'
+                }`}
               title="Mostrar apenas pedidos acima de 20 minutos de espera (SLA)"
             >
               Urgentes &gt; 20mn
@@ -953,11 +956,10 @@ export function OrderDashboard({
                 key={key}
                 type="button"
                 onClick={() => setSectionFilter(key)}
-                className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${
-                  sectionFilter === key
-                    ? 'bg-zinc-900 border-zinc-900 text-white'
-                    : 'bg-zinc-50 border-zinc-200/90 text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white'
-                }`}
+                className={`h-10 px-4 cursor-pointer rounded-xl border text-xs font-semibold shadow-2xs transition-all active:scale-[0.98] ${sectionFilter === key
+                  ? 'bg-zinc-900 border-zinc-900 text-white'
+                  : 'bg-zinc-50 border-zinc-200/90 text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white'
+                  }`}
               >
                 {label}
               </button>
@@ -974,13 +976,12 @@ export function OrderDashboard({
             return (
               <div
                 key={slot.tableNumber}
-                className={`rounded-2xl border p-4 flex flex-col justify-between gap-3 transition-all ${
-                  isOccupied
-                    ? slot.hasReady
-                      ? 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-300 shadow-xs'
-                      : 'bg-white border-zinc-200/90 shadow-xs'
-                    : 'bg-zinc-100/70 border-zinc-200/80 text-zinc-500'
-                }`}
+                className={`rounded-2xl border p-4 flex flex-col justify-between gap-3 transition-all ${isOccupied
+                  ? slot.hasReady
+                    ? 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-300 shadow-xs'
+                    : 'bg-white border-zinc-200/90 shadow-xs'
+                  : 'bg-zinc-100/70 border-zinc-200/80 text-zinc-500'
+                  }`}
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
@@ -990,11 +991,10 @@ export function OrderDashboard({
 
                     {isOccupied ? (
                       <span
-                        className={`px-2.5 py-0.5 rounded-full border text-[11px] font-semibold ${
-                          slot.hasReady
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                            : 'bg-amber-50 border-amber-200 text-amber-800'
-                        }`}
+                        className={`px-2.5 py-0.5 rounded-full border text-[11px] font-semibold ${slot.hasReady
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                          : 'bg-amber-50 border-amber-200 text-amber-800'
+                          }`}
                       >
                         {slot.hasReady
                           ? 'Pronto a Servir'
@@ -1019,19 +1019,21 @@ export function OrderDashboard({
                           </span>
                         ))}
                       </div>
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-zinc-500">
-                          Conta ativa:
-                        </span>
-                        <span className="text-sm font-bold font-mono text-zinc-950">
-                          {slot.totalBill.toFixed(2)} €
-                        </span>
-                      </div>
+                      {isOwner && (
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-xs text-zinc-500">
+                            Conta ativa:
+                          </span>
+                          <span className="text-sm font-bold font-mono text-zinc-950">
+                            {slot.totalBill.toFixed(2)} €
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {isOccupied && (
+                {isOwner && isOccupied && (
                   <button
                     type="button"
                     onClick={() =>
@@ -1078,9 +1080,8 @@ export function OrderDashboard({
               <h3 className="text-base font-bold tracking-tight text-zinc-950">
                 {sectionFilter === 'all'
                   ? 'Sem pedidos ativos na bancada'
-                  : `Sem pedidos ativos para ${
-                      sectionFilter === 'bar' ? 'Bar / Copa' : 'Cozinha'
-                    }`}
+                  : `Sem pedidos ativos para ${sectionFilter === 'bar' ? 'Bar / Copa' : 'Cozinha'
+                  }`}
               </h3>
               <p className="mx-auto max-w-xs text-xs leading-relaxed text-zinc-500">
                 Os novos pedidos submetidos pelos clientes surgirão aqui automaticamente em tempo real.
@@ -1101,6 +1102,7 @@ export function OrderDashboard({
                   order={order}
                   isNew={newOrderIds.has(order.id)}
                   isUpdating={Boolean(updatingMap[order.id])}
+                  isOwner={isOwner}
                   error={orderErrorMap[order.id]}
                   onClearError={() =>
                     setOrderErrorMap((previous) => ({
@@ -1110,7 +1112,7 @@ export function OrderDashboard({
                   }
                   onUpdateStatus={handleUpdateStatus}
                   onPrintOrder={handlePrintOrder}
-                  onChangeTable={handleChangeOrderTable}
+                  onChangeTable={isOwner ? handleChangeOrderTable : undefined}
                 />
               ))}
             </div>
@@ -1119,7 +1121,7 @@ export function OrderDashboard({
       )}
 
       {/* Undo Toast for completed orders */}
-      {undoOrder && (
+      {isOwner && undoOrder && (
         <aside
           role="status"
           aria-label="Aviso de pedido concluído com opção de desfazer"
@@ -1170,7 +1172,11 @@ export function OrderDashboard({
       />
 
       {/* Talão Térmico 80mm para Impressora de Cozinha */}
-      <ThermalReceipt order={printingOrder} restaurantName={restaurantName} />
+      <ThermalReceipt
+        order={printingOrder}
+        restaurantName={restaurantName}
+        isOwner={isOwner}
+      />
     </div>
   );
 }

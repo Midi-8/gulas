@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { revalidatePath, updateTag } from 'next/cache';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getAuthenticatedStaff } from '@/lib/auth/staff';
+import { getAuthenticatedStaff, isOwner } from '@/lib/auth/staff';
 import type { Database } from '@/lib/supabase/types';
 
 const toggleProductAvailabilitySchema = z.object({
@@ -226,7 +226,7 @@ export async function toggleProductAvailability(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -325,7 +325,7 @@ export async function updateProductDetails(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -437,7 +437,7 @@ export async function createCatalogProduct(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -535,7 +535,7 @@ export async function deleteCatalogProduct(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -622,7 +622,7 @@ export async function duplicateCatalogProduct(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -720,7 +720,7 @@ export async function restoreAllOutOfStockProducts(): Promise<
 > {
   try {
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -800,7 +800,7 @@ export async function toggleCategoryAvailability(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -869,7 +869,7 @@ export async function getRestaurantCategories(): Promise<
 > {
   try {
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Sessão expirada ou utilizador não autorizado.' },
@@ -935,7 +935,7 @@ export async function createCatalogCategory(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Sessão expirada ou utilizador não autorizado.' },
@@ -1014,7 +1014,7 @@ export async function updateCatalogCategory(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Sessão expirada ou utilizador não autorizado.' },
@@ -1085,7 +1085,7 @@ export async function deleteCatalogCategory(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Sessão expirada ou utilizador não autorizado.' },
@@ -1159,7 +1159,7 @@ export async function deleteCatalogCategory(
 export async function getRestaurantStockList(): Promise<ProductStockActionResult<ProductStockItem[]>> {
   try {
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -1225,7 +1225,7 @@ export async function toggleRestaurantOpenStatus(
 ): Promise<ProductStockActionResult<{ isOpen: boolean }>> {
   try {
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
@@ -1295,7 +1295,7 @@ export async function toggleRestaurantOpenStatus(
 export async function getRestaurantSettings(): Promise<ProductStockActionResult<RestaurantSettingsData>> {
   try {
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Sessão expirada ou utilizador não autorizado.' },
@@ -1359,7 +1359,7 @@ export async function updateRestaurantSettings(
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Sessão expirada ou utilizador não autorizado.' },

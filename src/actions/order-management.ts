@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getAuthenticatedStaff } from '@/lib/auth/staff';
+import { getAuthenticatedStaff, isOwner } from '@/lib/auth/staff';
 import { OrderStatus } from '@/types/restaurant';
 import {
   getOrderByIdSchema,
@@ -62,7 +62,7 @@ interface RawOrderItemRow {
   product_id: string | null;
   product_name: string;
   quantity: number;
-  unit_price: number;
+  unit_price?: number;
   notes: string | null;
   products?: {
     unit_quantity?: string | null;
@@ -77,8 +77,8 @@ interface RawOrderRow {
   order_number: number;
   table_number: number;
   status: string;
-  subtotal: number;
-  total: number;
+  subtotal?: number;
+  total?: number;
   customer_notes: string | null;
   created_at: string;
   updated_at: string;
@@ -105,7 +105,10 @@ function formatOrderItemProductName(
   return cleanName;
 }
 
-function mapRawOrderToManagedOrder(row: RawOrderRow): ManagedOrder {
+function mapRawOrderToManagedOrder(
+  row: RawOrderRow,
+  userIsOwner: boolean = true
+): ManagedOrder {
   const items: ManagedOrderItem[] = Array.isArray(row.order_items)
     ? row.order_items.map((item) => ({
       id: String(item.id),
@@ -115,7 +118,7 @@ function mapRawOrderToManagedOrder(row: RawOrderRow): ManagedOrder {
         item.products?.unit_quantity
       ),
       quantity: Number(item.quantity),
-      unitPrice: Number(item.unit_price),
+      unitPrice: userIsOwner ? Number(item.unit_price) : 0,
       notes: item.notes ? String(item.notes) : null,
       categorySlug: item.products?.categories?.slug ?? null,
     }))
@@ -126,8 +129,8 @@ function mapRawOrderToManagedOrder(row: RawOrderRow): ManagedOrder {
     orderNumber: Number(row.order_number),
     tableNumber: Number(row.table_number),
     status: row.status as OrderStatus,
-    subtotal: Number(row.subtotal),
-    total: Number(row.total),
+    subtotal: userIsOwner ? Number(row.subtotal) : 0,
+    total: userIsOwner ? Number(row.total) : 0,
     customerNotes: row.customer_notes ? String(row.customer_notes) : null,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
@@ -135,6 +138,7 @@ function mapRawOrderToManagedOrder(row: RawOrderRow): ManagedOrder {
   };
 }
 
+// Leitura completa para o patrão.
 const ORDER_SELECT = `
   id,
   order_number,
@@ -151,6 +155,30 @@ const ORDER_SELECT = `
     product_name,
     quantity,
     unit_price,
+    notes,
+    products (
+      unit_quantity,
+      categories (
+        slug
+      )
+    )
+  )
+` as const;
+
+// Leitura operacional para o funcionário, sem valores financeiros.
+const OPERATIONAL_ORDER_SELECT = `
+  id,
+  order_number,
+  table_number,
+  status,
+  customer_notes,
+  created_at,
+  updated_at,
+  order_items (
+    id,
+    product_id,
+    product_name,
+    quantity,
     notes,
     products (
       unit_quantity,
@@ -213,6 +241,8 @@ export async function getActiveOrders(): Promise<
       };
     }
 
+    const userIsOwner = isOwner(staff);
+
     const activeStatuses: OrderStatus[] = [
       'pending',
       'accepted',
@@ -222,7 +252,7 @@ export async function getActiveOrders(): Promise<
 
     const { data, error } = await supabase
       .from('orders')
-      .select(ORDER_SELECT)
+      .select(userIsOwner ? ORDER_SELECT : OPERATIONAL_ORDER_SELECT)
       .eq('restaurant_id', staff.restaurant.id)
       .in('status', activeStatuses)
       .order('created_at', { ascending: true });
@@ -243,7 +273,10 @@ export async function getActiveOrders(): Promise<
     }
 
     const managedOrders = (data || []).map((row) =>
-      mapRawOrderToManagedOrder(row as unknown as RawOrderRow)
+      mapRawOrderToManagedOrder(
+        row as unknown as RawOrderRow,
+        userIsOwner
+      )
     );
 
     return {
@@ -311,9 +344,11 @@ export async function getOrderById(
       };
     }
 
+    const userIsOwner = isOwner(staff);
+
     const { data, error } = await supabase
       .from('orders')
-      .select(ORDER_SELECT)
+      .select(userIsOwner ? ORDER_SELECT : OPERATIONAL_ORDER_SELECT)
       .eq('id', orderId)
       .eq('restaurant_id', staff.restaurant.id)
       .maybeSingle();
@@ -346,7 +381,10 @@ export async function getOrderById(
 
     return {
       success: true,
-      data: mapRawOrderToManagedOrder(data as unknown as RawOrderRow),
+      data: mapRawOrderToManagedOrder(
+        data as unknown as RawOrderRow,
+        userIsOwner
+      ),
     };
   } catch (err: unknown) {
     console.error('[getOrderById] Exceção inesperada:', err);
@@ -367,7 +405,8 @@ export async function updateOrderStatus(
 ): Promise<OrderManagementActionResult<ManagedOrder>> {
   try {
     const rawInput =
-      typeof orderIdOrInput === 'string' && typeof maybeNextStatus === 'string'
+      typeof orderIdOrInput === 'string' &&
+        typeof maybeNextStatus === 'string'
         ? { orderId: orderIdOrInput, nextStatus: maybeNextStatus }
         : orderIdOrInput;
 
@@ -456,6 +495,19 @@ export async function updateOrderStatus(
       };
     }
 
+    const userIsOwner = isOwner(staff);
+
+    // Cancelamento restrito ao patrão.
+    if (nextStatus === 'cancelled' && !userIsOwner) {
+      return {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Apenas o Administrador pode cancelar pedidos.',
+        },
+      };
+    }
+
     const currentStatus = currentOrder.status as OrderStatus;
 
     if (!isValidStatusTransition(currentStatus, nextStatus as OrderStatus)) {
@@ -463,7 +515,9 @@ export async function updateOrderStatus(
         success: false,
         error: {
           code: 'INVALID_STATUS_TRANSITION',
-          message: `Transição de estado inválida: não é permitido transitar de "${currentStatus}" para "${nextStatus}".`,
+          message:
+            `Transição de estado inválida: não é permitido transitar ` +
+            `de "${currentStatus}" para "${nextStatus}".`,
         },
       };
     }
@@ -485,7 +539,7 @@ export async function updateOrderStatus(
     }
 
     const { data: updatedOrder, error: updateError } = await updateQuery
-      .select(ORDER_SELECT)
+      .select(userIsOwner ? ORDER_SELECT : OPERATIONAL_ORDER_SELECT)
       .maybeSingle();
 
     if (updateError) {
@@ -517,7 +571,8 @@ export async function updateOrderStatus(
     return {
       success: true,
       data: mapRawOrderToManagedOrder(
-        updatedOrder as unknown as RawOrderRow
+        updatedOrder as unknown as RawOrderRow,
+        userIsOwner
       ),
     };
   } catch (err: unknown) {
@@ -540,12 +595,12 @@ export async function getOrderHistory(options?: {
   try {
     const staff = await getAuthenticatedStaff();
 
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
           code: 'UNAUTHORIZED',
-          message: 'Sessão expirada ou utilizador não autorizado.',
+          message: 'Acesso restrito ao Administrador.',
         },
       };
     }
@@ -576,13 +631,19 @@ export async function getOrderHistory(options?: {
     if (options?.period && options.period !== 'all') {
       const now = new Date();
       let startDate: Date | null = null;
+
       if (options.period === 'today') {
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        startDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
       } else if (options.period === '7days') {
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       } else if (options.period === '30days') {
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       }
+
       if (startDate) {
         query = query.gte('created_at', startDate.toISOString());
       }
@@ -606,7 +667,10 @@ export async function getOrderHistory(options?: {
     }
 
     const managedOrders = (data || []).map((row) =>
-      mapRawOrderToManagedOrder(row as unknown as RawOrderRow)
+      mapRawOrderToManagedOrder(
+        row as unknown as RawOrderRow,
+        true
+      )
     );
 
     return {
@@ -649,12 +713,12 @@ export async function reopenCompletedOrder(
     const { orderId, expectedUpdatedAt } = parsed.data;
     const staff = await getAuthenticatedStaff();
 
-    if (!staff) {
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
           code: 'UNAUTHORIZED',
-          message: 'Sessão expirada ou utilizador não autorizado.',
+          message: 'Acesso restrito ao Administrador.',
         },
       };
     }
@@ -709,7 +773,9 @@ export async function reopenCompletedOrder(
         success: false,
         error: {
           code: 'INVALID_STATUS_TRANSITION',
-          message: `Apenas pedidos concluídos podem ser reabertos. Estado atual: "${currentOrder.status}".`,
+          message:
+            `Apenas pedidos concluídos podem ser reabertos. ` +
+            `Estado atual: "${currentOrder.status}".`,
         },
       };
     }
@@ -776,7 +842,8 @@ export async function reopenCompletedOrder(
     return {
       success: true,
       data: mapRawOrderToManagedOrder(
-        reopenedOrder as unknown as RawOrderRow
+        reopenedOrder as unknown as RawOrderRow,
+        true
       ),
     };
   } catch (err: unknown) {
@@ -798,36 +865,42 @@ const changeOrderTableSchema = z.object({
 });
 
 /**
- * Permite transferir um pedido ativo entre mesas (1–20) ou Take-Away (0).
+ * Permite ao patrão transferir um pedido entre mesas (1–20)
+ * ou para Take-Away (0).
  */
 export async function changeOrderTable(
   input: z.infer<typeof changeOrderTableSchema>
 ): Promise<OrderManagementActionResult<ManagedOrder>> {
   try {
     const parsed = changeOrderTableSchema.safeParse(input);
+
     if (!parsed.success) {
       return {
         success: false,
         error: {
           code: 'INVALID_INPUT',
           message:
-            parsed.error.issues[0]?.message ?? 'Dados de transferência inválidos.',
+            parsed.error.issues[0]?.message ??
+            'Dados de transferência inválidos.',
         },
       };
     }
 
     const staff = await getAuthenticatedStaff();
-    if (!staff) {
+
+    if (!staff || !isOwner(staff)) {
       return {
         success: false,
         error: {
           code: 'UNAUTHORIZED',
-          message: 'Sessão expirada ou utilizador não autorizado.',
+          message:
+            'Apenas o Administrador pode transferir pedidos entre mesas.',
         },
       };
     }
 
     const supabase = await createServerSupabaseClient();
+
     if (!supabase) {
       return {
         success: false,
@@ -839,6 +912,7 @@ export async function changeOrderTable(
     }
 
     let resolvedTableId: string | null = null;
+
     if (parsed.data.newTableNumber > 0) {
       const { data: targetTable } = await supabase
         .from('tables')
@@ -853,10 +927,13 @@ export async function changeOrderTable(
           success: false,
           error: {
             code: 'INVALID_INPUT',
-            message: `A Mesa ${parsed.data.newTableNumber} não está ativa no restaurante.`,
+            message:
+              `A Mesa ${parsed.data.newTableNumber} ` +
+              'não está ativa no restaurante.',
           },
         };
       }
+
       resolvedTableId = targetTable.id;
     }
 
@@ -873,22 +950,31 @@ export async function changeOrderTable(
       .maybeSingle();
 
     if (updateError || !updatedOrder) {
-      console.error('[changeOrderTable] Erro ao transferir mesa:', updateError?.message);
+      console.error(
+        '[changeOrderTable] Erro ao transferir mesa:',
+        updateError?.message
+      );
+
       return {
         success: false,
         error: {
           code: 'DATABASE_ERROR',
-          message: 'Não foi possível transferir o pedido para a mesa selecionada.',
+          message:
+            'Não foi possível transferir o pedido para a mesa selecionada.',
         },
       };
     }
 
     return {
       success: true,
-      data: mapRawOrderToManagedOrder(updatedOrder as unknown as RawOrderRow),
+      data: mapRawOrderToManagedOrder(
+        updatedOrder as unknown as RawOrderRow,
+        true
+      ),
     };
   } catch (err: unknown) {
     console.error('[changeOrderTable] Exceção inesperada:', err);
+
     return {
       success: false,
       error: {

@@ -6,11 +6,13 @@ import { ManagedOrder } from '@/actions/order-management';
 interface ThermalReceiptProps {
   order: ManagedOrder | null;
   restaurantName?: string;
+  isOwner?: boolean;
 }
 
 export function ThermalReceipt({
   order,
   restaurantName = 'GULAS — Vila das Aves',
+  isOwner = true,
 }: ThermalReceiptProps) {
   if (!order) return null;
 
@@ -67,7 +69,7 @@ export function ThermalReceipt({
       <div className="border-b-2 border-dashed border-black pb-2 mb-2 space-y-1.5">
         <div className="flex justify-between text-[10px] font-bold uppercase border-b border-black/40 pb-1">
           <span>Qtd / Artigo</span>
-          <span>Subtotal</span>
+          {isOwner && <span>Subtotal</span>}
         </div>
         {order.items.map((item) => (
           <div key={item.id} className="space-y-0.5">
@@ -75,9 +77,11 @@ export function ThermalReceipt({
               <span>
                 {item.quantity}x {item.productName}
               </span>
-              <span className="shrink-0">
-                {(item.unitPrice * item.quantity).toFixed(2)}€
-              </span>
+              {isOwner && (
+                <span className="shrink-0">
+                  {(item.unitPrice * item.quantity).toFixed(2)}€
+                </span>
+              )}
             </div>
             {item.notes && (
               <p className="pl-3 text-[11px] italic">
@@ -88,15 +92,23 @@ export function ThermalReceipt({
         ))}
       </div>
 
-      <div className="space-y-1 pt-0.5">
-        <div className="flex justify-between text-sm font-black">
-          <span>TOTAL</span>
-          <span>{order.total.toFixed(2)}€</span>
+      {isOwner ? (
+        <div className="space-y-1 pt-0.5">
+          <div className="flex justify-between text-sm font-black">
+            <span>TOTAL</span>
+            <span>{order.total.toFixed(2)}€</span>
+          </div>
+          <p className="text-[9px] text-center pt-3">
+            Documento interno de controlo de pedido
+          </p>
         </div>
-        <p className="text-[9px] text-center pt-3">
-          Documento interno de controlo de pedido
-        </p>
-      </div>
+      ) : (
+        <div className="pt-2 text-center">
+          <p className="text-[9px]">
+            Comanda operacional de cozinha / copa
+          </p>
+        </div>
+      )}
     </div>
   );
 }
