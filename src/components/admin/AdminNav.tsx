@@ -3,8 +3,22 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export function AdminNav() {
+interface AdminNavProps {
+  isOwner?: boolean;
+}
+
+export function AdminNav({ isOwner = false }: AdminNavProps) {
   const pathname = usePathname();
+
+  if (!isOwner) {
+    return (
+      <div className="inline-flex items-center justify-center px-4 py-2 bg-white border border-zinc-200/90 shadow-xs rounded-2xl">
+        <h1 className="text-xs sm:text-sm font-bold tracking-tight text-zinc-900 uppercase font-mono">
+          Monitor de Pedidos
+        </h1>
+      </div>
+    );
+  }
 
   const isKdsActive = pathname === '/admin/orders';
   const isHistoryActive = pathname.startsWith('/admin/orders/history');

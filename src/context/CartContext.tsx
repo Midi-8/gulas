@@ -9,15 +9,28 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { Product, CartItem, Order, OrderStatus } from '@/types/restaurant';
+import {
+  Product,
+  CartItem,
+  Order,
+  OrderStatus,
+  ProductModifier,
+  getCartItemTotal,
+} from '@/types/restaurant';
+import { getCartLineId } from '@/components/menu/ProductDetailModal';
 import { createOrder } from '@/actions/orders';
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number, notes?: string) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  updateNotes: (productId: string, notes: string) => void;
+  addItem: (
+    product: Product,
+    quantity?: number,
+    notes?: string,
+    selectedModifiers?: ProductModifier[]
+  ) => void;
+  removeItem: (idOrProductId: string) => void;
+  updateQuantity: (idOrProductId: string, quantity: number) => void;
+  updateNotes: (idOrProductId: string, notes: string) => void;
   syncCatalogProducts: (catalog: Product[]) => void;
   clearCart: () => void;
   itemCount: number;
@@ -128,7 +141,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
 
           queueMicrotask(() => {
             if (Array.isArray(parsed.items) && areItemsFresh) {
-              setItems(parsed.items);
+              const hydrated = parsed.items.map((item: CartItem) => ({
+                ...item,
+                id: item.id || getCartLineId(item.product.id, item.selectedModifiers),
+              }));
+              setItems(hydrated);
             }
 
             if (
@@ -175,15 +192,24 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     }, 2800);
   };
 
-  const addItem = (product: Product, quantity = 1, notes?: string) => {
+  const addItem = (
+    product: Product,
+    quantity = 1,
+    notes?: string,
+    selectedModifiers?: ProductModifier[]
+  ) => {
     if (!product.available) {
       showToast('Este artigo encontra-se indisponível de momento.');
       return;
     }
 
+    const targetLineId = getCartLineId(product.id, selectedModifiers);
+
     setItems((prev) => {
       const existingIndex = prev.findIndex(
-        (item) => item.product.id === product.id
+        (item) =>
+          (item.id || getCartLineId(item.product.id, item.selectedModifiers)) ===
+          targetLineId
       );
 
       if (existingIndex > -1) {
@@ -205,44 +231,94 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
 
         updated[existingIndex] = {
           ...currentItem,
+          id: targetLineId,
           quantity: currentItem.quantity + quantity,
           notes: mergedNotes,
+          selectedModifiers: selectedModifiers ?? currentItem.selectedModifiers,
         };
 
         return updated;
       }
 
-      return [...prev, { product, quantity, notes }];
+      return [
+        ...prev,
+        {
+          id: targetLineId,
+          product,
+          quantity,
+          notes: notes?.trim() || undefined,
+          selectedModifiers:
+            selectedModifiers && selectedModifiers.length > 0
+              ? selectedModifiers
+              : undefined,
+        },
+      ];
     });
 
     showToast(`Adicionado: ${product.name}`);
   };
 
-  const removeItem = (productId: string) => {
-    setItems((prev) =>
-      prev.filter((item) => item.product.id !== productId)
-    );
+  const removeItem = (targetId: string) => {
+    setItems((prev) => {
+      const hasLineMatch = prev.some(
+        (item) =>
+          (item.id || getCartLineId(item.product.id, item.selectedModifiers)) ===
+          targetId
+      );
+      if (hasLineMatch) {
+        return prev.filter(
+          (item) =>
+            (item.id || getCartLineId(item.product.id, item.selectedModifiers)) !==
+            targetId
+        );
+      }
+      return prev.filter((item) => item.product.id !== targetId);
+    });
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (targetId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(productId);
+      removeItem(targetId);
       return;
     }
 
-    setItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
-    );
+    setItems((prev) => {
+      const hasLineMatch = prev.some(
+        (item) =>
+          (item.id || getCartLineId(item.product.id, item.selectedModifiers)) ===
+          targetId
+      );
+
+      return prev.map((item) => {
+        const itemLineId =
+          item.id || getCartLineId(item.product.id, item.selectedModifiers);
+        const matches = hasLineMatch
+          ? itemLineId === targetId
+          : item.product.id === targetId;
+
+        return matches ? { ...item, quantity } : item;
+      });
+    });
   };
 
-  const updateNotes = (productId: string, notes: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, notes } : item
-      )
-    );
+  const updateNotes = (targetId: string, notes: string) => {
+    setItems((prev) => {
+      const hasLineMatch = prev.some(
+        (item) =>
+          (item.id || getCartLineId(item.product.id, item.selectedModifiers)) ===
+          targetId
+      );
+
+      return prev.map((item) => {
+        const itemLineId =
+          item.id || getCartLineId(item.product.id, item.selectedModifiers);
+        const matches = hasLineMatch
+          ? itemLineId === targetId
+          : item.product.id === targetId;
+
+        return matches ? { ...item, notes } : item;
+      });
+    });
   };
 
   const syncCatalogProducts = React.useCallback((catalog: Product[]) => {
@@ -287,7 +363,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
   const subtotal = useMemo(
     () =>
       items.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
+        (sum, item) => sum + getCartItemTotal(item),
         0
       ),
     [items]
@@ -340,6 +416,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
           productId: item.product.id,
           quantity: item.quantity,
           notes: finalNotes,
+          modifierIds: (item.selectedModifiers ?? []).map((modifier) => modifier.id),
         };
       });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { getAuthenticatedStaff } from '@/lib/auth/staff';
+import { getAuthenticatedStaff, isOwner } from '@/lib/auth/staff';
 import { getOrderHistory } from '@/actions/order-management';
 import { redirect } from 'next/navigation';
 import { OrderHistoryView } from '@/components/admin/history/OrderHistoryView';
@@ -14,6 +14,10 @@ export default async function AdminOrderHistoryPage() {
 
   if (!staff) {
     redirect('/admin/login');
+  }
+
+  if (!isOwner(staff)) {
+    redirect('/admin/orders');
   }
 
   // Pre-fetch initial order history on the server

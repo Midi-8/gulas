@@ -120,16 +120,22 @@ export const getAuthenticatedStaff = cache(
 );
 
 /**
- * Helper RBAC para controlo de acesso por cargo ('owner' | 'manager' | 'staff').
- * Estrutura a verificação explícita de permissões administrativas/analíticas.
+ * Helper RBAC para verificar se o utilizador autenticado é o Dono do restaurante.
+ * Apenas utilizadores com role === 'owner' têm privilégios administrativos totais.
+ */
+export function isOwner(
+  staff: AuthenticatedStaff | null
+): staff is AuthenticatedStaff {
+  if (!staff) return false;
+  return staff.profile.role === 'owner';
+}
+
+/**
+ * Helper RBAC para controlo de acesso administrativo e analítico.
+ * Apenas o Dono ('owner') tem permissão para aceder a BI, Catálogo e Gestão.
  */
 export function canManageCatalogAndAnalytics(
   staff: AuthenticatedStaff | null
 ): staff is AuthenticatedStaff {
-  if (!staff) return false;
-  return (
-    staff.profile.role === 'owner' ||
-    staff.profile.role === 'manager' ||
-    staff.profile.role === 'staff'
-  );
+  return isOwner(staff);
 }

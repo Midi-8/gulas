@@ -7,6 +7,7 @@ interface OrderStatusActionsProps {
   tableNumber: number;
   status: OrderStatus;
   isUpdating: boolean;
+  isOwner?: boolean;
   onUpdateStatus: (nextStatus: ValidNextStatus) => Promise<void>;
 }
 
@@ -15,6 +16,7 @@ export function OrderStatusActions({
   tableNumber,
   status,
   isUpdating,
+  isOwner = true,
   onUpdateStatus,
 }: OrderStatusActionsProps) {
   const [activeNextStatus, setActiveNextStatus] =
@@ -123,16 +125,18 @@ export function OrderStatusActions({
             </button>
           )}
 
-          <button
-            type="button"
-            disabled={isUpdating}
-            onClick={() => setIsConfirmingCancel(true)}
-            aria-label={`Cancelar pedido número ${orderNumber}`}
-            title="Cancelar Pedido"
-            className="py-2.5 px-3.5 rounded-xl border border-zinc-200/90 bg-white hover:bg-rose-600 hover:border-rose-600 text-zinc-600 hover:text-white text-xs font-semibold shadow-2xs transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer shrink-0"
-          >
-            Cancelar
-          </button>
+          {isOwner && (
+            <button
+              type="button"
+              disabled={isUpdating}
+              onClick={() => setIsConfirmingCancel(true)}
+              aria-label={`Cancelar pedido número ${orderNumber}`}
+              title="Cancelar Pedido"
+              className="py-2.5 px-3.5 rounded-xl border border-zinc-200/90 bg-white hover:bg-rose-600 hover:border-rose-600 text-zinc-600 hover:text-white text-xs font-semibold shadow-2xs transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              Cancelar
+            </button>
+          )}
         </div>
       )}
     </div>

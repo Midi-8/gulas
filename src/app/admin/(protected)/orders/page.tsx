@@ -1,5 +1,5 @@
 import React from 'react';
-import { getAuthenticatedStaff } from '@/lib/auth/staff';
+import { getAuthenticatedStaff, isOwner } from '@/lib/auth/staff';
 import { getActiveOrders } from '@/actions/order-management';
 import { redirect } from 'next/navigation';
 import { OrderDashboard } from '@/components/admin/orders/OrderDashboard';
@@ -27,6 +27,7 @@ export default async function AdminOrdersPage() {
       restaurantSlug={staff.restaurant.slug}
       initialIsRestaurantOpen={staff.restaurant.isOpen}
       initialOrders={initialOrders}
+      isOwner={isOwner(staff)}
     />
   );
 }

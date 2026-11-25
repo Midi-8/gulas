@@ -10,6 +10,8 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ staff }: AdminHeaderProps) {
+  const isOwnerUser = staff.profile.role === 'owner';
+
   return (
     <header
       data-restaurant={staff.restaurant.slug}
@@ -21,7 +23,7 @@ export function AdminHeader({ staff }: AdminHeaderProps) {
         </div>
 
         <div className="flex justify-center">
-          <AdminNav />
+          <AdminNav isOwner={isOwnerUser} />
         </div>
 
         <div className="flex items-center justify-end gap-2">

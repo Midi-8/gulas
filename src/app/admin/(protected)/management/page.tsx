@@ -1,6 +1,6 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
-import { getAuthenticatedStaff } from '@/lib/auth/staff';
+import { getAuthenticatedStaff, isOwner } from '@/lib/auth/staff';
 import {
   getRestaurantStockList,
   getRestaurantCategories,
@@ -17,6 +17,10 @@ export default async function AdminManagementPage() {
 
   if (!staff) {
     redirect('/admin/login');
+  }
+
+  if (!isOwner(staff)) {
+    redirect('/admin/orders');
   }
 
   const [stockRes, categoriesRes] = await Promise.all([

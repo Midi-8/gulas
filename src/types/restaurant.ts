@@ -77,10 +77,33 @@ export interface Table {
   active: boolean;
 }
 
+export type ProductModifierGroup = 'extra' | 'remove' | 'sauce';
+
+export interface ProductModifier {
+  id: string;
+  label: string;
+  priceDelta: number;
+  group: ProductModifierGroup;
+}
+
 export interface CartItem {
+  id?: string;
   product: Product;
   quantity: number;
   notes?: string;
+  selectedModifiers?: ProductModifier[];
+}
+
+export function getCartItemUnitPrice(item: CartItem): number {
+  const modifiersDelta = (item.selectedModifiers || []).reduce(
+    (sum, mod) => sum + (mod.priceDelta || 0),
+    0
+  );
+  return Number((item.product.price + modifiersDelta).toFixed(2));
+}
+
+export function getCartItemTotal(item: CartItem): number {
+  return Number((getCartItemUnitPrice(item) * item.quantity).toFixed(2));
 }
 
 export interface Order {
